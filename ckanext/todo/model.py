@@ -18,10 +18,13 @@ todo_table = Table('todo', meta.metadata,
     meta.Column('todo_category_id', types.Integer,
                 ForeignKey('todo_category.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
                 nullable = False),
+    meta.Column('package_id', types.UnicodeText,
+                ForeignKey('package.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
+                nullable = True),
     meta.Column('description', types.UnicodeText),
     meta.Column('creator', types.UnicodeText, 
                 ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
-                nullable = True),
+                nullable = False),
     meta.Column('resolver', types.UnicodeText, 
                 ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
                 nullable = True),
@@ -30,9 +33,8 @@ todo_table = Table('todo', meta.metadata,
 
 class Todo(object):
     """A Todo Object"""
-    def __init__(self, user_id):
-        self.user_id = user_id
-        self.created = None
+    def __init__(self, creator):
+        self.creator = creator
 
     def __repr__(self):
         return "<Todo('%s')>" % (self.user_id)

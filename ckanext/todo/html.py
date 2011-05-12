@@ -15,7 +15,7 @@ BODY_CODE = """
 <script type="text/javascript" src="/ckanext-todo/todo.js"></script>
 <script type="text/javascript">
     $('document').ready(function($){
-        CKANEXT.TODO.init('%(package_id)s', '%(package_name)s', '%(user_id)s');
+        CKANEXT.TODO.init('%(package)s', '%(user_id)s');
     });
 </script>
 """
@@ -29,9 +29,27 @@ TODO_COUNT_CODE = """
 TODO_CODE = """
 <div id="todo" class="subsection">
     <h3>Todo</h3>
-    <ul id="todo-list">
-        <li>Nothing todo for this package.</li>
-    </ul>
+    <a id="todo-button"></a>
+
+    <div id="todo-add">
+        <form name="todo-add-form" method="post" action="/api/2/todo">
+            <div>
+                <label for="category_name">Category</label>
+                <input name="category_name" type="text" />
+            </div>
+            <div>
+                <label for="description">Description</label>
+                <textarea name="description"></textarea>
+            </div>
+            <div>
+                <a id="todo-add-button" class="positive-button pcb">
+                    <span>Add</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div id="todo-list">Nothing todo for this package.</div>
 </div>
 """
 

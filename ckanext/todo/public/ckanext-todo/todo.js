@@ -3,34 +3,86 @@
 var CKANEXT = CKANEXT || {};
 
 CKANEXT.TODO = {
-    init:function(packageID, packageName, userID){
+    init:function(packageID, userID){
         this.packageID = packageID;
-        this.todoCount();
+        this.userID = userID;
+        this.showTodo();
     },
 
     // show the number of todo items for this package
-    todoCount:function(){
-        var packageID = this.packageID;
+    showTodo:function(){
+        var todoData = "package=" + this.packageID;
 
-        // $.getJSON('/api/2/todo/package/' + packageID,
-        //     function(data){
-                // if(data.length == 0){
-                    var html = '<a id="package-todo-count" class="button pcb" ' +
-                               'href="#todo"><span>Nothing Todo</span></a>';
-                // }
-                // else{
-                //     // if followers, show the count and provide a link to the
-                //     // page with a list of package followers
-                //     var html = '<a href="HREF" id="package-followers" ' +
-                //         'class="button pcb"><span>TEXT</span></a>'
-                //     var text = data.length + " Following";
-                //     var followersURL = "/package/followers/" + packageName;
-                //     html = html.replace('HREF', followersURL);
-                //     html = html.replace('TEXT', text);
-                // }
+        var todoSuccess = function(data){
+            // display the package todo count
+            var html = '<a id="package-todo-count" class="button pcb" ' +
+                'href="#todo"><span>Nothing Todo</span></a>';
+            if(data.length != 0){
+                html = html.replace('Nothing', data.length);
+            }
+            $('a#package-todo-count').replaceWith(html);
 
-                // replace the package followers button
-                $('a#package-todo-count').replaceWith(html);
-        // });
+            // Show a table for each todo item listing the todo category, description,
+            // creator and creation date
+            if(data.length != 0){
+                var todoHtml = '<div id="todo-list">';
+
+                for(var i in data){
+                    todoHtml += '<table class="todo-item"><tbody>';
+                    todoHtml += '<tr>';
+                    todoHtml += '<td class="todo-list-title">Category</td>';
+                    todoHtml += '<td>' + data[i].category + '</td>';
+                    todoHtml += '</tr>';
+
+                    todoHtml += '<tr>';
+                    todoHtml += '<td class="todo-list-title">Description</td>';
+                    todoHtml += '<td>' + data[i].description + '</td>';
+                    todoHtml += '</tr>';
+
+                    todoHtml += '<tr>';
+                    todoHtml += '<td class="todo-list-title">Creator</td>';
+                    todoHtml += '<td>' + data[i].creator + '</td>';
+                    todoHtml += '</tr>';
+
+                    todoHtml += '<tr>';
+                    todoHtml += '<td class="todo-list-title">Creation Date</td>';
+                    todoHtml += '<td>' + data[i].created + '</td>';
+                    todoHtml += '</tr>';
+                    todoHtml += '</tbody></table>';
+                }
+
+                todoHtml += '</div>';
+                $('div#todo-list').replaceWith(todoHtml);
+            }
+        };
+
+        var todoError = function(data){
+            console.log('error');
+        };
+
+        $.ajax({method: 'GET',
+                url: '/api/2/todo',
+                dataType: 'json',
+                data: todoData,
+                success: todoSuccess,
+                error: todoError
+        }); 
+
+        // if user is not logged in, show a disabled button prompting them to login
+        if(this.userID == ''){
+            var todoButtonHtml = '<a id="todo-button" class="disabled-button pcb">' +
+                '<span>Login to add todo items</span></a>';
+            $('a#todo-button').replaceWith(todoButtonHtml);
+        }
+        else{
+            var todoButtonHtml = '<a id="todo-button" class="positive-button pcb">' +
+                '<span>Add a todo</span></a>';
+            $('a#todo-button').replaceWith(todoButtonHtml);
+            // add a click handler to display the form
+            $('a#todo-button').click(function(){
+                $('#todo-add').show(500);
+                // $('a#todo-button').hide(500);
+            });
+        }
     }
 };

@@ -8,7 +8,6 @@ log = getLogger(__name__)
 from genshi.input import HTML
 from genshi.filters import Transformer
 from pylons import request, tmpl_context as c
-from webob import Request
 from ckan.lib.base import h
 from ckan.plugins import SingletonPlugin, implements
 from ckan.plugins.interfaces import (IConfigurable, IRoutes, 
@@ -21,6 +20,7 @@ from ckanext.todo import html
 
 class TodoPlugin(SingletonPlugin):
     """
+    CKAN Todo Extension
     """
     implements(IConfigurable)
     implements(IConfigurer, inherit=True)
@@ -72,6 +72,14 @@ class TodoPlugin(SingletonPlugin):
         """
         Expose the todo API.
         """
+        map.connect('todo', '/api/2/todo',
+                    controller='ckanext.todo.controller:TodoController',
+                    action='get', 
+                    conditions=dict(method=['GET']))
+        map.connect('todo_category', '/api/2/todo/category',
+                    controller='ckanext.todo.controller:TodoController',
+                    action='category', 
+                    conditions=dict(method=['GET']))
         return map
 
     def filter(self, stream):
@@ -84,10 +92,8 @@ class TodoPlugin(SingletonPlugin):
         if(routes.get('controller') == 'package' and
            routes.get('action') == 'read' and 
            c.pkg.id):
-            # user_id = controller.get_user_id(request.environ.get('REMOTE_USER')) or ""
-            user_id = ""
-            data = {'package_id': c.pkg.id,
-                    'package_name': c.pkg.name,
+            user_id = controller.get_user_id(request.environ.get('REMOTE_USER')) or ""
+            data = {'package': c.pkg.name,
                     'user_id': user_id}
             # add CSS style
             stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
