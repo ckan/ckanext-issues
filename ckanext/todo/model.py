@@ -9,6 +9,8 @@ from ckan.model.types import make_uuid
 from datetime import datetime
 
 TODO_CATEGORY_NAME_MAX_LENGTH = 100
+DEFAULT_CATEGORIES = [u"broken-resource-link", u"no-author", u"bad-format", 
+                      u"add-description"]
 
 todo_table = Table('todo', meta.metadata,
     meta.Column('id', types.Integer, primary_key = True, 

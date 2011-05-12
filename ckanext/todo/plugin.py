@@ -53,11 +53,21 @@ class TodoPlugin(SingletonPlugin):
         """
         Called at the end of CKAN setup.
 
-        Create todo table in the database 
+        Create todo and todo_category tables in the database.
+        Prepopulate todo_category table with default categories.
         """
         model.todo_category_table.create(checkfirst=True)
         model.todo_table.create(checkfirst=True)
-
+        # add default categories if they don't already exist
+        session = model.meta.Session()
+        for category in model.DEFAULT_CATEGORIES:
+            query = model.Session.query(model.TodoCategory)\
+                .filter(model.TodoCategory.name == category)
+            if not query.first():
+                todo_cat = model.TodoCategory(category)
+                session.add(todo_cat)
+        session.commit()
+            
     def before_map(self, map):
         """
         Expose the todo API.
