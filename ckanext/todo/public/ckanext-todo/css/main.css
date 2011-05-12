@@ -1,4 +1,4 @@
-span#todo-count { display: inline }
+span#todo-count { display: block }
 #todo-error { color: #b00 }
 #todo-list { 
     list-style-type: none;

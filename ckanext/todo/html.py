@@ -11,6 +11,7 @@ HEAD_CODE = """
 
 BODY_CODE = """
 <script type="text/javascript" src="/ckanext-todo/jquery-1.5.2.min.js"></script>
+<script type="text/javascript" src="/ckanext-todo/scroll.js"></script>
 <script type="text/javascript" src="/ckanext-todo/todo.js"></script>
 <script type="text/javascript">
     $('document').ready(function($){
@@ -26,8 +27,7 @@ TODO_COUNT_CODE = """
 """
 
 TODO_CODE = """
-<div class="todo subsection">
-    <a id="todo-subsection" />
+<div id="todo" class="subsection">
     <h3>Todo</h3>
     <ul id="todo-list">
         <li>Nothing todo for this package.</li>

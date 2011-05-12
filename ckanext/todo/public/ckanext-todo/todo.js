@@ -15,8 +15,8 @@ CKANEXT.TODO = {
         // $.getJSON('/api/2/todo/package/' + packageID,
         //     function(data){
                 // if(data.length == 0){
-                    var html = '<a id="package-todo-count" class="button pcb">' +
-                               '<span>Nothing Todo</span></a>';
+                    var html = '<a id="package-todo-count" class="button pcb" ' +
+                               'href="#todo"><span>Nothing Todo</span></a>';
                 // }
                 // else{
                 //     // if followers, show the count and provide a link to the
