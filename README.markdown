@@ -1,9 +1,9 @@
 CKAN Todo Extension
-=======================
+===================
 
-The Todo extension for CKAN 
+Adds Todo list functionality.
 
-**Current Status:** Alpha
+**Current Status:** Incomplete
 
 Installation and Activation
 ---------------------------
