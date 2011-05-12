@@ -1,0 +1,114 @@
+.pcb, .pcb span {
+	background: url('../images/secondary.png') no-repeat;
+	height: 23px;
+	line-height: 23px;
+	padding: 3px 0 7px 0;
+}
+
+.pcb, a.pcb:link, a.pcb:visited {
+	color: #333;
+	font-size: 11px;
+	padding-left: 14px;
+	text-decoration: none !important;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+/* ie 6 hack */
+* html div#frame .pcb {
+	color: #333;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	text-decoration: none;
+}
+/* ie 7 hack */
+*:first-child+html .pcb {
+	color: #333;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	text-decoration: none;
+}
+
+.pcb span {
+	background-position: right -326px;
+	padding-right: 14px;
+}
+
+a.button {
+	background-position: left -219px;
+	padding-top: 3px;
+}
+a.button span {
+	background-position: right -545px;
+	padding-top: 3px;
+}
+a.button:hover {
+	background-position: left -246px;
+    cursor: pointer;
+    color: #333;
+}
+a.button:hover span {
+	background-position: right -572px;
+}
+a.button:active {
+	background-position: left -273px;
+}
+a.button:active span {
+	background-position: right -599px;
+}
+a.disabled-button {
+	background-position: left -300px;
+	color: #bbb !important;
+}
+a.disabled-button span {
+	background-position: right -626px;
+}
+
+a.positive-button {
+	background-position: left -219px;
+	padding-top: 3px;
+	color: #333;
+}
+a.positive-button span {
+	background-position: right -545px;
+	padding-top: 3px;
+}
+a.positive-button:hover {
+	background-position: left -27px;
+	color: #333;
+    cursor: pointer;
+}
+a.positive-button:hover span {
+	background-position: right -353px;
+}
+a.positive-button:active {
+	background-position: left -54px;
+}
+a.positive-button:active span {
+	background-position: right -380px;
+}
+
+a.negative-button {
+	background-position: left -219px;
+	padding-top: 3px;
+}
+a.negative-button span {
+	background-position: right -545px;
+	padding-top: 3px;
+}
+a.negative-button:hover {
+	background-position: left -137px;
+	color: #fff !important;
+    cursor: pointer;
+}
+a.negative-button:hover span {
+	background-position: right -463px;
+	color: #fff !important;
+}
+a.negative-button:active, .red-active-button {
+	background-position: left -165px;
+	color: #fff !important;
+}
+a.negative-button:active span, .red-active-button span {
+	background-position: right -491px;
+	color: #fff !important;
+}

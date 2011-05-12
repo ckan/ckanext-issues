@@ -76,7 +76,27 @@ class TodoPlugin(SingletonPlugin):
 
     def filter(self, stream):
         """
-        Required to implement IGenshiStreamFilter.
+        Implements IGenshiStreamFilter.
         """
         routes = request.environ.get('pylons.routes_dict')
+
+        # if this is the read action of a package, show todo info
+        if(routes.get('controller') == 'package' and
+           routes.get('action') == 'read' and 
+           c.pkg.id):
+            # user_id = controller.get_user_id(request.environ.get('REMOTE_USER')) or ""
+            user_id = ""
+            data = {'package_id': c.pkg.id,
+                    'package_name': c.pkg.name,
+                    'user_id': user_id}
+            # add CSS style
+            stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
+            # add jquery and todo.js links
+            stream = stream | Transformer('body').append(HTML(html.BODY_CODE % data))
+            # add the todo count to the package title, after the RSS 'subscribe' link
+            stream = stream | Transformer('body//div[@id="package"]//h2[@class="head"]')\
+                .append(HTML(html.TODO_COUNT_CODE))
+            # add todo subsection
+            stream = stream | Transformer('body//div[@id="package"]')\
+                .append(HTML(html.TODO_CODE))
         return stream
