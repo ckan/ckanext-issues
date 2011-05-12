@@ -55,8 +55,8 @@ class TodoPlugin(SingletonPlugin):
 
         Create todo table in the database 
         """
-        # model.todo.create(checkfirst=True)
-        pass
+        model.todo_category_table.create(checkfirst=True)
+        model.todo_table.create(checkfirst=True)
 
     def before_map(self, map):
         """
