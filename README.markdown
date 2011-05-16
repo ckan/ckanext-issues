@@ -20,6 +20,13 @@ able to add the following to your CKAN .ini file:
 After you clear your cache and reload the site, the Todo plugin
 and should be available. 
 
+Todo / Roadmap
+--------------
+* Tests
+* Todo list page
+* Add the ability to resolve Todo items
+* Add the ability to delete Todo items
+
 Tests
 -----
 From the ckanext-todo directory, run:
