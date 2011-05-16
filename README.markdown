@@ -25,7 +25,7 @@ Todo / Roadmap
 * Tests
 * Todo list page
 * Add the ability to delete Todo items
-* Add autocomplete to todo categories
+* Add autocomplete API and frontend for todo categories
 
 Tests
 -----
