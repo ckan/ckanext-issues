@@ -55,6 +55,31 @@ class TodoController(BaseController):
                 return {'error': "Package not found"}
             query = query.filter(model.Todo.package_id == package.id)
 
+        # check for a category
+        category_name_or_id = request.params.get('category')
+        if category_name_or_id:
+            category = model.TodoCategory.get(category_name_or_id)
+            if not category:
+                response.status_int = 404
+                return {'error': "Category not found"}
+            query = query.filter(model.Todo.todo_category_id == category.id)
+
+        # check for resolved status
+        resolved = request.params.get('resolved')
+        if resolved:
+            try:
+                resolved = int(resolved)
+            except:
+                response.status_int = 400
+                return {'error': "Resolved can only be 0 or 1"}
+            if not ((resolved == 0) or (resolved == 1)):
+                response.status_int = 400
+                return {'error': "Resolved can only be 0 or 1"}
+            if resolved:
+                query = query.filter(model.Todo.resolved != None)
+            else:
+                query = query.filter(model.Todo.resolved == None)
+
         # check for a query limit
         limit = request.params.get('limit')
         if limit:
