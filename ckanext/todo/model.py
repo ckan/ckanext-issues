@@ -42,6 +42,11 @@ class Todo(object):
     def __repr__(self):
         return "<Todo('%s')>" % (self.user_id)
 
+    @classmethod
+    def get(cls, reference):
+        """Returns a Todo object referenced by its id."""
+        return Session.query(cls).filter(cls.id == reference).first()
+
 meta.mapper(Todo, todo_table)
 
 # ------------------------------------------------------------------------------
@@ -63,7 +68,7 @@ class TodoCategory(object):
 
     @classmethod
     def get(cls, reference):
-        """Returns a package object referenced by its id or name."""
+        """Returns a TodoCategory object referenced by its id or name."""
         if type(reference) is int:
             # if reference is an integer, get by ID
             return Session.query(cls).filter(cls.id == reference).first()

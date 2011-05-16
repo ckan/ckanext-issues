@@ -79,6 +79,10 @@ class TodoPlugin(SingletonPlugin):
                     controller='ckanext.todo.controller:TodoController',
                     action='post', 
                     conditions=dict(method=['POST']))
+        map.connect('todo_resolve', '/api/2/todo/resolve',
+                    controller='ckanext.todo.controller:TodoController',
+                    action='resolve', 
+                    conditions=dict(method=['POST']))
         map.connect('todo_category', '/api/2/todo/category',
                     controller='ckanext.todo.controller:TodoController',
                     action='category', 

@@ -22,7 +22,8 @@ CKANEXT.TODO = {
 
     // create and return the HTML code for 1 todo item
     todoItem:function(data){
-        var html = '<table class="todo-item"><tbody>';
+        var html = '<table id="todo-item-' + data.id + '" ';
+        html += 'class="todo-item"><tbody>';
         html += '<tr>';
         html += '<td class="todo-list-title">Category</td>';
         html += '<td>' + data.category + '</td>';
@@ -39,14 +40,26 @@ CKANEXT.TODO = {
         html += '<td class="todo-list-title">Creation Date</td>';
         html += '<td>' + data.created + '</td>';
         html += '</tr>';
+
+        // display the resolve button if user is logged in
+        if(CKANEXT.TODO.userID != ''){
+            html += '<tr>';
+            html += '<td class="todo-list-title"></td>';
+            html += '<td><a id="resolve-' + data.id + '" ';
+            html += 'class="positive-button pcb resolve-button">';
+            html += '<span>Mark as resolved</span></a></td>';
+            html += '</tr>';
+        }
+
         html += '</tbody></table>';
+        
         return html;
     },
 
     // show the number of todo items for this package, and display the 
     // 'Add a todo' button/form
     showTodo:function(){
-        var todoData = "package=" + this.packageName;
+        var todoData = "resolved=0&package=" + this.packageName;
 
         var todoSuccess = function(data){
             // set the package todo count and display it
@@ -69,7 +82,7 @@ CKANEXT.TODO = {
             }
 
             // if user is not logged in, show a disabled button prompting them to login
-            if(this.userID == ''){
+            if(CKANEXT.TODO.userID == ''){
                 var todoButtonHtml = '<a id="todo-button" class="disabled-button pcb">' +
                     '<span>Login to add todo items</span></a>';
                 $('a#todo-button').replaceWith(todoButtonHtml);
@@ -83,6 +96,8 @@ CKANEXT.TODO = {
                 $('a#todo-button').click(CKANEXT.TODO.addTodo);
                 // add a click handler to the form submit button
                 $('a#todo-add-button').click(CKANEXT.TODO.addNewTodo);
+                // add click handler for resolve buttons
+                $('a.resolve-button').click(CKANEXT.TODO.resolve);
             }
         };
 
@@ -120,6 +135,7 @@ CKANEXT.TODO = {
                 package_name: CKANEXT.TODO.packageName,
                 category_name: category,
                 description: description};
+
         $.post("/api/2/todo", data,
             // successful
             function(response){
@@ -132,11 +148,13 @@ CKANEXT.TODO = {
                 // update the todo count
                 CKANEXT.TODO.todoCount = CKANEXT.TODO.todoCount + 1;
                 CKANEXT.TODO.showTodoCount();
+
                 // update the list
                 var showNewTodo = function(data){
                     var todoHtml = CKANEXT.TODO.todoItem(data[0]);
                     $('div#todo-list').prepend(todoHtml);
-
+                    // add click handler for resolve button
+                    $('a#resolve-' + data[0].id).click(CKANEXT.TODO.resolve);
                 };
                 var todoData = "package=" + CKANEXT.TODO.packageName + "&limit=1";
 
@@ -155,11 +173,40 @@ CKANEXT.TODO = {
                 $('a#todo-add-button').removeClass("disabled-button");
                 $('a#todo-add-button').addClass("positive-button");
                 $('a#todo-add-button').click(CKANEXT.TODO.addNewTodo);
-            })
+        })
         .error(
             function(error){
                 var errorHtml = '<div id="todo-error">Error: ' +
                     'Could not add the new todo item, please try again' +
+                    ' later (Error STATUS).</div>';
+                errorHtml = errorHtml.replace('STATUS', error.status);
+                $('div#todo-error').replaceWith(errorHtml);
+        });
+    },
+
+    // callback handler for resolve buttons
+    resolve:function(e){
+        // get the todo ID from the button ID
+        todo_id = $(e.target).parent().attr('id').substr("resolve-".length);
+
+        data = {todo_id: todo_id,
+                resolver: CKANEXT.TODO.userID};
+
+        $.post("/api/2/todo/resolve", data,
+            // successful
+            function(response){
+                // remove any existing error message
+                $('div#todo-error').empty();
+                // hide the todo item
+                $('table#todo-item-' + todo_id).hide(500);
+                // reduce the todo count by 1
+                CKANEXT.TODO.todoCount = CKANEXT.TODO.todoCount - 1;
+                CKANEXT.TODO.showTodoCount();
+        })
+        .error(
+            function(error){
+                var errorHtml = '<div id="todo-error">Error: ' +
+                    'Could not resolve the todo item, please try again' +
                     ' later (Error STATUS).</div>';
                 errorHtml = errorHtml.replace('STATUS', error.status);
                 $('div#todo-error').replaceWith(errorHtml);

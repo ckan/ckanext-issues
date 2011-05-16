@@ -38,8 +38,8 @@ class TodoController(BaseController):
 
         The list can be limited by specifying the following parameters:
         * package: a package ID or name
-        * (NOT YET IMPLEMENTED) category: a category ID or name 
-        * (NOT YET IMPLEMENTED) resolved: 0 or 1, where 0 is not resolved and 1 is resolved
+        * category: a category ID or name 
+        * resolved: 0 or 1, where 0 is not resolved and 1 is resolved
         * limit: a positive integer, sets the maximum number of items to be returned.
         """
         query = model.Session.query(model.Todo).order_by(model.Todo.created.desc())
@@ -93,7 +93,8 @@ class TodoController(BaseController):
                 return {'error': "Limit value is not a positive integer"}
             query = query.limit(limit)
 
-        return [{'category': model.TodoCategory.get(todo.todo_category_id).name,
+        return [{'id': todo.id,
+                 'category': model.TodoCategory.get(todo.todo_category_id).name,
                  'description': todo.description,
                  'creator': get_user_full_name(todo.creator),
                  'created': todo.created.strftime('%d %h %Y')}
@@ -164,6 +165,51 @@ class TodoController(BaseController):
             t = model.Todo(category.id, description, creator)
             t.package_id = package.id if package else None
             session.add(t)
+            session.commit()
+        except Exception as e:
+            log.warn("Database Error: " + str(e))
+            session.rollback()
+            response.status_int = 500
+            return {'error': "Could not add todo item to database"}
+
+        return {}
+
+    @jsonify
+    def resolve(self):
+        """
+        Resolve a todo item.
+        """
+        # check for a todo ID
+        todo_id = request.params.get('todo_id')
+        if not todo_id:
+            response.status_int = 400
+            return {'error': "No todo ID given"}
+
+        # make sure todo ID is valid
+        todo = model.Todo.get(todo_id)
+        if not todo:
+            response.status_int = 400
+            return {'error': "Invalid todo ID"}
+
+        # check for a resolver
+        resolver = request.params.get('resolver')
+        if not resolver:
+            response.status_int = 400
+            return {'error': "No resolver given"}
+
+        # check that resolver matches the current user
+        current_user = model.User.get(request.environ.get('REMOTE_USER'))
+        if not current_user:
+            response.status_int = 403
+            return {'error': "You are not authorized to make this request"}
+        if not resolver == current_user.id:
+            response.status_int = 403
+            return {'error': "You are not authorized to make this request"}
+
+        # update database
+        session = model.meta.Session()
+        try:
+            todo.resolved = model.datetime.now()
             session.commit()
         except Exception as e:
             log.warn("Database Error: " + str(e))
