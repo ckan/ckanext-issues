@@ -26,6 +26,7 @@ Todo / Roadmap
 * Todo list page
 * Add the ability to resolve Todo items
 * Add the ability to delete Todo items
+* Add autocomplete to todo categories
 
 Tests
 -----
