@@ -60,12 +60,11 @@ class TodoPlugin(SingletonPlugin):
         model.todo_table.create(checkfirst=True)
         # add default categories if they don't already exist
         session = model.meta.Session()
-        for category in model.DEFAULT_CATEGORIES:
-            query = model.Session.query(model.TodoCategory)\
-                .filter(model.TodoCategory.name == category)
-            if not query.first():
-                todo_cat = model.TodoCategory(category)
-                session.add(todo_cat)
+        for category_name in model.DEFAULT_CATEGORIES:
+            category = model.TodoCategory.get(category_name)
+            if not category:
+                category = model.TodoCategory(category_name)
+                session.add(category)
         session.commit()
             
     def before_map(self, map):
@@ -76,6 +75,10 @@ class TodoPlugin(SingletonPlugin):
                     controller='ckanext.todo.controller:TodoController',
                     action='get', 
                     conditions=dict(method=['GET']))
+        map.connect('todo_post', '/api/2/todo',
+                    controller='ckanext.todo.controller:TodoController',
+                    action='post', 
+                    conditions=dict(method=['POST']))
         map.connect('todo_category', '/api/2/todo/category',
                     controller='ckanext.todo.controller:TodoController',
                     action='category', 

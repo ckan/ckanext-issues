@@ -32,7 +32,7 @@ TODO_CODE = """
     <a id="todo-button"></a>
 
     <div id="todo-add">
-        <form name="todo-add-form" method="post" action="/api/2/todo">
+        <form name="todo-add-form" method="post">
             <div>
                 <label for="category_name">Category</label>
                 <input name="category_name" type="text" />
@@ -49,10 +49,7 @@ TODO_CODE = """
         </form>
     </div>
 
-    <div id="todo-list">Nothing todo for this package.</div>
+    <div id="todo-error"></div>
+    <div id="todo-list"></div>
 </div>
-"""
-
-ERROR_CODE = """
-<div id="todo-error"></div>
 """

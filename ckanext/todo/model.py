@@ -2,6 +2,7 @@
 CKAN Todo Extension Data Model
 """
 import sqlalchemy as sa
+from sqlalchemy.sql.expression import or_
 from ckan import model
 from ckan.model import meta, User, Package, Session
 from ckan.model.meta import types, Table, ForeignKey, DateTime
@@ -21,7 +22,7 @@ todo_table = Table('todo', meta.metadata,
     meta.Column('package_id', types.UnicodeText,
                 ForeignKey('package.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
                 nullable = True),
-    meta.Column('description', types.UnicodeText),
+    meta.Column('description', types.UnicodeText, nullable = False),
     meta.Column('creator', types.UnicodeText, 
                 ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
                 nullable = False),
@@ -33,7 +34,9 @@ todo_table = Table('todo', meta.metadata,
 
 class Todo(object):
     """A Todo Object"""
-    def __init__(self, creator):
+    def __init__(self, category_id, description, creator):
+        self.todo_category_id = category_id
+        self.description = description
         self.creator = creator
 
     def __repr__(self):
@@ -56,6 +59,16 @@ class TodoCategory(object):
         self.name = name
 
     def __repr__(self):
-        return "<Todo('%s')>" % (self.name)
+        return "<TodoCategory('%s')>" % (self.name)
+
+    @classmethod
+    def get(cls, reference):
+        """Returns a package object referenced by its id or name."""
+        if type(reference) is int:
+            # if reference is an integer, get by ID
+            return Session.query(cls).filter(cls.id == reference).first()
+        else:
+            # if not, get by name
+            return Session.query(cls).filter(cls.name == reference).first()
 
 meta.mapper(TodoCategory, todo_category_table)
