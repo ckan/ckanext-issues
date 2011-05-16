@@ -40,9 +40,9 @@ class TodoController(BaseController):
         * package: a package ID or name
         * (NOT YET IMPLEMENTED) category: a category ID or name 
         * (NOT YET IMPLEMENTED) resolved: 0 or 1, where 0 is not resolved and 1 is resolved
-        * (NOT YET IMPLEMENTED) limit: a positive integer, sets the maximum number of items to be returned.
+        * limit: a positive integer, sets the maximum number of items to be returned.
         """
-        query = model.Session.query(model.Todo)
+        query = model.Session.query(model.Todo).order_by(model.Todo.created.desc())
 
         # check for a package ID or name in the request
         package_id = request.params.get('package')
@@ -51,8 +51,22 @@ class TodoController(BaseController):
             # a valid package ID/name
             package =  model.Package.get(package_id)
             if not package:
-                return (404, {'error': "Package not found"})
+                response.status_int = 404
+                return {'error': "Package not found"}
             query = query.filter(model.Todo.package_id == package.id)
+
+        # check for a query limit
+        limit = request.params.get('limit')
+        if limit:
+            try:
+                limit = int(limit)
+            except:
+                response.status_int = 400
+                return {'error': "Limit value is not a positive integer"}
+            if not limit > 0:
+                response.status_int = 400
+                return {'error': "Limit value is not a positive integer"}
+            query = query.limit(limit)
 
         return [{'category': model.TodoCategory.get(todo.todo_category_id).name,
                  'description': todo.description,
@@ -105,7 +119,6 @@ class TodoController(BaseController):
                 response.status_int = 400
                 return {'error': "Invalid package name or ID"}
 
-        return {}
         session = model.meta.Session()
 
         # if category doesn't already exist, create it
