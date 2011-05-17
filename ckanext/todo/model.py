@@ -76,4 +76,14 @@ class TodoCategory(object):
             # if not, get by name
             return Session.query(cls).filter(cls.name == reference).first()
 
+    @classmethod
+    def search(cls, querystr, sqlalchemy_query=None):
+        """ Search TodoCategory names """
+        if not sqlalchemy_query:
+            query = model.Session.query(cls)
+        else:
+            query = sqlalchemy_query
+        qstr = '%' + querystr + '%'
+        return query.filter(cls.name.ilike(qstr))
+
 meta.mapper(TodoCategory, todo_category_table)

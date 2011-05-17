@@ -9,7 +9,10 @@ from pylons.i18n import _
 from pylons.decorators import jsonify
 from pylons import request, tmpl_context as c
 from ckan.lib.base import BaseController, response, render, abort
+from ckan.lib.search import query_for
 from ckanext.todo import model
+
+AUTOCOMPLETE_LIMIT = 10
 
 def get_user_id(user_name):
     """
@@ -227,6 +230,30 @@ class TodoController(BaseController):
         """
         query = model.Session.query(model.TodoCategory)
         return [{'name': category.name} for category in query if query]
+
+    @jsonify
+    def autocomplete(self):
+        """
+        Todo autocomplete API
+        """
+        incomplete = request.params.get("incomplete")
+        if incomplete:
+            query = model.TodoCategory.search(incomplete)
+            category_names = [cat.name for cat in query]
+        else:
+            category_names = []
+        result_set = {
+            "ResultSet": {
+                "Result": []
+            }
+        }
+
+        for name in category_names[:AUTOCOMPLETE_LIMIT]:
+            result = {
+                "Name": name
+            }
+            result_set["ResultSet"]["Result"].append(result)
+        return result_set
 
     def todo_page(self):
         """

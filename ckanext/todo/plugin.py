@@ -87,6 +87,9 @@ class TodoPlugin(SingletonPlugin):
                     controller='ckanext.todo.controller:TodoController',
                     action='category', 
                     conditions=dict(method=['GET']))
+        map.connect('todo_autocomplete', '/api/2/todo/autocomplete',
+                    controller='ckanext.todo.controller:TodoController',
+                    action='autocomplete')
         map.connect('todo_page', '/todo',
                     controller='ckanext.todo.controller:TodoController',
                     action='todo_page')
