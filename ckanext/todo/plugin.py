@@ -98,6 +98,14 @@ class TodoPlugin(SingletonPlugin):
         """
         routes = request.environ.get('pylons.routes_dict')
 
+        # add a 'Todo' link to the menu bar
+        menu_data = {'href': 
+            h.nav_link(c, "Todo", 
+                controller='ckanext.todo.controller:TodoController', 
+                action='todo_page')}
+        stream = stream | Transformer('body//div[@class="menu"]/ul]')\
+            .append(HTML(html.MENU_CODE % menu_data))
+
         # if this is the read action of a package, show todo info
         if(routes.get('controller') == 'package' and
            routes.get('action') == 'read' and 

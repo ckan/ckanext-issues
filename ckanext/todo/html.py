@@ -53,3 +53,7 @@ TODO_CODE = """
     <div id="todo-list"></div>
 </div>
 """
+
+MENU_CODE = """
+<li>%(href)s</li>
+"""
