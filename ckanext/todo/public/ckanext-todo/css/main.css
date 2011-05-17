@@ -1,3 +1,4 @@
+/* Todo section of package pages */
 span#todo-count { display: block; }
 #todo-error { 
     margin-top: 1em;
@@ -27,4 +28,17 @@ span#todo-count { display: block; }
 }
 td.todo-list-title {
     width: 150px;
+}
+
+/* Todo page */
+#todo-page ul {
+    list-style-type: none;
+    margin-left: 0;
+}
+
+#todo-categories { padding-top: 1em; }
+
+.todo-category {
+    padding-top: 1em;
+    border-top: 1px solid #ECECEC;
 }

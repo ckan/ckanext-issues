@@ -87,6 +87,9 @@ class TodoPlugin(SingletonPlugin):
                     controller='ckanext.todo.controller:TodoController',
                     action='category', 
                     conditions=dict(method=['GET']))
+        map.connect('todo_page', '/todo',
+                    controller='ckanext.todo.controller:TodoController',
+                    action='todo_page')
         return map
 
     def filter(self, stream):

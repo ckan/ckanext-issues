@@ -4,6 +4,7 @@ CKAN Todo Extension
 from logging import getLogger
 log = getLogger(__name__)
 
+from sqlalchemy import func
 from pylons.i18n import _
 from pylons.decorators import jsonify
 from pylons import request, tmpl_context as c
@@ -226,3 +227,25 @@ class TodoController(BaseController):
         """
         query = model.Session.query(model.TodoCategory)
         return [{'name': category.name} for category in query if query]
+
+    def todo_page(self):
+        """
+        Display a page containing a list of all todo items.
+        """
+        # categories
+        categories = model.Session.query(func.count(model.Todo.id).label('todo_count'), 
+                                         model.Todo.todo_category_id)\
+            .filter(model.Todo.resolved != None)\
+            .group_by(model.Todo.todo_category_id)
+        c.categories = []
+        for t in categories:
+            tc = model.TodoCategory.get(t.todo_category_id)
+            tc.todo_count = t.todo_count
+            # get todo items for each category
+            tc.todo = model.Session.query(model.Todo).filter(model.Todo.resolved != None)\
+                .filter(model.Todo.todo_category_id == t.todo_category_id)\
+                .order_by(model.Todo.created.desc())
+            c.categories.append(tc)
+        # sort into alphabetical order
+        c.categories.sort(key = lambda x: x.name)
+        return render("todo.html")
