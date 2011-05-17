@@ -258,7 +258,7 @@ class TodoController(BaseController):
 
     def todo_page(self):
         """
-        Display a page containing a list of all todo items.
+        Display a page containing a list of all todo items, sorted by category.
         """
         # categories
         categories = model.Session.query(func.count(model.Todo.id).label('todo_count'), 
