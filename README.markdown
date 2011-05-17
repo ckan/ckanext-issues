@@ -23,7 +23,6 @@ and should be available.
 Todo / Roadmap
 --------------
 * Tests
-* Todo list page
 * Add autocomplete API and frontend for todo categories
 
 Tests
