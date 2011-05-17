@@ -3,7 +3,7 @@ CKAN Todo Extension
 
 Adds Todo list functionality.
 
-**Current Status:** Incomplete
+**Current Status:** Beta
 
 Installation and Activation
 ---------------------------
@@ -19,10 +19,6 @@ able to add the following to your CKAN .ini file:
  
 After you clear your cache and reload the site, the Todo plugin
 and should be available. 
-
-Todo / Roadmap
---------------
-* Tests
 
 Tests
 -----
