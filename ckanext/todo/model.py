@@ -40,7 +40,7 @@ class Todo(object):
         self.creator = creator
 
     def __repr__(self):
-        return "<Todo('%s')>" % (self.user_id)
+        return "<Todo('%s')>" % (self.id)
 
     @classmethod
     def get(cls, reference):

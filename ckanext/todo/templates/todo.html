@@ -30,7 +30,18 @@
                 <h4 id="${category.name}">${category.name}</h4>
                 <ul>
                     <py:for each="todo in category.todo">
-                    <li>${todo.description}</li> 
+                    <li>
+                        <div py:choose="">Package: 
+                            <span py:when="not todo.package_id">None</span>
+                            <span py:otherwise="">
+                                ${h.link_to(c.pkg_names[todo.package_id],
+                                            h.url_for(controller='package', action='read',
+                                                      id = c.pkg_names[todo.package_id]))}
+                            </span>
+                        </div>
+                        <div>Description: ${todo.description}</div>
+                        <div>Created: ${todo.created.strftime('%d %h %Y')}</div>
+                    </li> 
                     </py:for>
                 </ul>
             </div>
