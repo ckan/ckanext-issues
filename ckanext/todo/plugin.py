@@ -100,9 +100,9 @@ class TodoPlugin(SingletonPlugin):
 
         # add a 'Todo' link to the menu bar
         menu_data = {'href': 
-            h.nav_link(c, "Todo", 
-                controller='ckanext.todo.controller:TodoController', 
-                action='todo_page')}
+            h.link_to("Todo", h.url_for('todo_page'), 
+                class_ = ('active' if c.controller == 'ckanext.todo.controller:TodoController' else ''))}
+
         stream = stream | Transformer('body//div[@class="menu"]/ul]')\
             .append(HTML(html.MENU_CODE % menu_data))
 
