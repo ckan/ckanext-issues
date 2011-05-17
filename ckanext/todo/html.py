@@ -35,7 +35,7 @@ TODO_CODE = """
         <form name="todo-add-form" method="post">
             <div>
                 <label for="category_name">Category</label>
-                <input name="category_name" type="text" />
+                <input name="category_name" class="todo-category-autocomplete" type="text" />
             </div>
             <div>
                 <label for="description">Description</label>

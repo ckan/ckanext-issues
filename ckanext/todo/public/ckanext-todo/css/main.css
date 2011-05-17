@@ -19,8 +19,8 @@ span#todo-count { display: block; }
     padding: 0;
     margin: 0;
 }
+#todo-add-button { margin-left: 20%; }
 #todo-add textarea { height: 100px; }
-#todo-add a { margin-left: 20%; }
 #todo-add div { margin-bottom: 0.75em; }
 .todo-item td {
     background-color: #fff;
@@ -28,6 +28,21 @@ span#todo-count { display: block; }
 }
 td.todo-list-title {
     width: 150px;
+}
+
+/* Autocomplete */
+#category-autocomplete-suggestions {
+    margin-left: 20%
+}
+.categories.small a {
+    padding-right: 6px;
+}
+.categories a.active {
+    background: #2B69C6;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.2em;
+    margin: 0 0.2em;
 }
 
 /* Todo page */

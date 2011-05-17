@@ -117,6 +117,7 @@ class TodoController(BaseController):
         if not category_name:
             response.status_int = 400
             return {'error': "No category name given"}
+        category_name = category_name.strip()
 
         # check for a description
         description = request.params.get('description')

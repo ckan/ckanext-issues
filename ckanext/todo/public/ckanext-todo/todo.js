@@ -8,6 +8,12 @@ CKANEXT.TODO = {
         this.userID = userID;
         this.todoCount = 0;
         this.showTodo();
+        // autocomplete
+        $('.todo-category-autocomplete')
+            .after('<div id="category-autocomplete-suggestions"' +
+                   'class="categories small"></div>')
+            .keyup(this.updateCategories)
+            .keydown(this.doComplete);
     },
 
     // show the todo count
@@ -211,5 +217,60 @@ CKANEXT.TODO = {
                 errorHtml = errorHtml.replace('STATUS', error.status);
                 $('div#todo-error').replaceWith(errorHtml);
         });
+    },
+
+    updateCategories:function(e){
+        var incomplete = $(this).val();
+        var container = $(this).next('.categories');
+
+        // If we're not in the middle of typing a tag, return.
+        if(incomplete[incomplete.length - 1] === ' '){
+            return;
+        }
+
+        // callback function for new autocomplete suggestions
+        var newCategories = function(json){
+            $(container).empty();
+
+            // add links to the autocomplete container
+            $.each(json["ResultSet"]["Result"], function(){
+                $(container).append('<a>' + this["Name"] + '</a>');
+            });
+
+            // set active link
+            $(container).children().first().addClass('active')
+                .end().hover(function(){
+                    $(this).addClass('active').siblings().removeClass('active');
+            });
+
+            // add click handler for autocomplete links
+            $(container).children().click(function(){
+                var input = $(container).prev('.todo-category-autocomplete');
+                $(input).val($(this).text());
+                $(this).parent().empty();
+            }); 
+        }
+        
+        // get latest autocomplete suggestions
+        $.ajax({
+            url: "/api/2/todo/autocomplete",
+            data: "incomplete=" + incomplete,
+            dataType: 'json',
+            type: 'get',
+            success: newCategories
+        });
+    },
+
+    doComplete:function(e){
+        var list = $(this).next('.categories');
+        var active = list.find('a.active');
+
+        // Complete tag on {tab, return, right-arrow}.
+        if(active[0] && ($.inArray(e.keyCode, [9, 13, 39]) !== -1)){
+          $(this).val(active.text() + " ");
+          console.log(list);
+          list.empty();
+          return false;
+        }
     }
 };
