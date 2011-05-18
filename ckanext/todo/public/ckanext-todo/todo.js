@@ -182,9 +182,9 @@ CKANEXT.TODO = {
         })
         .error(
             function(error){
+                console.log(error.responseText);
                 var errorHtml = '<div id="todo-error">Error: ' +
-                    'Could not add the new todo item, please try again' +
-                    ' later (Error STATUS).</div>';
+                    JSON.parse(error.responseText).msg + '</div>';
                 errorHtml = errorHtml.replace('STATUS', error.status);
                 $('div#todo-error').replaceWith(errorHtml);
         });

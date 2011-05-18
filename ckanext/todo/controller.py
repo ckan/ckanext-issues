@@ -11,8 +11,10 @@ from pylons import request, tmpl_context as c
 from ckan.lib.base import BaseController, response, render, abort
 from ckan.lib.search import query_for
 from ckanext.todo import model
+import re
 
 AUTOCOMPLETE_LIMIT = 10
+VALID_CATEGORY = re.compile(r"[0-9a-z\-\._]+")
 
 def get_user_id(user_name):
     """
@@ -116,29 +118,36 @@ class TodoController(BaseController):
         category_name = request.params.get('category_name')
         if not category_name:
             response.status_int = 400
-            return {'error': "No category name given"}
+            return {'msg': "Please enter a category"}
+
+        # make sure category name consists of valid characters
         category_name = category_name.strip()
+        valid = VALID_CATEGORY.match(category_name)
+        if not valid or not valid.end() == len(category_name):
+            response.status_int = 400
+            return {'msg': "Category can only consist of lowercase " +
+                           "characters, numbers and the symbols .-_"}
 
         # check for a description
         description = request.params.get('description')
         if not description:
             response.status_int = 400
-            return {'error': "No description given"}
+            return {'msg': "Please enter a description"}
 
         # check for a creator
         creator = request.params.get('creator')
         if not creator:
             response.status_int = 400
-            return {'error': "No creator given"}
+            return {'msg': "Please enter a creator for this todo item"}
 
         # check that creator matches the current user
         current_user = model.User.get(request.environ.get('REMOTE_USER'))
         if not current_user:
             response.status_int = 403
-            return {'error': "You are not authorized to make this request"}
+            return {'msg': "You are not authorized to make this request"}
         if not creator == current_user.id:
             response.status_int = 403
-            return {'error': "You are not authorized to make this request"}
+            return {'msg': "You are not authorized to make this request"}
 
         # check for a package ID or name in the request
         package_name = request.params.get('package_name')
@@ -148,7 +157,7 @@ class TodoController(BaseController):
             package =  model.Package.get(package_name)
             if not package:
                 response.status_int = 400
-                return {'error': "Invalid package name or ID"}
+                return {'msg': "Invalid package name or ID"}
 
         session = model.meta.Session()
 
@@ -163,7 +172,7 @@ class TodoController(BaseController):
                 log.warn("Database Error: " + str(e))
                 session.rollback()
                 response.status_int = 500
-                return {'error': "Could not add category to database"}
+                return {'msg': "Could not add category to database."}
 
         # add new item to database
         try:
@@ -175,7 +184,7 @@ class TodoController(BaseController):
             log.warn("Database Error: " + str(e))
             session.rollback()
             response.status_int = 500
-            return {'error': "Could not add todo item to database"}
+            return {'msg': "Could not add todo item to database"}
 
         return {}
 

@@ -8,7 +8,7 @@ class CreateTodoTestData(object):
     @classmethod
     def create(cls):
         rev = repo.new_revision()
-        cls.todo_category_names = [u'test-category']
+        cls.todo_category_names = [u'test-category1', 'test-category2']
         for category_name in cls.todo_category_names:
             tc = model.TodoCategory(category_name)
             model.Session.add(tc)
