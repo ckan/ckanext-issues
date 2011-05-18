@@ -36,7 +36,7 @@
                             <span py:otherwise="">
                                 ${h.link_to(c.pkg_names[todo.package_id],
                                             h.url_for(controller='package', action='read',
-                                                      id = c.pkg_names[todo.package_id]))}
+                                                      id = c.pkg_names[todo.package_id]) + "#todo")}
                             </span>
                         </div>
                         <div>Description: ${todo.description}</div>
