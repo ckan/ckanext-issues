@@ -173,7 +173,7 @@ CKANEXT.TODO = {
                 }); 
 
                 // remove the todo form and reenable the add buttons
-                $('#todo-add').hide(500);
+                $('#todo-add').fadeOut(500);
                 $('a#todo-button').removeClass("disabled-button");
                 $('a#todo-button').addClass("positive-button");
                 $('a#todo-add-button').removeClass("disabled-button");
@@ -204,7 +204,7 @@ CKANEXT.TODO = {
                 // remove any existing error message
                 $('div#todo-error').empty();
                 // hide the todo item
-                $('table#todo-item-' + todo_id).hide(500);
+                $('table#todo-item-' + todo_id).fadeOut(500);
                 // reduce the todo count by 1
                 CKANEXT.TODO.todoCount = CKANEXT.TODO.todoCount - 1;
                 CKANEXT.TODO.showTodoCount();
