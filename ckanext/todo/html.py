@@ -14,7 +14,8 @@ BODY_CODE = """
 <script type="text/javascript" src="/ckanext-todo/scroll.js"></script>
 <script type="text/javascript" src="/ckanext-todo/todo.js"></script>
 <script type="text/javascript">
-    $('document').ready(function($){
+    jQuery.noConflict();
+    jQuery('document').ready(function($){
         CKANEXT.TODO.init('%(package)s', '%(user_id)s');
     });
 </script>
