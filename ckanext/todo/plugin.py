@@ -124,6 +124,6 @@ class TodoPlugin(SingletonPlugin):
             stream = stream | Transformer('//div[@id="minornavigation"]//ul[@class="tabbed"]')\
                 .append(HTML(html.TODO_COUNT_CODE))
             # add todo subsection
-            stream = stream | Transformer('body//div[@id="package"]')\
+            stream = stream | Transformer('//div[@id="minornavigation"]')\
                 .append(HTML(html.TODO_CODE))
         return stream
