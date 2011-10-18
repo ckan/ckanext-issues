@@ -246,24 +246,18 @@ class TodoController(BaseController):
         """
         Todo autocomplete API
         """
-        incomplete = request.params.get("incomplete")
-        if incomplete:
-            query = model.TodoCategory.search(incomplete)
-            category_names = [cat.name for cat in query]
-        else:
-            category_names = []
-        result_set = {
-            "ResultSet": {
-                "Result": []
-            }
-        }
+        # Get the "term" (what the user has typed so far in the input box) from
+        # jQuery UI
+        term = request.params.get("term")
 
-        for name in category_names[:AUTOCOMPLETE_LIMIT]:
-            result = {
-                "Name": name
-            }
-            result_set["ResultSet"]["Result"].append(result)
-        return result_set
+        if term:
+            # Make a list of categories that match the term and return it
+            query = model.TodoCategory.search(term)
+            category_names = [cat.name for cat in query]
+            return category_names[:AUTOCOMPLETE_LIMIT]
+        else:
+            # No categories match what the user has typed.
+            return []
 
     def todo_page(self):
         """
