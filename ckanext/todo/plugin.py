@@ -120,10 +120,7 @@ class TodoPlugin(SingletonPlugin):
             stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
             # add jquery and todo.js links
             stream = stream | Transformer('body').append(HTML(html.BODY_CODE % data))
-            # add the todo count to the package title, after the RSS 'subscribe' link
-            stream = stream | Transformer('//div[@id="minornavigation"]//ul[@class="tabbed"]')\
-                .append(HTML(html.TODO_COUNT_CODE))
             # add todo subsection
-            stream = stream | Transformer('//div[@id="minornavigation"]')\
+            stream = stream | Transformer('//div[@id="dataset"]')\
                 .append(HTML(html.TODO_CODE))
         return stream

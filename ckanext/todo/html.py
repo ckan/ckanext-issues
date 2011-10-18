@@ -21,12 +21,6 @@ BODY_CODE = """
 </script>
 """
 
-TODO_COUNT_CODE = """
-<li id="todo-count">
-  <a id="package-todo-count"></a>
-</li>
-"""
-
 TODO_CODE = """
 <div id="todo" class="subsection">
     <h3>Todo</h3>
