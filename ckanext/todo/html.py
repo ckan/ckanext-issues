@@ -56,5 +56,5 @@ TODO_CODE = """
 """
 
 MENU_CODE = """
-<li>%(href)s</li>
+%(href)s
 """

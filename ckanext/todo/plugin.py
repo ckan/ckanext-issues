@@ -106,7 +106,7 @@ class TodoPlugin(SingletonPlugin):
             h.link_to("Todo", h.url_for('todo_page'), 
                 class_ = ('active' if c.controller == 'ckanext.todo.controller:TodoController' else ''))}
 
-        stream = stream | Transformer('body//div[@class="menu"]/ul]')\
+        stream = stream | Transformer('body//div[@id="mainmenu"]')\
             .append(HTML(html.MENU_CODE % menu_data))
 
         # if this is the read action of a package, show todo info
