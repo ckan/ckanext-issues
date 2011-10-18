@@ -22,9 +22,9 @@ BODY_CODE = """
 """
 
 TODO_COUNT_CODE = """
-<span id="todo-count">
-<a id="package-todo-count"></a>
-</span>
+<li id="todo-count">
+  <a id="package-todo-count"></a>
+</li>
 """
 
 TODO_CODE = """
