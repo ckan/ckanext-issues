@@ -48,7 +48,7 @@ CKANEXT.TODO = {
             html += '<tr>';
             html += '<td class="todo-list-title"></td>';
             html += '<td><a id="resolve-' + data.id + '" ';
-            html += 'class="positive-button pcb resolve-button">';
+            html += 'class="resolve-button" >';
             html += '<span>Mark as resolved</span></a></td>';
             html += '</tr>';
         }
@@ -77,6 +77,7 @@ CKANEXT.TODO = {
                 }
                 todoHtml += '</div>';
                 $('div#todo-list').replaceWith(todoHtml);
+                $('.resolve-button').button();
             }
             else{
                 var todoHtml = '<div id="todo-list">Nothing todo for this package.</div>';
@@ -85,21 +86,18 @@ CKANEXT.TODO = {
 
             // if user is not logged in, show a disabled button prompting them to login
             if(CKANEXT.TODO.userID == ''){
-                var todoButtonHtml = '<a id="todo-button" class="disabled-button pcb">' +
-                    '<span>Login to add todo items</span></a>';
-                $('a#todo-button').replaceWith(todoButtonHtml);
+                $('#todo-button').button( {disabled: true, label: "Login to add todo items" });
             }
             else{
                 // show the 'Add a todo button'
-                var todoButtonHtml = '<a id="todo-button" class="positive-button pcb">' +
-                    '<span>Add a todo</span></a>';
-                $('a#todo-button').replaceWith(todoButtonHtml);
+                $('#todo-button').button({ label: "Add a todo" });
                 // add a click handler to the 'Add a todo' button
-                $('a#todo-button').click(CKANEXT.TODO.addTodo);
+                $('#todo-button').click(CKANEXT.TODO.addTodo);
                 // add a click handler to the form submit button
-                $('a#todo-add-button').click(CKANEXT.TODO.addNewTodo);
+                $('#todo-add-button').button({ label: "Add" });
+                $('#todo-add-button').click(CKANEXT.TODO.addNewTodo);
                 // add click handler for resolve buttons
-                $('a.resolve-button').click(CKANEXT.TODO.resolve);
+                $('.resolve-button').click(CKANEXT.TODO.resolve);
             }
         };
 
@@ -124,8 +122,7 @@ CKANEXT.TODO = {
     // disables the button and displays the form
     addTodo:function(){
         $('#todo-add').show(500);
-        $('a#todo-button').removeClass("positive-button");
-        $('a#todo-button').addClass("disabled-button");
+        $('#todo-button').button("option", "disabled", true);
     },
 
     // callback handler for the 'add' button clicked (submit new todo item)
@@ -142,9 +139,8 @@ CKANEXT.TODO = {
             // successful
             function(response){
                 // briefly disable add button
-                $('a#todo-add-button').unbind();
-                $('a#todo-add-button').removeClass("positive-button");
-                $('a#todo-add-button').addClass("disabled-button");
+                $('#todo-add-button').button("option", "disabled", true);
+
                 // remove any existing error message
                 $('div#todo-error').empty();
                 // update the todo count
@@ -156,7 +152,8 @@ CKANEXT.TODO = {
                     var todoHtml = CKANEXT.TODO.todoItem(data[0]);
                     $('div#todo-list').prepend(todoHtml);
                     // add click handler for resolve button
-                    $('a#resolve-' + data[0].id).click(CKANEXT.TODO.resolve);
+                    $('#resolve-' + data[0].id).button();
+                    $('#resolve-' + data[0].id).click(CKANEXT.TODO.resolve);
                 };
                 var todoData = "package=" + CKANEXT.TODO.packageName + "&limit=1";
 
@@ -170,11 +167,8 @@ CKANEXT.TODO = {
 
                 // remove the todo form and reenable the add buttons
                 $('#todo-add').fadeOut(500);
-                $('a#todo-button').removeClass("disabled-button");
-                $('a#todo-button').addClass("positive-button");
-                $('a#todo-add-button').removeClass("disabled-button");
-                $('a#todo-add-button').addClass("positive-button");
-                $('a#todo-add-button').click(CKANEXT.TODO.addNewTodo);
+                $('#todo-button').button("option", "disabled", false);
+                $('#todo-add-button').button("option", "disabled", false);
         })
         .error(
             function(error){
@@ -189,7 +183,7 @@ CKANEXT.TODO = {
     // callback handler for resolve buttons
     resolve:function(e){
         // get the todo ID from the button ID
-        todo_id = $(e.target).parent().attr('id').substr("resolve-".length);
+        todo_id = $(e.currentTarget).attr('id').substr("resolve-".length);
 
         data = {todo_id: todo_id,
                 resolver: CKANEXT.TODO.userID};

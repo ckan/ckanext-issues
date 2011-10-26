@@ -37,9 +37,7 @@ TODO_CODE = """
                 <textarea name="description"></textarea>
             </div>
             <div>
-                <a id="todo-add-button" class="positive-button pcb">
-                    <span>Add</span>
-                </a>
+                <a id="todo-add-button"></a>
             </div>
         </form>
     </div>
