@@ -1,24 +1,22 @@
 from setuptools import setup, find_packages
 
 version = '0.1'
-from ckanext.todo import __doc__ as long_description
 
 setup(
-	name='ckanext-todo',
+	name='ckanext-issues',
 	version=version,
-	description=long_description.split('\n')[0],
-	long_description=long_description,
+	description='CKAN Extension providing Issues (Task/Todos/...)',
 	classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
 	keywords='',
-	author='John Glover',
-	author_email='j@johnglover.net',
+	author='CKAN Project (Open Knowledge Foundation)',
+	author_email='info@okfn.org',
 	url='',
 	license='mit',
     packages=find_packages(exclude=['tests']),
-    namespace_packages=['ckanext', 'ckanext.todo'],
-    package_data = {'ckanext.todo' : ['public/ckanext-todo/*.js', 
-                                      'public/ckanext-todo/css/*.css',
-                                      'public/ckanext-todo/images/*.png',
+    namespace_packages=['ckanext', 'ckanext.issues'],
+    package_data = {'ckanext.issues' : ['public/ckanext-issues/*.js', 
+                                      'public/ckanext-issues/css/*.css',
+                                      'public/ckanext-issues/images/*.png',
                                       'templates/*.html']},
 	include_package_data=True,
 	zip_safe=False,
@@ -28,6 +26,6 @@ setup(
 	entry_points=\
 	"""
     [ckan.plugins]
-	todo=ckanext.todo.plugin:TodoPlugin
+	issues=ckanext.issues.plugin:IssuesPlugin
 	""",
 )

@@ -1,5 +1,5 @@
 """
-CKAN Todo Extension
+CKAN Issue Extension
 """
 import os
 from logging import getLogger
@@ -13,14 +13,14 @@ from ckan.plugins import SingletonPlugin, implements
 from ckan.plugins.interfaces import (IConfigurable, IRoutes, 
                                      IGenshiStreamFilter, IConfigurer)
 
-from ckanext.todo import model
-from ckanext.todo import controller
-from ckanext.todo import html
+from ckanext.issues import model
+from ckanext.issues import controller
+from ckanext.issues import html
 
 
-class TodoPlugin(SingletonPlugin):
+class IssuesPlugin(SingletonPlugin):
     """
-    CKAN Todo Extension
+    CKAN Issues Extension
     """
     implements(IConfigurable)
     implements(IConfigurer, inherit=True)
@@ -53,46 +53,46 @@ class TodoPlugin(SingletonPlugin):
         """
         Called at the end of CKAN setup.
 
-        Create todo and todo_category tables in the database.
-        Prepopulate todo_category table with default categories.
+        Create issue and issue_category tables in the database.
+        Prepopulate issue_category table with default categories.
         """
-        model.todo_category_table.create(checkfirst=True)
-        model.todo_table.create(checkfirst=True)
+        model.issue_category_table.create(checkfirst=True)
+        model.issue_table.create(checkfirst=True)
         # add default categories if they don't already exist
         session = model.meta.Session()
         for category_name in model.DEFAULT_CATEGORIES:
-            category = model.TodoCategory.get(category_name)
+            category = model.IssueCategory.get(category_name)
             if not category:
-                category = model.TodoCategory(category_name)
+                category = model.IssueCategory(category_name)
                 session.add(category)
         session.commit()
             
     def before_map(self, map):
         """
-        Expose the todo API.
+        Expose the issue API.
         """
-        map.connect('todo', '/api/2/todo',
-                    controller='ckanext.todo.controller:TodoController',
+        map.connect('issue', '/api/2/issue',
+                    controller='ckanext.issues.controller:IssueController',
                     action='get', 
                     conditions=dict(method=['GET']))
-        map.connect('todo_post', '/api/2/todo',
-                    controller='ckanext.todo.controller:TodoController',
+        map.connect('issue_post', '/api/2/issue',
+                    controller='ckanext.issues.controller:IssueController',
                     action='post', 
                     conditions=dict(method=['POST']))
-        map.connect('todo_resolve', '/api/2/todo/resolve',
-                    controller='ckanext.todo.controller:TodoController',
+        map.connect('issue_resolve', '/api/2/issue/resolve',
+                    controller='ckanext.issues.controller:IssueController',
                     action='resolve', 
                     conditions=dict(method=['POST']))
-        map.connect('todo_category', '/api/2/todo/category',
-                    controller='ckanext.todo.controller:TodoController',
+        map.connect('issue_category', '/api/2/issue/category',
+                    controller='ckanext.issues.controller:IssueController',
                     action='category', 
                     conditions=dict(method=['GET']))
-        map.connect('todo_autocomplete', '/api/2/todo/autocomplete',
-                    controller='ckanext.todo.controller:TodoController',
+        map.connect('issue_autocomplete', '/api/2/issue/autocomplete',
+                    controller='ckanext.issues.controller:IssueController',
                     action='autocomplete')
-        map.connect('todo_page', '/todo',
-                    controller='ckanext.todo.controller:TodoController',
-                    action='todo_page')
+        map.connect('issue_page', '/issue',
+                    controller='ckanext.issues.controller:IssueController',
+                    action='issue_page')
         return map
 
     def filter(self, stream):
@@ -101,15 +101,15 @@ class TodoPlugin(SingletonPlugin):
         """
         routes = request.environ.get('pylons.routes_dict')
 
-        # add a 'Todo' link to the menu bar
+        # add a 'Issue' link to the menu bar
         menu_data = {'href': 
-            h.link_to("Todo", h.url_for('todo_page'), 
-                class_ = ('active' if c.controller == 'ckanext.todo.controller:TodoController' else ''))}
+            h.link_to("Issue", h.url_for('issue_page'), 
+                class_ = ('active' if c.controller == 'ckanext.issues.controller:IssueController' else ''))}
 
         stream = stream | Transformer('body//div[@id="mainmenu"]')\
             .append(HTML(html.MENU_CODE % menu_data))
 
-        # if this is the read action of a package, show todo info
+        # if this is the read action of a package, show issue info
         if(routes.get('controller') == 'package' and
            routes.get('action') == 'read' and 
            c.pkg.id):
@@ -118,9 +118,9 @@ class TodoPlugin(SingletonPlugin):
                     'user_id': user_id}
             # add CSS style
             stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
-            # add jquery and todo.js links
+            # add jquery and issue.js links
             stream = stream | Transformer('body').append(HTML(html.BODY_CODE % data))
-            # add todo subsection
+            # add issue subsection
             stream = stream | Transformer('//div[@id="dataset"]')\
-                .append(HTML(html.TODO_CODE))
+                .append(HTML(html.ISSUE_CODE))
         return stream

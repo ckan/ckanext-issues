@@ -1,32 +1,32 @@
 /* Todo section of package pages */
-span#todo-count { display: block; }
-#todo-error { 
+span#issue-count { display: block; }
+#issue-error { 
     margin-top: 1em;
     margin-bottom: 1em;
     color: #b00; 
 }
-#todo-list { margin-top: 1em; }
-#todo-add { 
+#issue-list { margin-top: 1em; }
+#issue-add { 
     display: none;
     margin-top: 1em;
 }
-#todo-add label {
+#issue-add label {
     float: left;
     width: 20%;
 }
-#todo-add input, textarea {
+#issue-add input, textarea {
     width: 79.5%;
     padding: 0;
     margin: 0;
 }
-#todo-add-button { margin-left: 20%; }
-#todo-add textarea { height: 100px; }
-#todo-add div { margin-bottom: 0.75em; }
-.todo-item td {
+#issue-add-button { margin-left: 20%; }
+#issue-add textarea { height: 100px; }
+#issue-add div { margin-bottom: 0.75em; }
+.issue-item td {
     background-color: #fff;
     border: none;
 }
-td.todo-list-title {
+td.issue-list-title {
     width: 150px;
 }
 
@@ -46,15 +46,15 @@ td.todo-list-title {
 }
 
 /* Todo page */
-#todo-page ul {
+#issue-page ul {
     list-style-type: none;
     margin-left: 0;
 }
 
-#todo-categories { padding-top: 1em; }
+#issue-categories { padding-top: 1em; }
 
-.todo-category {
+.issue-category {
     padding-top: 1em;
     border-top: 1px solid #ECECEC;
 }
-.todo-category li { margin-bottom: 1em; }
+.issue-category li { margin-bottom: 1em; }

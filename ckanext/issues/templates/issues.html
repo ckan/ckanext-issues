@@ -3,44 +3,44 @@
       xmlns:xi="http://www.w3.org/2001/XInclude"
       py:strip="">
 
-  <py:def function="page_title">Todo List</py:def>
+  <py:def function="page_title">Issue List</py:def>
   <link rel="stylesheet"  type="text/css" media="screen, print"
-        href="/ckanext-todo/css/main.css"
+        href="/ckanext-issues/css/main.css"
         py:def="optional_head()" />
 
   <div py:match="content" class="package">
     <h2 class="head">Todo List</h2>
 
-    <div id="todo-page" py:choose="">
+    <div id="issue-page" py:choose="">
         <span py:when="not c.categories">
-            There are currently no todo items.
+            There are currently no issues.
         </span>
 
         <div py:otherwise="">
-            <ul id="todo-categories">
+            <ul id="issue-categories">
                 <py:for each="category in c.categories">
                 <li><a href="#${category.name}">${category.name}</a> 
-                    (${category.todo_count})
+                    (${category.issue_count})
                 </li> 
                 </py:for>
             </ul>
 
             <py:for each="category in c.categories">
-            <div class="todo-category">
+            <div class="issue-category">
                 <h4 id="${category.name}">${category.name}</h4>
                 <ul>
-                    <py:for each="todo in category.todo">
+                    <py:for each="issue in category.issue">
                     <li>
                         <div py:choose="">Package: 
-                            <span py:when="not todo.package_id">None</span>
+                            <span py:when="not issue.package_id">None</span>
                             <span py:otherwise="">
-                                ${h.link_to(c.pkg_names[todo.package_id],
+                                ${h.link_to(c.pkg_names[issue.package_id],
                                             h.url_for(controller='package', action='read',
-                                                      id = c.pkg_names[todo.package_id]) + "#todo")}
+                                                      id = c.pkg_names[issue.package_id]) + "#issue")}
                             </span>
                         </div>
-                        <div>Description: ${todo.description}</div>
-                        <div>Created: ${todo.created.strftime('%d %h %Y')}</div>
+                        <div>Description: ${issue.description}</div>
+                        <div>Created: ${issue.created.strftime('%d %h %Y')}</div>
                     </li> 
                     </py:for>
                 </ul>

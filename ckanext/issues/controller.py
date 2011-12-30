@@ -1,5 +1,5 @@
 """
-CKAN Todo Extension
+CKAN Issues Extension
 """
 from logging import getLogger
 log = getLogger(__name__)
@@ -10,7 +10,7 @@ from pylons.decorators import jsonify
 from pylons import request, tmpl_context as c
 from ckan.lib.base import BaseController, response, render, abort
 from ckan.lib.search import query_for
-from ckanext.todo import model
+from ckanext.issues import model
 import re
 
 AUTOCOMPLETE_LIMIT = 10
@@ -32,14 +32,14 @@ def get_user_full_name(user_id):
         .filter(model.User.id == user_id)
     return query.first().display_name if query.first() else None
 
-class TodoController(BaseController):
+class IssueController(BaseController):
     """
-    The CKANEXT-Todo Controller.
+    The CKANEXT-Issues Controller.
     """
     @jsonify
     def get(self):
         """
-        Return a list of todo items, sorted with the most recently created items
+        Return a list of issues items, sorted with the most recently created items
         first.
 
         The list can be limited by specifying the following parameters:
@@ -48,7 +48,7 @@ class TodoController(BaseController):
         * resolved: 0 or 1, where 0 is not resolved and 1 is resolved
         * limit: a positive integer, sets the maximum number of items to be returned.
         """
-        query = model.Session.query(model.Todo).order_by(model.Todo.created.desc())
+        query = model.Session.query(model.Issue).order_by(model.Issue.created.desc())
 
         # check for a package ID or name in the request
         package_id = request.params.get('package')
@@ -59,16 +59,16 @@ class TodoController(BaseController):
             if not package:
                 response.status_int = 404
                 return {'error': "Package not found"}
-            query = query.filter(model.Todo.package_id == package.id)
+            query = query.filter(model.Issue.package_id == package.id)
 
         # check for a category
         category_name_or_id = request.params.get('category')
         if category_name_or_id:
-            category = model.TodoCategory.get(category_name_or_id)
+            category = model.IssueCategory.get(category_name_or_id)
             if not category:
                 response.status_int = 404
                 return {'error': "Category not found"}
-            query = query.filter(model.Todo.todo_category_id == category.id)
+            query = query.filter(model.Issue.issue_category_id == category.id)
 
         # check for resolved status
         resolved = request.params.get('resolved')
@@ -82,9 +82,9 @@ class TodoController(BaseController):
                 response.status_int = 400
                 return {'error': "Resolved can only be 0 or 1"}
             if resolved:
-                query = query.filter(model.Todo.resolved != None)
+                query = query.filter(model.Issue.resolved != None)
             else:
-                query = query.filter(model.Todo.resolved == None)
+                query = query.filter(model.Issue.resolved == None)
 
         # check for a query limit
         limit = request.params.get('limit')
@@ -99,19 +99,19 @@ class TodoController(BaseController):
                 return {'error': "Limit value is not a positive integer"}
             query = query.limit(limit)
 
-        return [{'id': todo.id,
-                 'category': model.TodoCategory.get(todo.todo_category_id).name,
-                 'description': todo.description,
-                 'creator': get_user_full_name(todo.creator),
-                 'created': todo.created.strftime('%d %h %Y')}
-                for todo in query if query]
+        return [{'id': issues.id,
+                 'category': model.IssueCategory.get(issues.issue_category_id).name,
+                 'description': issues.description,
+                 'creator': get_user_full_name(issues.creator),
+                 'created': issues.created.strftime('%d %h %Y')}
+                for issues in query if query]
 
     @jsonify
     def post(self):
         """
-        Add a new todo item.
+        Add a new issues item.
 
-        Todo items must have a category, description and a creator. Other fields
+        Issue items must have a category, description and a creator. Other fields
         are optional.
         """
         # check for a category name
@@ -138,7 +138,7 @@ class TodoController(BaseController):
         creator = request.params.get('creator')
         if not creator:
             response.status_int = 400
-            return {'msg': "Please enter a creator for this todo item"}
+            return {'msg': "Please enter a creator for this issues item"}
 
         # check that creator matches the current user
         current_user = model.User.get(request.environ.get('REMOTE_USER'))
@@ -162,10 +162,10 @@ class TodoController(BaseController):
         session = model.meta.Session()
 
         # if category doesn't already exist, create it
-        category = model.TodoCategory.get(category_name)
+        category = model.IssueCategory.get(category_name)
         if not category:
             try:
-                category = model.TodoCategory(unicode(category_name))
+                category = model.IssueCategory(unicode(category_name))
                 session.add(category)
                 session.commit()
             except Exception as e:
@@ -176,7 +176,7 @@ class TodoController(BaseController):
 
         # add new item to database
         try:
-            t = model.Todo(category.id, description, creator)
+            t = model.Issue(category.id, description, creator)
             t.package_id = package.id if package else None
             session.add(t)
             session.commit()
@@ -184,26 +184,26 @@ class TodoController(BaseController):
             log.warn("Database Error: " + str(e))
             session.rollback()
             response.status_int = 500
-            return {'msg': "Could not add todo item to database"}
+            return {'msg': "Could not add issues item to database"}
 
         return {}
 
     @jsonify
     def resolve(self):
         """
-        Resolve a todo item.
+        Resolve a issues item.
         """
-        # check for a todo ID
-        todo_id = request.params.get('todo_id')
-        if not todo_id:
+        # check for a issues ID
+        issue_id = request.params.get('issue_id')
+        if not issue_id:
             response.status_int = 400
-            return {'error': "No todo ID given"}
+            return {'error': "No issues ID given"}
 
-        # make sure todo ID is valid
-        todo = model.Todo.get(todo_id)
-        if not todo:
+        # make sure issues ID is valid
+        issues = model.Issue.get(issue_id)
+        if not issues:
             response.status_int = 400
-            return {'error': "Invalid todo ID"}
+            return {'error': "Invalid issues ID"}
 
         # check for a resolver
         resolver = request.params.get('resolver')
@@ -223,28 +223,28 @@ class TodoController(BaseController):
         # update database
         session = model.meta.Session()
         try:
-            todo.resolved = model.datetime.now()
+            issues.resolved = model.datetime.now()
             session.commit()
         except Exception as e:
             log.warn("Database Error: " + str(e))
             session.rollback()
             response.status_int = 500
-            return {'error': "Could not add todo item to database"}
+            return {'error': "Could not add issues item to database"}
 
         return {}
 
     @jsonify
     def category(self):
         """
-        Return a list of todo all todo categories.
+        Return a list of issues all issues categories.
         """
-        query = model.Session.query(model.TodoCategory)
+        query = model.Session.query(model.IssueCategory)
         return [{'name': category.name} for category in query if query]
 
     @jsonify
     def autocomplete(self):
         """
-        Todo autocomplete API
+        Issue autocomplete API
         """
         # Get the "term" (what the user has typed so far in the input box) from
         # jQuery UI
@@ -252,36 +252,36 @@ class TodoController(BaseController):
 
         if term:
             # Make a list of categories that match the term and return it
-            query = model.TodoCategory.search(term)
+            query = model.IssueCategory.search(term)
             category_names = [cat.name for cat in query]
             return category_names[:AUTOCOMPLETE_LIMIT]
         else:
             # No categories match what the user has typed.
             return []
 
-    def todo_page(self):
+    def issue_page(self):
         """
-        Display a page containing a list of all todo items, sorted by category.
+        Display a page containing a list of all issues items, sorted by category.
         """
         # categories
-        categories = model.Session.query(func.count(model.Todo.id).label('todo_count'), 
-                                         model.Todo.todo_category_id)\
-            .filter(model.Todo.resolved == None)\
-            .group_by(model.Todo.todo_category_id)
+        categories = model.Session.query(func.count(model.Issue.id).label('issue_count'), 
+                                         model.Issue.issue_category_id)\
+            .filter(model.Issue.resolved == None)\
+            .group_by(model.Issue.issue_category_id)
         c.categories = []
         c.pkg_names = {}
         for t in categories:
-            tc = model.TodoCategory.get(t.todo_category_id)
-            tc.todo_count = t.todo_count
-            # get todo items for each category
-            tc.todo = model.Session.query(model.Todo).filter(model.Todo.resolved == None)\
-                .filter(model.Todo.todo_category_id == t.todo_category_id)\
-                .order_by(model.Todo.created.desc())
-            for todo in tc.todo:
+            tc = model.IssueCategory.get(t.issue_category_id)
+            tc.issue_count = t.issue_count
+            # get issues items for each category
+            tc.issues = model.Session.query(model.Issue).filter(model.Issue.resolved == None)\
+                .filter(model.Issue.issue_category_id == t.issue_category_id)\
+                .order_by(model.Issue.created.desc())
+            for issues in tc.issues:
                 # get the package name for each package if one exists
-                if todo.package_id:
-                    c.pkg_names[todo.package_id] = model.Package.get(todo.package_id).name
+                if issues.package_id:
+                    c.pkg_names[issues.package_id] = model.Package.get(issues.package_id).name
             c.categories.append(tc)
         # sort into alphabetical order
         c.categories.sort(key = lambda x: x.name)
-        return render("todo.html")
+        return render("issues.html")

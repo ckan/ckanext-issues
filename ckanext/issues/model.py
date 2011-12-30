@@ -1,5 +1,5 @@
 """
-CKAN Todo Extension Data Model
+CKAN Issue Extension Data Model
 """
 import sqlalchemy as sa
 from sqlalchemy.sql.expression import or_
@@ -13,11 +13,11 @@ TODO_CATEGORY_NAME_MAX_LENGTH = 100
 DEFAULT_CATEGORIES = [u"broken-resource-link", u"no-author", u"bad-format", 
                       u"add-description"]
 
-todo_table = Table('todo', meta.metadata,
+issue_table = Table('issue', meta.metadata,
     meta.Column('id', types.Integer, primary_key = True, 
                 autoincrement = True),
-    meta.Column('todo_category_id', types.Integer,
-                ForeignKey('todo_category.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
+    meta.Column('issue_category_id', types.Integer,
+                ForeignKey('issue_category.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
                 nullable = False),
     meta.Column('package_id', types.UnicodeText,
                 ForeignKey('package.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
@@ -32,43 +32,43 @@ todo_table = Table('todo', meta.metadata,
     meta.Column('resolved', DateTime),
     meta.Column('created', DateTime, default = datetime.now, nullable = False))
 
-class Todo(object):
-    """A Todo Object"""
+class Issue(object):
+    """A Issue Object"""
     def __init__(self, category_id, description, creator):
-        self.todo_category_id = category_id
+        self.issue_category_id = category_id
         self.description = description
         self.creator = creator
 
     def __repr__(self):
-        return "<Todo('%s')>" % (self.id)
+        return "<Issue('%s')>" % (self.id)
 
     @classmethod
     def get(cls, reference):
-        """Returns a Todo object referenced by its id."""
+        """Returns a Issue object referenced by its id."""
         return Session.query(cls).filter(cls.id == reference).first()
 
-meta.mapper(Todo, todo_table)
+meta.mapper(Issue, issue_table)
 
 # ------------------------------------------------------------------------------
 
-todo_category_table = Table('todo_category', meta.metadata,
+issue_category_table = Table('issue_category', meta.metadata,
     meta.Column('id', types.Integer, primary_key = True, 
                 autoincrement = True),
     meta.Column('name', types.Unicode(TODO_CATEGORY_NAME_MAX_LENGTH),
                 nullable=False, unique=True),
     meta.Column('created', DateTime, default = datetime.now, nullable = False))
 
-class TodoCategory(object):
-    """A Todo Category Object"""
+class IssueCategory(object):
+    """A Issue Category Object"""
     def __init__(self, name):
         self.name = name
 
     def __repr__(self):
-        return "<TodoCategory('%s')>" % (self.name)
+        return "<IssueCategory('%s')>" % (self.name)
 
     @classmethod
     def get(cls, reference):
-        """Returns a TodoCategory object referenced by its id or name."""
+        """Returns a IssueCategory object referenced by its id or name."""
         if type(reference) is int:
             # if reference is an integer, get by ID
             return Session.query(cls).filter(cls.id == reference).first()
@@ -78,7 +78,7 @@ class TodoCategory(object):
 
     @classmethod
     def search(cls, querystr, sqlalchemy_query=None):
-        """ Search TodoCategory names """
+        """ Search IssueCategory names """
         if not sqlalchemy_query:
             query = model.Session.query(cls)
         else:
@@ -86,4 +86,4 @@ class TodoCategory(object):
         qstr = '%' + querystr + '%'
         return query.filter(cls.name.ilike(qstr))
 
-meta.mapper(TodoCategory, todo_category_table)
+meta.mapper(IssueCategory, issue_category_table)
