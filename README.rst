@@ -12,13 +12,13 @@ To install the plugin, enter your virtualenv and install the source::
 
     $ pip install git+http://github.com/okfn/ckanext-issues
 
-This will also register a plugin entry point, so you now should be 
+This will also register a plugin entry point, so you now should be
 able to add the following to your CKAN .ini file::
 
-    ckan.plugins = todo
- 
+    ckan.plugins = issues
+
 After you clear your cache and reload the site, the Issues plugin
-and should be available. 
+and should be available.
 
 Tests
 -----
