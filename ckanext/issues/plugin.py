@@ -5,27 +5,19 @@ import os
 from logging import getLogger
 log = getLogger(__name__)
 
-from genshi.input import HTML
-from genshi.filters import Transformer
-from pylons import request, tmpl_context as c
-from ckan.lib.base import h
-from ckan.plugins import SingletonPlugin, implements
-from ckan.plugins.interfaces import (IConfigurable, IRoutes, 
-                                     IGenshiStreamFilter, IConfigurer)
+import ckan.plugins as p
+from ckan.plugins import implements, toolkit
 
 from ckanext.issues import model
 from ckanext.issues import controller
-from ckanext.issues import html
 
-
-class IssuesPlugin(SingletonPlugin):
+class IssuesPlugin(p.SingletonPlugin):
     """
     CKAN Issues Extension
     """
-    implements(IConfigurable)
-    implements(IConfigurer, inherit=True)
-    implements(IRoutes, inherit=True)
-    implements(IGenshiStreamFilter)
+    implements(p.IConfigurable)
+    implements(p.IConfigurer, inherit=True)
+    implements(p.IRoutes, inherit=True)
 
     def update_config(self, config):
         """
@@ -35,19 +27,17 @@ class IssuesPlugin(SingletonPlugin):
         and add the templates folder to CKAN's list of template
         folders.
         """
-        # add public folder to the CKAN's list of public folders
-        here = os.path.dirname(__file__)
-        public_dir = os.path.join(here, 'public')
-        if config.get('extra_public_paths'):
-            config['extra_public_paths'] += ',' + public_dir
-        else:
-            config['extra_public_paths'] = public_dir
-        # add template folder to the CKAN's list of template folders
-        template_dir = os.path.join(here, 'templates')
-        if config.get('extra_template_paths'):
-            config['extra_template_paths'] += ',' + template_dir
-        else:
-            config['extra_template_paths'] = template_dir
+        toolkit.add_template_directory(config, 'templates')
+        toolkit.add_public_directory(config, 'public')
+
+    def get_helpers(self):
+        """
+        A dictionary of extra helpers that will be available to provide
+        ga report info to templates.
+        """
+        return {
+            'issues_installed': lambda: True,
+        }
 
     def configure(self, config):
         """
@@ -60,50 +50,52 @@ class IssuesPlugin(SingletonPlugin):
         model.issue_table.create(checkfirst=True)
         # add default categories if they don't already exist
         session = model.meta.Session()
-        for category_name in model.DEFAULT_CATEGORIES:
+        for category_name,category_desc in model.DEFAULT_CATEGORIES.iteritems():
             category = model.IssueCategory.get(category_name)
             if not category:
                 category = model.IssueCategory(category_name)
+                category.description = category_desc
                 session.add(category)
         session.commit()
-            
+
     def before_map(self, map):
         """
         Expose the issue API.
         """
-        map.connect('issue', '/api/2/issue',
-                    controller='ckanext.issues.controller:IssueController',
-                    action='get', 
-                    conditions=dict(method=['GET']))
-        map.connect('issue_post', '/api/2/issue',
-                    controller='ckanext.issues.controller:IssueController',
-                    action='post', 
-                    conditions=dict(method=['POST']))
-        map.connect('issue_resolve', '/api/2/issue/resolve',
-                    controller='ckanext.issues.controller:IssueController',
-                    action='resolve', 
-                    conditions=dict(method=['POST']))
-        map.connect('issue_category', '/api/2/issue/category',
-                    controller='ckanext.issues.controller:IssueController',
-                    action='category', 
-                    conditions=dict(method=['GET']))
-        map.connect('issue_autocomplete', '/api/2/issue/autocomplete',
-                    controller='ckanext.issues.controller:IssueController',
-                    action='autocomplete')
-        map.connect('issue_page', '/issue',
-                    controller='ckanext.issues.controller:IssueController',
-                    action='issue_page')
+        from ckan.config.routing import SubMapper
+
+        with SubMapper(map, controller='ckanext.issues.controller:IssueAPIController', path_prefix='/api/2') as m:
+            m.connect('issue', '/issue',
+                        action='get',
+                        conditions=dict(method=['GET']))
+            m.connect('issue_post', '/issue',
+                        action='post',
+                        conditions=dict(method=['POST']))
+            m.connect('issue_resolve', '/issue/resolve',
+                        action='resolve',
+                        conditions=dict(method=['POST']))
+            m.connect('issue_category', '/issue/category',
+                        action='category',
+                        conditions=dict(method=['GET']))
+            m.connect('issue_autocomplete', '/issue/autocomplete',
+                        action='autocomplete')
+
+        with SubMapper(map, controller='ckanext.issues.controller:IssueController') as m:
+            m.connect('issue_page', '/issues/:package_id', action='issue_page')
+            m.connect('add_issue_with_resource', '/issues/add/:package_id/:resource_id', action='add')
+            m.connect('add_issue', '/issues/add/:package_id', action='add')
+            m.connect('all_issues_page', '/issues', action='all_issues_page')
+
         return map
 
-    def filter(self, stream):
+    #def filter(self, stream):
         """
         Implements IGenshiStreamFilter.
-        """
         routes = request.environ.get('pylons.routes_dict')
 
         # add a 'Issue' link to the menu bar
-        menu_data = {'href': 
-            h.link_to("Issue", h.url_for('issue_page'), 
+        menu_data = {'href':
+            h.link_to("Issue", h.url_for('issue_page'),
                 class_ = ('active' if c.controller == 'ckanext.issues.controller:IssueController' else ''))}
 
         stream = stream | Transformer('body//div[@id="mainmenu"]')\
@@ -111,7 +103,7 @@ class IssuesPlugin(SingletonPlugin):
 
         # if this is the read action of a package, show issue info
         if(routes.get('controller') == 'package' and
-           routes.get('action') == 'read' and 
+           routes.get('action') == 'read' and
            c.pkg.id):
             user_id = controller.get_user_id(request.environ.get('REMOTE_USER')) or ""
             data = {'package': c.pkg.name,
@@ -124,3 +116,5 @@ class IssuesPlugin(SingletonPlugin):
             stream = stream | Transformer('//div[@id="dataset"]')\
                 .append(HTML(html.ISSUE_CODE))
         return stream
+        """
+        #pass

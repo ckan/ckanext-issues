@@ -1,12 +1,12 @@
-/* Todo section of package pages */
+/* Issue section of package pages */
 span#issue-count { display: block; }
-#issue-error { 
+#issue-error {
     margin-top: 1em;
     margin-bottom: 1em;
-    color: #b00; 
+    color: #b00;
 }
 #issue-list { margin-top: 1em; }
-#issue-add { 
+#issue-add {
     display: none;
     margin-top: 1em;
 }
@@ -45,7 +45,7 @@ td.issue-list-title {
     margin: 0 0.2em;
 }
 
-/* Todo page */
+/* Issue page */
 #issue-page ul {
     list-style-type: none;
     margin-left: 0;

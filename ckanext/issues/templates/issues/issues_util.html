@@ -1,0 +1,13 @@
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  xmlns:py="http://genshi.edgewall.org/"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  py:strip=""
+  >
+
+<a py:def="add_issue_button(package,extra_style)" style='${extra_style}' href="${h.url_for('issue_page',package_id=package.name)}" class="btn btn-danger">Report an issue</a>
+
+<a py:def="add_resource_issue_button(package,resource,extra_style)" style='${extra_style}' href="${h.url_for('issue_page',package_id=package.name)}?resource=${resource.id}" class="btn btn-danger">Report an issue</a>
+
+</html>

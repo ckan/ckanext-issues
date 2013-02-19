@@ -1,0 +1,21 @@
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  xmlns:py="http://genshi.edgewall.org/"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  py:strip=""
+  >
+
+<py:match path="primarysidebar">
+
+  <div id="" class="widget-container">
+    <h3>Issues</h3>
+    <p>If you find an issue with a dataset, but can't find it in the list here,
+       click below to add a new one</p>
+
+    <a py:if="not c.resource_id" href="${h.url_for('add_issue', package_id=c.pkg.name)}">Add a new issue</a>
+    <a py:if="c.resource_id" href="${h.url_for('add_issue_with_resource', package_id=c.pkg.name, resource_id=c.resource_id)}">Add a new issue</a>
+  </div>
+
+</py:match>
+</html>

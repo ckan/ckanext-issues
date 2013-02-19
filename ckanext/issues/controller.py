@@ -8,8 +8,9 @@ from sqlalchemy import func
 from pylons.i18n import _
 from pylons.decorators import jsonify
 from pylons import request, tmpl_context as c
-from ckan.lib.base import BaseController, response, render, abort
+from ckan.lib.base import BaseController, response, render, abort, redirect
 from ckan.lib.search import query_for
+import ckan.lib.helpers as h
 from ckanext.issues import model
 import re
 
@@ -24,18 +25,9 @@ def get_user_id(user_name):
         .filter(model.User.name == user_name)
     return query.first().id if query.first() else None
 
-def get_user_full_name(user_id):
-    """
-    Return the user name of user_id, or None if no such user exists
-    """
-    query = model.Session.query(model.User)\
-        .filter(model.User.id == user_id)
-    return query.first().display_name if query.first() else None
 
-class IssueController(BaseController):
-    """
-    The CKANEXT-Issues Controller.
-    """
+class IssueAPIController(BaseController):
+
     @jsonify
     def get(self):
         """
@@ -44,7 +36,7 @@ class IssueController(BaseController):
 
         The list can be limited by specifying the following parameters:
         * package: a package ID or name
-        * category: a category ID or name 
+        * category: a category ID or name
         * resolved: 0 or 1, where 0 is not resolved and 1 is resolved
         * limit: a positive integer, sets the maximum number of items to be returned.
         """
@@ -53,7 +45,7 @@ class IssueController(BaseController):
         # check for a package ID or name in the request
         package_id = request.params.get('package')
         if package_id:
-            # if a package was specified, make sure that it is 
+            # if a package was specified, make sure that it is
             # a valid package ID/name
             package =  model.Package.get(package_id)
             if not package:
@@ -102,8 +94,12 @@ class IssueController(BaseController):
         return [{'id': issues.id,
                  'category': model.IssueCategory.get(issues.issue_category_id).name,
                  'description': issues.description,
-                 'creator': get_user_full_name(issues.creator),
-                 'created': issues.created.strftime('%d %h %Y')}
+                 'creator': issues.reporter.name,
+                 'created': issues.created.strftime('%d %h %Y'),
+                 'package': issues.package.name if issues.package else "",
+                 "resolved_by": issues.resolver or "",
+                 "resolved_date": issues.resolved.strftime('%d %h %Y') if issues.resolved else "",
+                 "resource": issues.resource.id if issues.resource else ""}
                 for issues in query if query]
 
     @jsonify
@@ -152,7 +148,7 @@ class IssueController(BaseController):
         # check for a package ID or name in the request
         package_name = request.params.get('package_name')
         if package_name:
-            # if a package was specified, make sure that it is 
+            # if a package was specified, make sure that it is
             # a valid package ID/name
             package =  model.Package.get(package_name)
             if not package:
@@ -259,29 +255,87 @@ class IssueController(BaseController):
             # No categories match what the user has typed.
             return []
 
-    def issue_page(self):
+class IssueController(BaseController):
+    """
+    The CKANEXT-Issues Controller.
+    """
+
+    def add(self, package_id, resource_id=None):
+        c.pkg = model.Package.get(package_id)
+        c.resource = model.Resource.get(resource_id) if resource_id else None
+        c.error, c.status = "", ""
+        c.description = ""
+        c.categories = model.Session.query(model.IssueCategory).order_by('description').all()
+        c.category = ""
+
+        if request.method == 'POST':
+            c.category = request.POST.get('category_name')
+            c.description = request.POST.get('description')
+
+            if not c.category and not c.description:
+                c.error = "Please enter a category and a description"
+            elif not c.category:
+                c.error = "Please choose a category for this issue"
+            elif not c.description:
+                c.error = "Please provide a description of the issue"
+
+            # Do we have a resource?
+
+            if not c.error:
+                user = model.User.get(c.user)
+                category = model.Session.query(model.IssueCategory)\
+                    .filter(model.IssueCategory.name==c.category).first()
+                t = model.Issue(category_id=category.id,
+                                description=c.description,
+                                creator=user.id)
+                t.package_id = c.pkg.id
+                if c.resource:
+                    t.resource_id = c.resource.id
+                model.Session.add(t)
+                model.Session.commit()
+
+                h.flash_success("Your issue has been registered, thank you for the feedback")
+                redirect(h.url_for('issue_page', package_id=c.pkg.name))
+
+        return render("issues/add_issue.html")
+
+    def issue_page(self, package_id):
         """
         Display a page containing a list of all issues items, sorted by category.
         """
         # categories
-        categories = model.Session.query(func.count(model.Issue.id).label('issue_count'), 
+        c.pkg = model.Package.get(package_id)
+        c.issues = model.Session.query(model.Issue)\
+            .filter(model.Issue.package_id==c.pkg.id)\
+            .order_by(model.Issue.created.desc())
+        c.resource_id = request.GET.get('resource', "")
+        return render("issues/issues.html")
+
+    def all_issues_page(self):
+        """
+        Display a page containing a list of all issues items, sorted by category.
+        """
+        # categories
+        categories = model.Session.query(func.count(model.Issue.id).label('issue_count'),
                                          model.Issue.issue_category_id)\
             .filter(model.Issue.resolved == None)\
             .group_by(model.Issue.issue_category_id)
+
         c.categories = []
         c.pkg_names = {}
         for t in categories:
             tc = model.IssueCategory.get(t.issue_category_id)
             tc.issue_count = t.issue_count
+
             # get issues items for each category
             tc.issues = model.Session.query(model.Issue).filter(model.Issue.resolved == None)\
-                .filter(model.Issue.issue_category_id == t.issue_category_id)\
+                .filter(model.Issue.issue_category_id == t.issue_category_id) \
                 .order_by(model.Issue.created.desc())
+
             for issues in tc.issues:
-                # get the package name for each package if one exists
                 if issues.package_id:
                     c.pkg_names[issues.package_id] = model.Package.get(issues.package_id).name
             c.categories.append(tc)
         # sort into alphabetical order
         c.categories.sort(key = lambda x: x.name)
-        return render("issues.html")
+        return render("issues/all_issues.html")
