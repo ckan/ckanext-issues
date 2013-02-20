@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from sqlalchemy.sql.expression import or_
 from sqlalchemy.orm import relation, backref
 from ckan import model
-from ckan.model import meta, User, Package, Session, Resource
+from ckan.model import meta, User, Package, Session, Resource, Group
 from ckan.model.meta import types, Table, ForeignKey, DateTime
 from ckan.model.types import make_uuid
 from datetime import datetime
@@ -14,6 +14,7 @@ ISSUE_CATEGORY_NAME_MAX_LENGTH = 100
 DEFAULT_CATEGORIES = {u"broken-resource-link": "Broken resource link",
                       u"no-author": "No author specified",
                       u"bad-format": "Data is in incorrect format",
+                      u"no-resources": "There are no resources in the dataset",
                       u"add-description": "There is no description of the data",
                       u"other": "Other"}
 

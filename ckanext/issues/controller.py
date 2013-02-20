@@ -1,6 +1,7 @@
 """
 CKAN Issues Extension
 """
+import collections
 from logging import getLogger
 log = getLogger(__name__)
 
@@ -318,6 +319,33 @@ class IssueController(BaseController):
             .order_by(model.Issue.created.desc())
         c.resource_id = request.GET.get('resource', "")
         return render("issues/issues.html")
+
+    def publisher_issue_page(self, publisher_id):
+        """
+        Display a page containing a list of all issues items for a given
+        publisher
+        """
+        c.publisher = model.Group.get(publisher_id)
+
+        q = """
+            SELECT table_id
+            FROM member
+            WHERE group_id='{gid}'
+              AND table_name='package'
+              AND state='active'
+        """.format(gid=c.publisher.id)
+        results = model.Session.execute(q)
+
+        package_ids = [x['table_id'] for x in results]
+        issues = model.Session.query(model.Issue)\
+            .filter(model.Issue.package_id.in_(package_ids))\
+            .order_by(model.Issue.created.desc())
+
+        c.results = collections.defaultdict(list)
+        for issue in issues:
+            c.results[issue.package].append(issue)
+        c.package_set = sorted(set(c.results.keys()), key=lambda x: x.title)
+        return render("issues/publisher_issues.html")
 
     def all_issues_page(self):
         """
