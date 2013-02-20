@@ -1,5 +1,9 @@
-
+import ckanext.issues.model as issue_model
 import ckan.model as model
+
+def issue_count(package):
+  return model.Session.query(issue_model.Issue)\
+    .filter(issue_model.Issue.package_id==package.id).count()
 
 def resolved_count_for_publisher(publisher):
     q = """

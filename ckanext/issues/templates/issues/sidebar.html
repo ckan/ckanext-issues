@@ -10,11 +10,15 @@
 
   <div id="" class="widget-container">
     <h3>Issues</h3>
-    <p>If you find an issue with a dataset, but can't find it in the list here,
-       click below to add a new one</p>
+    <p>Issues reported against the dataset, or attached resources are described here. <py:if test="not c.user">You must be logged in to report a new issue</py:if></p>
+    <p py:if="c.user">
+      If you find an issue with a dataset, but can't find it in the list here,
+      click below to add a new one</p>
 
-    <a py:if="not c.resource_id" href="${h.url_for('add_issue', package_id=c.pkg.name)}">Add a new issue</a>
-    <a py:if="c.resource_id" href="${h.url_for('add_issue_with_resource', package_id=c.pkg.name, resource_id=c.resource_id)}">Add a new issue</a>
+    <py:if test="c.user">
+      <a py:if="not c.resource_id" href="${h.url_for('add_issue', package_id=c.pkg.name)}">Add a new issue</a>
+      <a py:if="c.resource_id" href="${h.url_for('add_issue_with_resource', package_id=c.pkg.name, resource_id=c.resource_id)}">Add a new issue</a>
+    </py:if>
   </div>
 
 </py:match>

@@ -11,7 +11,15 @@
   <xi:include href="sidebar.html"/>
 
   <div py:match="content" class="package">
-    <h2 class="head">Add a new issue to ${c.pkg.title}</h2>
+  <h1 class="head">Add new issue <small>${c.pkg.title}</small></h1>
+
+    <div id="minornavigation">
+      <div id="minornavigation-bg-left">
+      <div id="minornavigation-bg-right">
+        <minornavigation></minornavigation>
+      </div>
+      </div>
+    </div>
 
     <div id="issue" class="subsection">
         <div py:if="c.error" class="alert alert-danger">
@@ -39,10 +47,10 @@
                 <textarea cols="60" rows="10" class="input-block-level" name="description">${c.description}</textarea>
               </div>
             </div>
-            <div py:if="c.resource" class="control-group">
+            <div py:if="c.resource_name" class="control-group">
               <div class="controls">
                 <label for="resource">Resource:</label>
-                <input type="text" name="resource" class="input-block-level" value="${c.resource.description}" disabled="disabled"/>
+                <input type="text" name="resource" class="input-block-level" value="${c.resource_name}" disabled="disabled"/>
               </div>
             </div>
           <div class="form-actions">

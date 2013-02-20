@@ -261,8 +261,15 @@ class IssueController(BaseController):
     """
 
     def add(self, package_id, resource_id=None):
+        if not c.user:
+            abort(401, "Please login to add a new issue")
+
         c.pkg = model.Package.get(package_id)
-        c.resource = model.Resource.get(resource_id) if resource_id else None
+        c.pkg_dict = c.pkg.as_dict()
+
+        resource = model.Resource.get(resource_id) if resource_id else None
+        c.resource_name = resource.description if resource else ""
+
         c.error, c.status = "", ""
         c.description = ""
         c.categories = model.Session.query(model.IssueCategory).order_by('description').all()
@@ -289,8 +296,8 @@ class IssueController(BaseController):
                                 description=c.description,
                                 creator=user.id)
                 t.package_id = c.pkg.id
-                if c.resource:
-                    t.resource_id = c.resource.id
+                if c.resource_name:
+                    t.resource_id = resource.id
                 model.Session.add(t)
                 model.Session.commit()
 
@@ -305,6 +312,7 @@ class IssueController(BaseController):
         """
         # categories
         c.pkg = model.Package.get(package_id)
+        c.pkg_dict = c.pkg.as_dict()
         c.issues = model.Session.query(model.Issue)\
             .filter(model.Issue.package_id==c.pkg.id)\
             .order_by(model.Issue.created.desc())

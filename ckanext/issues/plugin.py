@@ -8,6 +8,7 @@ log = getLogger(__name__)
 import ckan.plugins as p
 from ckan.plugins import implements, toolkit
 
+from ckanext.issues.lib import util
 from ckanext.issues import model
 from ckanext.issues import controller
 
@@ -18,6 +19,7 @@ class IssuesPlugin(p.SingletonPlugin):
     implements(p.IConfigurable)
     implements(p.IConfigurer, inherit=True)
     implements(p.IRoutes, inherit=True)
+    implements(p.ITemplateHelpers, inherit=True)
 
     def update_config(self, config):
         """
@@ -37,6 +39,7 @@ class IssuesPlugin(p.SingletonPlugin):
         """
         return {
             'issues_installed': lambda: True,
+            'issue_count': util.issue_count,
         }
 
     def configure(self, config):
@@ -81,40 +84,9 @@ class IssuesPlugin(p.SingletonPlugin):
                         action='autocomplete')
 
         with SubMapper(map, controller='ckanext.issues.controller:IssueController') as m:
-            m.connect('issue_page', '/issues/:package_id', action='issue_page')
-            m.connect('add_issue_with_resource', '/issues/add/:package_id/:resource_id', action='add')
-            m.connect('add_issue', '/issues/add/:package_id', action='add')
-            m.connect('all_issues_page', '/issues', action='all_issues_page')
+            m.connect('issue_page', '/dataset/:package_id/issues/', action='issue_page')
+            m.connect('add_issue', '/dataset/:package_id/issues/add/', action='add')
+            m.connect('add_issue_with_resource', '/dataset/:package_id/issues/add/:resource_id', action='add')
+            m.connect('all_issues_page', '/dataset/issues/all', action='all_issues_page')
 
         return map
-
-    #def filter(self, stream):
-        """
-        Implements IGenshiStreamFilter.
-        routes = request.environ.get('pylons.routes_dict')
-
-        # add a 'Issue' link to the menu bar
-        menu_data = {'href':
-            h.link_to("Issue", h.url_for('issue_page'),
-                class_ = ('active' if c.controller == 'ckanext.issues.controller:IssueController' else ''))}
-
-        stream = stream | Transformer('body//div[@id="mainmenu"]')\
-            .append(HTML(html.MENU_CODE % menu_data))
-
-        # if this is the read action of a package, show issue info
-        if(routes.get('controller') == 'package' and
-           routes.get('action') == 'read' and
-           c.pkg.id):
-            user_id = controller.get_user_id(request.environ.get('REMOTE_USER')) or ""
-            data = {'package': c.pkg.name,
-                    'user_id': user_id}
-            # add CSS style
-            stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
-            # add jquery and issue.js links
-            stream = stream | Transformer('body').append(HTML(html.BODY_CODE % data))
-            # add issue subsection
-            stream = stream | Transformer('//div[@id="dataset"]')\
-                .append(HTML(html.ISSUE_CODE))
-        return stream
-        """
-        #pass

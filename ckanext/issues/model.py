@@ -14,7 +14,8 @@ ISSUE_CATEGORY_NAME_MAX_LENGTH = 100
 DEFAULT_CATEGORIES = {u"broken-resource-link": "Broken resource link",
                       u"no-author": "No author specified",
                       u"bad-format": "Data is in incorrect format",
-                      u"add-description": "There is no description of the data"}
+                      u"add-description": "There is no description of the data",
+                      u"other": "Other"}
 
 
 # ------------------------------------------------------------------------------

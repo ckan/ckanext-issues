@@ -10,8 +10,19 @@
 
   <xi:include href="sidebar.html"/>
 
+
   <div py:match="content" class="package">
-    <h2 class="head">Issue List <small>${c.pkg.title}</small></h2>
+    <h1 class="head">Issue List <small>${c.pkg.title}</small></h1>
+
+    <div id="minornavigation">
+      <div id="minornavigation-bg-left">
+      <div id="minornavigation-bg-right">
+        <minornavigation></minornavigation>
+      </div>
+      </div>
+    </div>
+
+
 
     <div id="issue-page" py:choose="">
       <span py:when="not c.issues">
