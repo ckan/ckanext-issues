@@ -23,7 +23,7 @@
       </span>
       <div py:when="c.results">
         <py:for each="pkg in c.package_set">
-          <h2><a href="${h.url_for(controller='ckanext.dgu.controllers.package:PackageController', action='read', id=pkg.name)}">${pkg.title}</a></h2>
+          <h2><a href="${h.url_for(controller='package', action='read', id=pkg.name)}">${pkg.title}</a></h2>
           <table class="table">
             <thead>
               <tr>

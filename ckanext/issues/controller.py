@@ -8,7 +8,7 @@ log = getLogger(__name__)
 from sqlalchemy import func
 from pylons.i18n import _
 from pylons.decorators import jsonify
-from pylons import request, tmpl_context as c
+from pylons import request, config, tmpl_context as c
 from ckan.lib.base import BaseController, response, render, abort, redirect
 from ckan.lib.search import query_for
 import ckan.lib.helpers as h
@@ -18,13 +18,58 @@ import re
 AUTOCOMPLETE_LIMIT = 10
 VALID_CATEGORY = re.compile(r"[0-9a-z\-\._]+")
 
-def get_user_id(user_name):
-    """
-    Return the ID of user_name, or None if no such user ID exists
-    """
-    query = model.Session.query(model.User)\
-        .filter(model.User.name == user_name)
-    return query.first().id if query.first() else None
+def _notify(issue):
+    # Depending on configuration, and availability of data we
+    # should email the admin and the publisher/
+    notify_admin = config.get("ckanext.issues.notify_admin", False)
+    notify_owner = config.get("ckanext.issues.notify_owner", False)
+    if not notify_admin and not notify_owner:
+        return
+
+    from ckan.lib.mailer import mail_recipient
+    from genshi.template.text import NewTextTemplate
+
+
+    admin_address = config.get('email_to')
+    from_address = config.get('ckanext.issues.from_address', 'admin@localhost.local')
+
+    publisher = issue.package.get_groups('publisher')[0]
+    if 'contact-address' in issue.package.extras:
+        contact_name = issue.package.extras.get('contact-name')
+        contact_address = issue.package.extras.get('contact-email')
+    else:
+        contact_name = publisher.extras.get('contact-name', 'Publisher')
+        contact_address = publisher.extras.get('contact-email')
+
+    # Send to admin if no contact address, and only cc admin if
+    # they are not also in the TO field.
+    to_address = contact_address or admin_address
+    cc_address = admin_address if contact_address else None
+
+    extra_vars = {
+        'issue' : issue,
+        'username': issue.reporter.fullname or issue.reporter.name,
+        'site_url'   : h.url_for(controller='ckanext.issues.controller:IssueController',
+                         action='issue_page', package_id=issue.package.name, qualified=True)
+    }
+    print extra_vars
+    email_msg = render("issues/email/new_issue.txt", extra_vars=extra_vars,
+                       loader_class=NewTextTemplate)
+
+    headers = {}
+    if cc_address:
+        headers['CC'] = cc_address
+
+    try:
+        if not contact_name:
+            contact_name = publisher.title
+
+        mail_recipient(contact_name, to_address,
+                       "Dataset issue",
+                       email_msg, headers=headers)
+    except Exception, e:
+        log.error('Failed to send an email message for issue notification')
+
 
 
 class IssueAPIController(BaseController):
@@ -293,14 +338,16 @@ class IssueController(BaseController):
                 user = model.User.get(c.user)
                 category = model.Session.query(model.IssueCategory)\
                     .filter(model.IssueCategory.name==c.category).first()
-                t = model.Issue(category_id=category.id,
+                issue = model.Issue(category_id=category.id,
                                 description=c.description,
                                 creator=user.id)
-                t.package_id = c.pkg.id
+                issue.package_id = c.pkg.id
                 if c.resource_name:
-                    t.resource_id = resource.id
-                model.Session.add(t)
+                    issue.resource_id = resource.id
+                model.Session.add(issue)
                 model.Session.commit()
+
+                _notify(issue)
 
                 h.flash_success("Your issue has been registered, thank you for the feedback")
                 redirect(h.url_for('issue_page', package_id=c.pkg.name))
