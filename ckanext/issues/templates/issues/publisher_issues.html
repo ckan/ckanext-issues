@@ -10,16 +10,20 @@
 
   <py:def function="body_class">no-sidebar</py:def>
 
+  <?python
+    controller_for_group = c.publisher.type
+    group_read_page = '/%s/%s' % (controller_for_group,c.publisher.name)
+  ?>
 
   <div py:match="content" class="package">
     <h1 class="head">Issue List <small>${c.publisher.title}</small>
-    <a href="${h.url_for(controller='ckanext.dgu.controllers.publisher:PublisherController',action='read', id=c.publisher.name)}" class="pull-right btn btn-primary"> &lt; Return to publisher</a>
+    <a href="${group_read_page}" class="pull-right btn btn-primary"> &lt; Return to publisher</a>
     </h1>
     <hr/>
 
     <div id="issue-page" py:choose="">
       <span py:when="not c.results">
-            There are currently no issues for '<a href="${h.url_for(controller='ckanext.dgu.controllers.publisher:PublisherController', action='read', id=c.publisher.name)}">${c.publisher.title}</a>'
+            There are currently no issues for '<a href="${group_read_page}">${c.publisher.title}</a>'
       </span>
       <div py:when="c.results">
         <py:for each="pkg in c.package_set">
