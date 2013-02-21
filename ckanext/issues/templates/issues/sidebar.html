@@ -16,8 +16,8 @@
       click below to add a new one</p>
 
     <py:if test="c.user">
-      <a py:if="not c.resource_id" href="${h.url_for('add_issue', package_id=c.pkg.name)}">Add a new issue</a>
-      <a py:if="c.resource_id" href="${h.url_for('add_issue_with_resource', package_id=c.pkg.name, resource_id=c.resource_id)}">Add a new issue</a>
+      <a py:if="not c.resource_id" href="${h.url_for('add_issue', package_id=c.pkg.name)}" class="btn">Report a new issue</a>
+      <a py:if="c.resource_id" href="${h.url_for('add_issue_with_resource', package_id=c.pkg.name, resource_id=c.resource_id)}" class="btn">Report a new issue</a>
     </py:if>
   </div>
 

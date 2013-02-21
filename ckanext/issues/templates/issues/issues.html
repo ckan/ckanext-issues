@@ -12,7 +12,7 @@
 
 
   <div py:match="content" class="package">
-    <h1 class="head">Issue List <small>${c.pkg.title}</small></h1>
+    <h1 class="head">Issues <small>${c.pkg.title}</small></h1>
 
     <div id="minornavigation">
       <div id="minornavigation-bg-left">
@@ -25,10 +25,10 @@
 
 
     <div id="issue-page" py:choose="">
-      <span py:when="not c.issues">
-            There are currently no issues for '<a href="${h.url_for(controller='package', action='read', id=c.pkg.name)}">${c.pkg.title}</a>'
-      </span>
-      <div py:when="c.issues">
+      <p py:when="not c.issues.count()">
+            There are currently no issues reported for '<a href="${h.url_for(controller='package', action='read', id=c.pkg.name)}">${c.pkg.title}</a>'
+      </p>
+      <div py:otherwise="c.issues">
           <table class="table">
             <thead>
               <tr>

@@ -53,7 +53,10 @@ class IssuesPlugin(p.SingletonPlugin):
         model.issue_table.create(checkfirst=True)
         # add default categories if they don't already exist
         session = model.meta.Session()
-        for category_name,category_desc in model.DEFAULT_CATEGORIES.iteritems():
+        for category_name, category_desc in model.DEFAULT_CATEGORIES.iteritems():
+            if not category_name:
+                continue
+
             category = model.IssueCategory.get(category_name)
             if not category:
                 category = model.IssueCategory(category_name)
