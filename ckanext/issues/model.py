@@ -104,6 +104,10 @@ meta.mapper(Issue, issue_table, properties={
         backref=backref('raised_issues', cascade='all, delete-orphan'),
         primaryjoin=issue_table.c.creator.__eq__(User.id)
     ),
+    'resolving_user': relation(model.User,
+        backref=backref('resolved_issues', cascade='all, delete-orphan'),
+        primaryjoin=issue_table.c.resolver.__eq__(User.id)
+    ),
     'package': relation(model.Package,
         backref=backref('raised_issues', cascade='all, delete-orphan'),
         primaryjoin=issue_table.c.package_id.__eq__(Package.id)

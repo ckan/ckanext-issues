@@ -242,8 +242,8 @@ class IssueAPIController(BaseController):
             return {'error': "No issues ID given"}
 
         # make sure issues ID is valid
-        issues = model.Issue.get(issue_id)
-        if not issues:
+        issue = model.Issue.get(issue_id)
+        if not issue:
             response.status_int = 400
             return {'error': "Invalid issues ID"}
 
@@ -253,19 +253,18 @@ class IssueAPIController(BaseController):
             response.status_int = 400
             return {'error': "No resolver given"}
 
-        # check that resolver matches the current user
-        current_user = model.User.get(request.environ.get('REMOTE_USER'))
-        if not current_user:
-            response.status_int = 403
-            return {'error': "You are not authorized to make this request"}
-        if not resolver == current_user.id:
+        resolver = model.Session.query(model.User).filter(model.User.name==resolver).first()
+
+        # check that resolver 'owns' the package
+        if not h.check_access('package_update', {'id':issue.package.id}):
             response.status_int = 403
             return {'error': "You are not authorized to make this request"}
 
         # update database
         session = model.meta.Session()
         try:
-            issues.resolved = model.datetime.now()
+            issue.resolved = model.datetime.now()
+            issue.resolver = resolver.id
             session.commit()
         except Exception as e:
             log.warn("Database Error: " + str(e))

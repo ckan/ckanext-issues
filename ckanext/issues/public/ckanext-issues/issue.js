@@ -1,3 +1,16 @@
+// Currently we only need resolve, and so will implement that
+// separately for now.
+function resolve_issue(issue_id, user){
+    data = {issue_id: issue_id,
+            resolver: user};
+    console.log(data)
+
+    $.post("/api/2/issue/resolve", data, function(response){
+        $('#state_' + issue_id).attr('src', '/ckanext-issues/images/tick.png');
+        $('#resolve_btn_' + issue_id).hide()
+    });
+}
+
 // CKAN Issue Extension
 
 var CKANEXT = CKANEXT || {};
