@@ -11,6 +11,7 @@
   </py:def>
   <xi:include href="sidebar.html"/>
 
+  <xi:include href="issues_util.html" />
 
   <div py:match="content" class="package">
     <h1 class="head">Issues <small>${c.pkg.title}</small></h1>
@@ -23,8 +24,6 @@
       </div>
     </div>
 
-
-
     <div id="issue-page" py:choose="">
       <p py:when="not c.issues.count()">
             There are currently no issues reported for '<a href="${h.url_for(controller='package', action='read', id=c.pkg.name)}">${c.pkg.title}</a>'
@@ -35,23 +34,28 @@
               <tr>
                 <th>Category</th>
                 <th>Description</th>
-                <th>Reporter</th>
                 <th>Reported</th>
+                <th>Comments</th>
                 <th>Resolved</th>
               </tr>
             </thead>
             <tbody>
             <py:for each="issue in c.issues">
               <tr class="${'success' if issue.resolved else 'error'}">
-                <td>${issue.category.name}</td>
+                <td>${issue.category.description}</td>
                 <td>${issue.description}
                   <py:if test="issue.resource">
                   <br/><br/>
                     Resource: ${issue.resource.description}
                   </py:if>
                 </td>
-                <td>${issue.reporter.name}</td>
-                <td>${h.render_datetime(issue.created)}</td>
+                <td>by ${issue.reporter.name} on ${h.render_datetime(issue.created)}</td>
+                <td>
+                    <py:if test="issue.comments">
+                      <a href="#" onclick="$('#comments_${issue.id}').toggle();return false;">${len(issue.comments)}</a>
+                    </py:if>
+                    <py:if test="not issue.comments">0</py:if>
+                  </td>
                 <td>
                   <py:if test="issue.resolved">
                     <img id='state_${issue.id}' src="/ckanext-issues/images/tick.png" title="Resolved by ${issue.resolving_user.name} on ${h.render_datetime(issue.resolved)}"/>
@@ -64,6 +68,11 @@
                       <button id='resolve_btn_${issue.id}' class="btn btn-mini" onclick="resolve_issue(${issue.id}, '${c.user}');">Fixed</button>
                     </py:if>
                  </py:if>
+                </td>
+              </tr>
+              <tr id="comments_${issue.id}" style="display:none;">
+                <td colspan="5">
+                  ${show_issue_comments(issue)}
                 </td>
               </tr>
             </py:for>

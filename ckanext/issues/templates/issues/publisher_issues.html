@@ -41,7 +41,7 @@
             <tbody>
             <py:for each="issue in c.results[pkg]">
               <tr class="${'success' if issue.resolved else 'error'}">
-                <td>${issue.category.name}</td>
+                <td>${issue.category.description}</td>
                 <td>${issue.description}
                   <py:if test="issue.resource">
                   <br/><br/>

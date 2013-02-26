@@ -5,6 +5,12 @@ def issue_count(package):
   return model.Session.query(issue_model.Issue)\
     .filter(issue_model.Issue.package_id==package.id).count()
 
+def issue_comment_count(issue):
+  return issue_model.IssueComment.get_comment_count(issue)
+
+def issue_comments(issue):
+  return issue_model.IssueComment.get_comments(issue)
+
 
 def _issue_query(publisher, resolved_required=False, days=None):
     r = "NOT" if resolved_required else ""

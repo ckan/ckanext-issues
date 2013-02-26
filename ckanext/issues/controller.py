@@ -6,6 +6,7 @@ from logging import getLogger
 log = getLogger(__name__)
 
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 from pylons.i18n import _
 from pylons.decorators import jsonify
 from pylons import request, config, tmpl_context as c
@@ -52,7 +53,7 @@ def _notify(issue):
         'site_url'   : h.url_for(controller='ckanext.issues.controller:IssueController',
                          action='issue_page', package_id=issue.package.name, qualified=True)
     }
-    print extra_vars
+
     email_msg = render("issues/email/new_issue.txt", extra_vars=extra_vars,
                        loader_class=NewTextTemplate)
 
@@ -362,6 +363,7 @@ class IssueController(BaseController):
         c.pkg_dict = c.pkg.as_dict()
         c.issues = model.Session.query(model.Issue)\
             .filter(model.Issue.package_id==c.pkg.id)\
+            .options(joinedload(model.Issue.comments))\
             .order_by(model.Issue.created.desc())
         c.resource_id = request.GET.get('resource', "")
         return render("issues/issues.html")

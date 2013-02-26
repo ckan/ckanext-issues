@@ -40,6 +40,7 @@ class IssuesPlugin(p.SingletonPlugin):
         return {
             'issues_installed': lambda: True,
             'issue_count': util.issue_count,
+            'issue_comment_count': util.issue_comment_count,
         }
 
     def configure(self, config):
@@ -51,6 +52,8 @@ class IssuesPlugin(p.SingletonPlugin):
         """
         model.issue_category_table.create(checkfirst=True)
         model.issue_table.create(checkfirst=True)
+        model.issue_comment_table.create(checkfirst=True)
+
         # add default categories if they don't already exist
         session = model.meta.Session()
         for category_name, category_desc in model.DEFAULT_CATEGORIES.iteritems():

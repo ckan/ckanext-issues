@@ -18,7 +18,6 @@ DEFAULT_CATEGORIES = {u"broken-resource-link": "Broken resource link",
                       u"add-description": "There is no description of the data",
                       u"other": "Other"}
 
-
 # ------------------------------------------------------------------------------
 
 issue_category_table = Table('issue_category', meta.metadata,
@@ -116,7 +115,47 @@ meta.mapper(Issue, issue_table, properties={
         backref=backref('raised_issues', cascade='all, delete-orphan'),
         primaryjoin=issue_table.c.resource_id.__eq__(Resource.id)
     ),})
-#Table1.id==Table2.refid
 
 
 meta.mapper(IssueCategory, issue_category_table)
+
+# ------------------------------------------------------------------------------
+
+issue_comment_table = Table('issue_comment', meta.metadata,
+    meta.Column('id', types.Integer, primary_key = True,
+                autoincrement = True),
+    meta.Column('comment', types.Unicode, nullable=False, unique=False),
+    meta.Column('author_id', types.Unicode,
+                ForeignKey('user.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
+                nullable=False, unique=False),
+    meta.Column('issue_id', types.Integer,
+                ForeignKey('issue.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
+                nullable=False, unique=False, index=True),
+    meta.Column('created', DateTime, default = datetime.now, nullable = False))
+
+class IssueComment(object):
+    """A Issue Comment Object"""
+    def __repr__(self):
+        return "<IssueComment('%s')>" % (self.comment)
+
+    @classmethod
+    def get_comments(cls, issue):
+        """ Gets all comments for a given issue """
+        return model.Session.query(cls).\
+            filter(cls.issue_id==issue.id).order_by("-created")
+
+    @classmethod
+    def get_comment_count(cls, issue):
+        """ Gets count of comments for a given issue """
+        return model.Session.query(cls).\
+            filter(cls.issue_id==issue.id).count()
+
+meta.mapper(IssueComment, issue_comment_table, properties={
+    'author': relation(model.User,
+        backref=backref('issue_comments', cascade='all, delete-orphan'),
+        primaryjoin=issue_comment_table.c.author_id.__eq__(User.id)
+    ),
+    'issue': relation(Issue,
+        backref=backref('comments', cascade='all, delete-orphan'),
+        primaryjoin=issue_comment_table.c.issue_id.__eq__(Issue.id)
+    ),})
