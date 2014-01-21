@@ -1,4 +1,17 @@
-// CKAN Todo Extension
+// Currently we only need resolve, and so will implement that
+// separately for now.
+function resolve_issue(issue_id, user){
+    data = {issue_id: issue_id,
+            resolver: user};
+    console.log(data)
+
+    $.post("/api/2/issue/resolve", data, function(response){
+        $('#state_' + issue_id).attr('src', '/ckanext-issues/images/tick.png');
+        $('#resolve_btn_' + issue_id).hide()
+    });
+}
+
+// CKAN Issue Extension
 
 var CKANEXT = CKANEXT || {};
 
@@ -7,17 +20,17 @@ CKANEXT.ISSUES = {
         this.packageName = packageName;
         this.userID = userID;
         this.issueCount = 0;
-        this.showTodo();
+        this.showIssue();
         // autocomplete
         $('.autocomplete-issue-category').autocomplete({source:'/api/2/issue/autocomplete'});
     },
 
     // show the issue count
-    showTodoCount:function(){
+    showIssueCount:function(){
         var html = '<a id="package-issue-count" class="button pcb" ' +
-            'href="#issue"><span>Nothing Todo</span></a>';
+            'href="#issue"><span>No issues</span></a>';
         if(this.issueCount != 0){
-            html = html.replace('Nothing', this.issueCount);
+            html = html.replace('No', this.issueCount);
         }
         $('a#package-issue-count').replaceWith(html);
     },
@@ -54,19 +67,19 @@ CKANEXT.ISSUES = {
         }
 
         html += '</tbody></table>';
-        
+
         return html;
     },
 
-    // show the number of issue items for this package, and display the 
+    // show the number of issue items for this package, and display the
     // 'Add a issue' button/form
-    showTodo:function(){
+    showIssue:function(){
         var issueData = "resolved=0&package=" + this.packageName;
 
         var issueSuccess = function(data){
             // set the package issue count and display it
             CKANEXT.ISSUES.issueCount = data.length;
-            CKANEXT.ISSUES.showTodoCount();
+            CKANEXT.ISSUES.showIssueCount();
 
             // Show a table for each issue item listing the issue category, description,
             // creator and creation date
@@ -90,12 +103,12 @@ CKANEXT.ISSUES = {
             }
             else{
                 // show the 'Add a issue button'
-                $('#issue-button').button({ label: "Add a issue" });
-                // add a click handler to the 'Add a issue' button
-                $('#issue-button').click(CKANEXT.ISSUES.addTodo);
+                $('#issue-button').button({ label: "Add an issue" });
+                // add a click handler to the 'Add an issue' button
+                $('#issue-button').click(CKANEXT.ISSUES.addIssue);
                 // add a click handler to the form submit button
                 $('#issue-add-button').button({ label: "Add" });
-                $('#issue-add-button').click(CKANEXT.ISSUES.addNewTodo);
+                $('#issue-add-button').click(CKANEXT.ISSUES.addNewissue);
                 // add click handler for resolve buttons
                 $('.resolve-button').click(CKANEXT.ISSUES.resolve);
             }
@@ -103,7 +116,7 @@ CKANEXT.ISSUES = {
 
         var issueError = function(error){
             var errorHtml = '<div id="issue-error">Error: ' +
-                'Could not get Todo items for this package, please try again' +
+                'Could not get issue items for this package, please try again' +
                 ' later (Error STATUS).</div>';
             errorHtml = errorHtml.replace('STATUS', error.status);
             $('div#issue-error').replaceWith(errorHtml);
@@ -115,18 +128,18 @@ CKANEXT.ISSUES = {
                 data: issueData,
                 success: issueSuccess,
                 error: issueError
-        }); 
+        });
     },
 
     // callback handler for the 'add a issue' button clicked
     // disables the button and displays the form
-    addTodo:function(){
+    addIssue:function(){
         $('#issue-add').show(500);
         $('#issue-button').button("option", "disabled", true);
     },
 
     // callback handler for the 'add' button clicked (submit new issue item)
-    addNewTodo:function(){
+    addNewIssue:function(){
         var category = $('input[name="category_name"]').val();
         var description = $('textarea[name="description"]').val();
 
@@ -145,10 +158,10 @@ CKANEXT.ISSUES = {
                 $('div#issue-error').empty();
                 // update the issue count
                 CKANEXT.ISSUES.issueCount = CKANEXT.ISSUES.issueCount + 1;
-                CKANEXT.ISSUES.showTodoCount();
+                CKANEXT.ISSUES.showIssueCount();
 
                 // update the list
-                var showNewTodo = function(data){
+                var showNewIssue = function(data){
                     var issueHtml = CKANEXT.ISSUES.issueItem(data[0]);
                     $('div#issue-list').prepend(issueHtml);
                     // add click handler for resolve button
@@ -162,8 +175,8 @@ CKANEXT.ISSUES = {
                         data: issueData,
                         dataType: 'json',
                         async:   false,
-                        success: showNewTodo
-                }); 
+                        success: showNewIssue
+                });
 
                 // remove the issue form and reenable the add buttons
                 $('#issue-add').fadeOut(500);
@@ -197,7 +210,7 @@ CKANEXT.ISSUES = {
                 $('table#issue-item-' + issue_id).fadeOut(500);
                 // reduce the issue count by 1
                 CKANEXT.ISSUES.issueCount = CKANEXT.ISSUES.issueCount - 1;
-                CKANEXT.ISSUES.showTodoCount();
+                CKANEXT.ISSUES.showIssueCount();
         })
         .error(
             function(error){

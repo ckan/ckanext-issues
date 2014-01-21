@@ -9,7 +9,7 @@
         py:def="optional_head()" />
 
   <div py:match="content" class="package">
-    <h2 class="head">Todo List</h2>
+    <h2 class="head">Issue List</h2>
 
     <div id="issue-page" py:choose="">
         <span py:when="not c.categories">
@@ -19,9 +19,9 @@
         <div py:otherwise="">
             <ul id="issue-categories">
                 <py:for each="category in c.categories">
-                <li><a href="#${category.name}">${category.name}</a> 
+                <li><a href="#${category.name}">${category.name}</a>
                     (${category.issue_count})
-                </li> 
+                </li>
                 </py:for>
             </ul>
 
@@ -29,9 +29,9 @@
             <div class="issue-category">
                 <h4 id="${category.name}">${category.name}</h4>
                 <ul>
-                    <py:for each="issue in category.issue">
+                    <py:for each="issue in category.issues">
                     <li>
-                        <div py:choose="">Package: 
+                        <div py:choose="">Package:
                             <span py:when="not issue.package_id">None</span>
                             <span py:otherwise="">
                                 ${h.link_to(c.pkg_names[issue.package_id],
@@ -41,7 +41,7 @@
                         </div>
                         <div>Description: ${issue.description}</div>
                         <div>Created: ${issue.created.strftime('%d %h %Y')}</div>
-                    </li> 
+                    </li>
                     </py:for>
                 </ul>
             </div>
@@ -50,5 +50,5 @@
     </div>
   </div> <!-- content -->
 
-  <xi:include href="package/layout.html" />
+  <xi:include href="../package/layout.html" />
 </html>

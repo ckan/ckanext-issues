@@ -1,0 +1,66 @@
+<html xmlns:py="http://genshi.edgewall.org/"
+      xmlns:i18n="http://genshi.edgewall.org/i18n"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      py:strip="">
+
+  <py:def function="page_title">Issue List</py:def>
+  <link rel="stylesheet"  type="text/css" media="screen, print"
+        href="/ckanext-issues/css/main.css"
+        py:def="optional_head()" />
+
+  <xi:include href="sidebar.html"/>
+
+  <div py:match="content" class="package">
+  <h1 class="head">Add new issue <small>${c.pkg.title}</small></h1>
+
+    <div id="minornavigation">
+      <div id="minornavigation-bg-left">
+      <div id="minornavigation-bg-right">
+        <minornavigation></minornavigation>
+      </div>
+      </div>
+    </div>
+
+    <div id="issue" class="subsection">
+        <div py:if="c.error" class="alert alert-danger">
+          ${c.error}
+        </div>
+        <div py:if="c.status" class="alert alert-success">
+          ${c.status}
+        </div>
+
+        <form name="issue-add-form" method="post">
+            <div class="control-group">
+              <div class="controls">
+                <label for="category_name">Category:</label>
+                <select name="category_name" class="input-block-level">
+                    <option value="">Please choose a category</option>
+                    <py:for each="cat in c.categories">
+                      <option value="${cat.name}"  py:attrs="{'selected': 'selected' if cat.name ==c.category else None}">${cat.description}</option>
+                    </py:for>
+                </select>
+              </div>
+            </div>
+            <div class="control-group">
+              <div class="controls">
+                <label for="description">Description:</label>
+                <textarea cols="60" rows="10" class="input-block-level" name="description">${c.description}</textarea>
+              </div>
+            </div>
+            <div py:if="c.resource_name" class="control-group">
+              <div class="controls">
+                <label for="resource">Resource:</label>
+                <input type="text" name="resource" class="input-block-level" value="${c.resource_name}" disabled="disabled"/>
+              </div>
+            </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn">Cancel</button>
+          </div>
+        </form>
+    </div>
+
+  </div> <!-- content -->
+
+  <xi:include href="../package/layout.html" />
+</html>

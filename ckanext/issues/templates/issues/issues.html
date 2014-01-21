@@ -1,0 +1,86 @@
+<html xmlns:py="http://genshi.edgewall.org/"
+      xmlns:i18n="http://genshi.edgewall.org/i18n"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      py:strip="">
+
+  <py:def function="page_title">Issue List</py:def>
+  <py:def function="optional_head">
+    <link rel="stylesheet"  type="text/css" media="screen, print"
+        href="/ckanext-issues/css/main.css"/>
+    <script src="/ckanext-issues/issue.js" type="text/javascript"></script>
+  </py:def>
+  <xi:include href="sidebar.html"/>
+
+  <xi:include href="issues_util.html" />
+
+  <div py:match="content" class="package">
+    <h1 class="head">Issues <small>${c.pkg.title}</small></h1>
+
+    <div id="minornavigation">
+      <div id="minornavigation-bg-left">
+      <div id="minornavigation-bg-right">
+        <minornavigation></minornavigation>
+      </div>
+      </div>
+    </div>
+
+    <div id="issue-page" py:choose="">
+      <p py:when="not c.issues.count()">
+            There are currently no issues reported for '<a href="${h.url_for(controller='package', action='read', id=c.pkg.name)}">${c.pkg.title}</a>'
+      </p>
+      <div py:otherwise="c.issues">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Reported</th>
+                <th>Comments</th>
+                <th>Resolved</th>
+              </tr>
+            </thead>
+            <tbody>
+            <py:for each="issue in c.issues">
+              <tr class="${'success' if issue.resolved else 'error'}">
+                <td>${issue.category.description}</td>
+                <td>${issue.description}
+                  <py:if test="issue.resource">
+                  <br/><br/>
+                    Resource: ${issue.resource.description}
+                  </py:if>
+                </td>
+                <td>by ${issue.reporter.name} on ${h.render_datetime(issue.created)}</td>
+                <td>
+                    <py:if test="issue.comments">
+                      <a href="#" onclick="$('#comments_${issue.id}').toggle();return false;">${len(issue.comments)}</a>
+                    </py:if>
+                    <py:if test="not issue.comments">0</py:if>
+                  </td>
+                <td>
+                  <py:if test="issue.resolved">
+                    <img id='state_${issue.id}' src="/ckanext-issues/images/tick.png" title="Resolved by ${issue.resolving_user.name} on ${h.render_datetime(issue.resolved)}"/>
+                  </py:if>
+                  <py:if test="not issue.resolved">
+                    <img id='state_${issue.id}' src="/ckanext-issues/images/cross.png"/>
+
+                    <py:if test="h.check_access('package_update', {'id':issue.package.id}) ">&nbsp;
+                      <!-- Only show if user can edit the package .. -->
+                      <button id='resolve_btn_${issue.id}' class="btn btn-mini" onclick="resolve_issue(${issue.id}, '${c.user}');">Fixed</button>
+                    </py:if>
+                 </py:if>
+                </td>
+              </tr>
+              <tr id="comments_${issue.id}" style="display:none;">
+                <td colspan="5">
+                  ${show_issue_comments(issue)}
+                </td>
+              </tr>
+            </py:for>
+          </tbody>
+          </table>
+      </div>
+    </div>
+  </div> <!-- content -->
+
+  <xi:include href="../package/layout.html" />
+</html>
