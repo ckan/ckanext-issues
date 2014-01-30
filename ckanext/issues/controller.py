@@ -314,31 +314,34 @@ class IssueController(BaseController):
         c.pkg_dict = c.pkg.as_dict()
 
         resource = model.Resource.get(resource_id) if resource_id else None
-        c.resource_name = resource.description if resource else ""
+        c.resource_name = resource.name or resource.description if resource else ""
 
-        c.error, c.status = "", ""
-        c.description = ""
-        c.categories = model.Session.query(model.IssueCategory).order_by('description').all()
-        c.category = ""
+        c.categories = [ {'text': cat.description, 'value': cat.id } for cat in
+                model.Session.query(model.IssueCategory)
+                    .order_by('description').all()
+                ]
+        # 3 is id of other category
+        c.errors, c.error_summary = {}, {}
+        c.category = "3"
 
         if request.method == 'POST':
-            c.category = request.POST.get('category_name')
+            c.category = request.POST.get('category')
+            c.title = request.POST.get('title')
             c.description = request.POST.get('description')
 
-            if not c.category and not c.description:
-                c.error = "Please enter a category and a description"
-            elif not c.category:
-                c.error = "Please choose a category for this issue"
-            elif not c.description:
-                c.error = "Please provide a description of the issue"
+            if not c.title:
+                c.error_summary['title'] = ["Please enter a title"]
+            if not c.description:
+                c.error_summary['description'] = ["Please provide a description of the issue"]
+            if not c.category:
+                c.error_summary['category'] = ["Please choose a category"]
+            c.errors = c.error_summary
 
             # Do we have a resource?
 
-            if not c.error:
+            if not c.error_summary:
                 user = model.User.get(c.user)
-                category = model.Session.query(model.IssueCategory)\
-                    .filter(model.IssueCategory.name==c.category).first()
-                issue = model.Issue(category_id=category.id,
+                issue = model.Issue(category_id=c.category,
                                 description=c.description,
                                 creator=user.id)
                 issue.package_id = c.pkg.id

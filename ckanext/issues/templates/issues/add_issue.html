@@ -1,66 +1,44 @@
-<html xmlns:py="http://genshi.edgewall.org/"
-      xmlns:i18n="http://genshi.edgewall.org/i18n"
-      xmlns:xi="http://www.w3.org/2001/XInclude"
-      py:strip="">
+{% extends "issues/base_form_page.html" %}
 
-  <py:def function="page_title">Issue List</py:def>
-  <link rel="stylesheet"  type="text/css" media="screen, print"
-        href="/ckanext-issues/css/main.css"
-        py:def="optional_head()" />
+{% block subtitle %}{{ _('New Issue') }} - {{super()}}{% endblock %}
 
-  <xi:include href="sidebar.html"/>
+{% block breadcrumb_item %}{{ h.nav_link(_('Issues'), named_route='issue_page',
+  package_id=c.pkg.name) }}{% endblock %}
 
-  <div py:match="content" class="package">
-  <h1 class="head">Add new issue <small>${c.pkg.title}</small></h1>
+{% block page_heading %}{{ _('New Issue') }} {% endblock %}
 
-    <div id="minornavigation">
-      <div id="minornavigation-bg-left">
-      <div id="minornavigation-bg-right">
-        <minornavigation></minornavigation>
+{% import 'macros/form.html' as form %}
+{% set data = c %}
+{% set errors = c.errors %}
+
+{% block ourform %}
+<form class="dataset-form form-horizontal" method="post" data-module="basic-form">
+  {% block error_summary %}
+    {% if c.error_summary | count %}
+      <div class="alert alert-error error-explanation">
+        <p>{{ _('The form contains invalid entries:') }}</p>
+        <ul>
+set           {% for key, error in c.error_summary.items() %}
+            <li>{{ key }}: {{ error[0] }}</li>
+          {% endfor %}
+        </ul>
       </div>
-      </div>
-    </div>
+    {% endif %}
+  {% endblock %}
 
-    <div id="issue" class="subsection">
-        <div py:if="c.error" class="alert alert-danger">
-          ${c.error}
-        </div>
-        <div py:if="c.status" class="alert alert-success">
-          ${c.status}
-        </div>
+  {% block fields %}
+    {{ form.input('title', label=_('Title'), id='field-title', placeholder=_('My issue with this dataset'), value=data.title, error=errors.title, classes=['control-full']) }}
+    {{ form.markdown('description', label=_('Description'), id='field-description', placeholder=_('A little information about this issue ...'), value=data.description, error=errors.description) }}
+    {{ form.select('category', label=_('Category'), id='category', selected=data.category, options=c.categories, error=errors.category) }}
+    {{ form.input('resource', label=_('Resource'), id='resource', attrs={'disabled':'1'}) }}
+  {% endblock %}
 
-        <form name="issue-add-form" method="post">
-            <div class="control-group">
-              <div class="controls">
-                <label for="category_name">Category:</label>
-                <select name="category_name" class="input-block-level">
-                    <option value="">Please choose a category</option>
-                    <py:for each="cat in c.categories">
-                      <option value="${cat.name}"  py:attrs="{'selected': 'selected' if cat.name ==c.category else None}">${cat.description}</option>
-                    </py:for>
-                </select>
-              </div>
-            </div>
-            <div class="control-group">
-              <div class="controls">
-                <label for="description">Description:</label>
-                <textarea cols="60" rows="10" class="input-block-level" name="description">${c.description}</textarea>
-              </div>
-            </div>
-            <div py:if="c.resource_name" class="control-group">
-              <div class="controls">
-                <label for="resource">Resource:</label>
-                <input type="text" name="resource" class="input-block-level" value="${c.resource_name}" disabled="disabled"/>
-              </div>
-            </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Save</button>
-            <button type="button" class="btn">Cancel</button>
-          </div>
-        </form>
-    </div>
+  <div class="form-actions">
+    {{ h.nav_link(_('Cancel'), controller='related', action='list', id=c.id,
+    class_='btn') }}
+    <button class="btn btn-primary" type="submit" name="save" tabindex="4">{{ _('Create') }}</button>
+  </div>
+</form>
 
-  </div> <!-- content -->
+{% endblock %}
 
-  <xi:include href="../package/layout.html" />
-</html>

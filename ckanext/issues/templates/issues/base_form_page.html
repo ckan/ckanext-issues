@@ -1,0 +1,27 @@
+{% extends "page.html" %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Datasets'), controller='package', action='search') }}</li>
+  <li><a href="{{ h.url_for(controller='package', action='read', id=c.pkg_dict.name) }}" title="{{ c.pkg_dict.title or c.pkg_dict.name }}">{{ h.truncate(c.pkg_dict.title or c.pkg_dict.name, 60) }}</a></li>
+  <li class="active">{% block breadcrumb_item %}{% endblock %}</li>
+{% endblock %}
+
+{% block primary_content %}
+  <section class="module">
+    <div class="module-content">
+      <h1 class="page-heading">{% block page_heading %}{% endblock %}</h1>
+      {% block ourform %}{% endblock %}
+    </div>
+  </section>
+{% endblock %}
+
+{% block secondary_content %}
+  <section class="module module-narrow">
+    <h2 class="module-heading"><i class="icon-info-sign"></i> {{ _('What are issues?') }}</h2>
+    <div class="module-content">
+      {% trans %}
+        <p>Issues are ... .</p>
+      {% endtrans %}
+    </div>
+  </section>
+{% endblock %}
