@@ -8,14 +8,15 @@ from sqlalchemy.orm import relation, backref
 from ckan import model
 from ckan.model import meta, User, Package, Session, Resource, Group
 from ckan.model.types import make_uuid
+import ckan.model.domain_object as domain_object
 from datetime import datetime
 
 ISSUE_CATEGORY_NAME_MAX_LENGTH = 100
-DEFAULT_CATEGORIES = {u"broken-resource-link": "Broken resource link",
-                      u"no-author": "No author specified",
-                      u"bad-format": "Data is in incorrect format",
-                      u"no-resources": "There are no resources in the dataset",
-                      u"add-description": "There is no description of the data",
+DEFAULT_CATEGORIES = {u"broken-resource-link": "Broken data link",
+                      u"no-author": "No publisher or author specified",
+                      u"bad-format": "Data incorrectly formatted",
+                      u"no-resources": "No resources in the dataset",
+                      u"add-description": "No description of the data",
                       u"other": "Other"}
 
 # ------------------------------------------------------------------------------
@@ -59,36 +60,30 @@ class IssueCategory(object):
 # ------------------------------------------------------------------------------
 
 issue_table = Table('issue', meta.metadata,
-    Column('id', types.Integer, primary_key = True,
-                autoincrement = True),
+    Column('id', types.Integer, primary_key=True, autoincrement=True),
+    Column('title', types.UnicodeText, nullable=False),
     Column('issue_category_id', types.Integer,
-                ForeignKey('issue_category.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
-                nullable = False),
-    Column('package_id', types.UnicodeText,
+        ForeignKey('issue_category.id', onupdate = 'CASCADE', ondelete = 'CASCADE')
+        ),
+    Column('dataset_id', types.UnicodeText,
                 ForeignKey('package.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
                 nullable = True),
     Column('resource_id', types.UnicodeText,
                 ForeignKey('resource.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
                 nullable = True),
     Column('description', types.UnicodeText, nullable = False),
-    Column('creator', types.UnicodeText,
+    Column('creator_id', types.UnicodeText,
                 ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
                 nullable = False),
-    Column('resolver', types.UnicodeText,
+    Column('resolver_id', types.UnicodeText,
                 ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
                 nullable = True),
     Column('resolved', types.DateTime),
     Column('created', types.DateTime, default = datetime.now, nullable = False))
 
-class Issue(object):
+class Issue(domain_object.DomainObject):
     """A Issue Object"""
-    def __init__(self, category_id, description, creator):
-        self.issue_category_id = category_id
-        self.description = description
-        self.creator = creator
-
-    def __repr__(self):
-        return "<Issue('%s')>" % (self.id)
+    pass
 
     @classmethod
     def get(cls, reference):
@@ -99,20 +94,20 @@ meta.mapper(Issue, issue_table, properties={
     'category': relation(IssueCategory,
         backref=backref('issues_all', cascade='all, delete-orphan')
     ),
-    'reporter': relation(model.User,
-        backref=backref('raised_issues', cascade='all, delete-orphan'),
-        primaryjoin=issue_table.c.creator.__eq__(User.id)
+    'creator': relation(model.User,
+        backref=backref('issues', cascade='all, delete-orphan'),
+        primaryjoin=issue_table.c.creator_id.__eq__(User.id)
     ),
-    'resolving_user': relation(model.User,
+    'resolver': relation(model.User,
         backref=backref('resolved_issues', cascade='all, delete-orphan'),
-        primaryjoin=issue_table.c.resolver.__eq__(User.id)
+        primaryjoin=issue_table.c.resolver_id.__eq__(User.id)
     ),
-    'package': relation(model.Package,
-        backref=backref('raised_issues', cascade='all, delete-orphan'),
-        primaryjoin=issue_table.c.package_id.__eq__(Package.id)
+    'dataset': relation(model.Package,
+        backref=backref('issues', cascade='all, delete-orphan'),
+        primaryjoin=issue_table.c.dataset_id.__eq__(Package.id)
     ),
     'resource': relation(model.Resource,
-        backref=backref('raised_issues', cascade='all, delete-orphan'),
+        backref=backref('issues', cascade='all, delete-orphan'),
         primaryjoin=issue_table.c.resource_id.__eq__(Resource.id)
     ),})
 
