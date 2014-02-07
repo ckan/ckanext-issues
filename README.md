@@ -67,12 +67,10 @@ Please open an issue in the github [issue tracker][issues].
 
 ## Developers
 
-Standard CKAN Extension. URL structure:
+Normal requirements for CKAN Extensions (including an installation of CKAN and
+its dev requirements).
 
-    /api/2/issue
+Testing:
 
-
-
-### Architecture
-
+    nosetests test/ --ckan --nologcapture
 

@@ -11,6 +11,8 @@ from ckan.plugins import implements, toolkit
 from ckanext.issues.lib import util
 from ckanext.issues import model
 from ckanext.issues import controller
+import ckanext.issues.logic as action
+import ckanext.issues.auth as auth
 
 class IssuesPlugin(p.SingletonPlugin):
     """
@@ -20,6 +22,8 @@ class IssuesPlugin(p.SingletonPlugin):
     implements(p.IConfigurer, inherit=True)
     implements(p.IRoutes, inherit=True)
     implements(p.ITemplateHelpers, inherit=True)
+    implements(p.IActions)
+    implements(p.IAuthFunctions)
 
     def update_config(self, config):
         """
@@ -98,3 +102,21 @@ class IssuesPlugin(p.SingletonPlugin):
 
 
         return map
+
+    def get_actions(self):
+        actions = {
+            'issue_create': action.issue_create,
+            'issue_show': action.issue_show,
+            # 'issue_upsert': action.issue_upsert,
+            # 'issue_delete': action.issue_delete,
+            # 'issue_search': action.issue_search,
+        }
+        return actions
+
+    def get_auth_functions(self):
+        return {
+            'issue_create': auth.issue_create,
+            'issue_upsert': auth.issue_upsert,
+            'issue_delete': auth.issue_delete,
+        }
+
