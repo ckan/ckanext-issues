@@ -115,6 +115,7 @@ class IssuesPlugin(p.SingletonPlugin):
 
     def get_auth_functions(self):
         return {
+            'issue_show': auth.issue_show,
             'issue_create': auth.issue_create,
             'issue_upsert': auth.issue_upsert,
             'issue_delete': auth.issue_delete,

@@ -28,9 +28,8 @@ def issue_show(context, data_dict=None):
     context['issue'] = issue
     if issue is None:
         raise NotFound
-    # _check_access('issue_show', context, data_dict)
-
     issue_dict = issue.as_dict()
+    p.toolkit.check_access('issue_show', context, issue_dict)
     return issue_dict
 
 def issue_create(context, data_dict):
@@ -53,8 +52,7 @@ def issue_create(context, data_dict):
     user = context['user']
     userobj = model.User.get(user)
 
-    # TODO: not working - getting a 409 ...
-    # p.toolkit.check_access('issue_create', context, data_dict)
+    p.toolkit.check_access('issue_create', context, data_dict)
 
     data_dict["creator_id"] = userobj.id
     #data, errors = _validate(
@@ -62,8 +60,13 @@ def issue_create(context, data_dict):
     #if errors:
     #    model.Session.rollback()
     #    raise ValidationError(errors)
-    dataset = model.Package.get(data_dict['dataset'])
-    del data_dict['dataset']
+    dataset = model.Package.get(data_dict['dataset_id'])
+    # TODO propoer validation?
+    if dataset is None:
+        raise p.toolkit.ValidationError({
+            'dataset_id': ['No dataset exists with id %s' % data_dict['dataset_id']]
+        })
+    del data_dict['dataset_id']
 
     try:
         issue = model.Issue(**data_dict)

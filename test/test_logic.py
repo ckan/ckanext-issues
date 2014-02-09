@@ -12,7 +12,7 @@ import ckan.plugins
 import ckan.new_tests.factories as factories
 from ckan.tests.html_check import HtmlCheckMethods
 
-class TestController(object):
+class TestLogic(object):
     @classmethod
     def setup_class(self):
         app = ckan.config.middleware.make_app(config['global_conf'], **config)
@@ -28,14 +28,26 @@ class TestController(object):
         ckan.plugins.unload('issues')
         model.repo.rebuild_db()
 
-    def _test_create_requires_auth(self):
+    def test_create_requires_auth(self):
         out = tests.call_action_api(self.app, 'issue_create', status=403)
+
+    def test_create_fails_if_no_dataset(self):
+        issue = {
+            'title': u'A data issue',
+            'description': u'xxx',
+            'dataset_id': 'made-up'
+        }
+        out = tests.call_action_api(self.app, 'issue_create',
+                apikey=self.user.apikey, status=409,
+                **issue
+                )
+        assert out['dataset_id'] == ['No dataset exists with id made-up'] , out
 
     def test_create_ok(self):
         issue = {
             'title': u'A data issue',
             'description': u'xxx',
-            'dataset': self.dataset.name
+            'dataset_id': self.dataset.name
         }
         out = tests.call_action_api(self.app, 'issue_create',
                 apikey=self.user.apikey, status=200,
