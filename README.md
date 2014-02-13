@@ -24,18 +24,14 @@ You can also add an issue about a specific resource
 
 ### Issues API
 
-The issues extension also provides a RESTful API:
+The issues extension also exposes its functionality as part of the standard [CKAN Action API][api]:
 
-    /api/2/issue
+[api]: http://docs.ckan.org/en/latest/api/index.html
 
 Specifically:
 
-    GET   /api/2/issue              list issues
-    POST  /api/2/issue              create an issue
-    POST  /api/2/issue/resolve      resolve an issue
-    POST  /api/2/issue/category     create an issue category
-    GET   /api/2/issue/autocomplete autocomplete for an issue
-
+    /api/3/action/issue_show
+    /api/3/action/issue_create
 
 ## Installation and Activation
 

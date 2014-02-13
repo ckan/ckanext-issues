@@ -77,22 +77,6 @@ class IssuesPlugin(p.SingletonPlugin):
         """
         from ckan.config.routing import SubMapper
 
-        with SubMapper(map, controller='ckanext.issues.controller:IssueAPIController', path_prefix='/api/2') as m:
-            m.connect('issue', '/issue',
-                        action='get',
-                        conditions=dict(method=['GET']))
-            m.connect('issue_post', '/issue',
-                        action='post',
-                        conditions=dict(method=['POST']))
-            m.connect('issue_resolve', '/issue/resolve',
-                        action='resolve',
-                        conditions=dict(method=['POST']))
-            m.connect('issue_category', '/issue/category',
-                        action='category',
-                        conditions=dict(method=['GET']))
-            m.connect('issue_autocomplete', '/issue/autocomplete',
-                        action='autocomplete')
-
         with SubMapper(map, controller='ckanext.issues.controller:IssueController') as m:
             m.connect('issue_page', '/dataset/:package_id/issues', action='issue_page')
             m.connect('add_issue', '/dataset/:package_id/issues/add', action='add')
