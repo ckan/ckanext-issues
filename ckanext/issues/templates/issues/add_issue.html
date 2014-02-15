@@ -8,7 +8,7 @@
 {% block page_heading %}{{ _('New Issue') }} {% endblock %}
 
 {% import 'macros/form.html' as form %}
-{% set data = c %}
+{% set data = c.data_dict %}
 {% set errors = c.errors %}
 
 {% block ourform %}
@@ -27,9 +27,8 @@ set           {% for key, error in c.error_summary.items() %}
   {% endblock %}
 
   {% block fields %}
-    {{ form.input('title', label=_('Title'), id='field-title', placeholder=_('My issue with this dataset'), value=data.title, error=errors.title, classes=['control-full']) }}
-    {{ form.markdown('description', label=_('Description'), id='field-description', placeholder=_('A little information about this issue ...'), value=data.description, error=errors.description) }}
-    {{ form.select('category', label=_('Category'), id='category', selected=data.category, options=c.categories, error=errors.category) }}
+    {{ form.input('title', label=_('Title'), id='field-title', placeholder=_('Title'), value=data.title, error=errors.title, classes=['control-full']) }}
+    {{ form.markdown('description', label=_('Description'), id='field-description', placeholder=_('Add a comment'), value=data.description, error=errors.description) }}
     {{ form.input('resource', label=_('Resource'), id='resource', attrs={'disabled':'1'}) }}
   {% endblock %}
 

@@ -62,24 +62,20 @@ class IssueCategory(object):
 issue_table = Table('issue', meta.metadata,
     Column('id', types.Integer, primary_key=True, autoincrement=True),
     Column('title', types.UnicodeText, nullable=False),
-    Column('issue_category_id', types.Integer,
-        ForeignKey('issue_category.id', onupdate = 'CASCADE', ondelete = 'CASCADE')
-        ),
+    Column('description', types.UnicodeText),
     Column('dataset_id', types.UnicodeText,
-                ForeignKey('package.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
-                nullable = True),
+        ForeignKey('package.id', onupdate='CASCADE', ondelete='CASCADE'),
+            nullable=False),
     Column('resource_id', types.UnicodeText,
-                ForeignKey('resource.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
-                nullable = True),
-    Column('description', types.UnicodeText, nullable = False),
+        ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE')
+        ),
     Column('creator_id', types.UnicodeText,
-                ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
-                nullable = False),
+        ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'), nullable=False),
     Column('resolver_id', types.UnicodeText,
-                ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
-                nullable = True),
+        ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')),
     Column('resolved', types.DateTime),
-    Column('created', types.DateTime, default = datetime.now, nullable = False))
+    Column('created', types.DateTime, default = datetime.now, nullable=False)
+    )
 
 class Issue(domain_object.DomainObject):
     """A Issue Object"""
@@ -91,9 +87,6 @@ class Issue(domain_object.DomainObject):
         return Session.query(cls).filter(cls.id == reference).first()
 
 meta.mapper(Issue, issue_table, properties={
-    'category': relation(IssueCategory,
-        backref=backref('issues_all', cascade='all, delete-orphan')
-    ),
     'creator': relation(model.User,
         backref=backref('issues', cascade='all, delete-orphan'),
         primaryjoin=issue_table.c.creator_id.__eq__(User.id)

@@ -13,7 +13,9 @@ from pylons import request, config, tmpl_context as c
 from ckan.lib.base import BaseController, response, render, abort, redirect
 from ckan.lib.search import query_for
 import ckan.lib.helpers as h
-from ckanext.issues import model
+import ckan.model as model
+import ckanext.issues.model as issuemodel
+import ckan.logic as logic
 import re
 
 AUTOCOMPLETE_LIMIT = 10
@@ -71,61 +73,61 @@ def _notify(issue):
     except Exception, e:
         log.error('Failed to send an email message for issue notification')
 
-
 class IssueController(BaseController):
     """
-    The CKANEXT-Issues Controller.
+    The Issues Controller.
     """
 
-    def add(self, package_id, resource_id=None):
+    def new(self, package_id, resource_id=None):
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user or c.author, 'auth_user_obj': c.userobj,
+                   'for_view': True}
         if not c.user:
-            abort(401, "Please login to add a new issue")
+            abort(401, _('Please login to add a new issue'))
 
-        c.pkg = model.Package.get(package_id)
-        c.pkg_dict = c.pkg.as_dict()
+        try:
+            c.pkg_dict = logic.get_action('package_show')(context, {'id':
+                package_id})
+        except logic.NotFound:
+            abort(404, _('Package not found'))
+
+        data_dict = {
+            'dataset_id': c.pkg_dict['id'],
+            'creator_id': c.userobj.id
+            }
+        try:
+            logic.check_access('issue_create', context, data_dict)
+        except logic.NotAuthorized:
+            abort(401, _('Not authorized to add a new issue'))
 
         resource = model.Resource.get(resource_id) if resource_id else None
-        c.resource_name = resource.name or resource.description if resource else ""
+        if resource:
+            data_dict['resource_id'] = resource.id
 
-        c.categories = [ {'text': cat.description, 'value': cat.id } for cat in
-                model.Session.query(model.IssueCategory)
-                    .order_by('description').all()
-                ]
-        # 3 is id of other category
         c.errors, c.error_summary = {}, {}
-        c.category = "3"
 
         if request.method == 'POST':
-            c.category = request.POST.get('category')
-            c.title = request.POST.get('title')
-            c.description = request.POST.get('description')
+            # TODO: ? use dictization etc
+            #    data = logic.clean_dict(
+            #        df.unflatten(
+            #            logic.tuplize_dict(
+            #                logic.parse_params(request.params))))
+            data_dict.update({
+                'title': request.POST.get('title'),
+                'description': request.POST.get('description')
+                })
 
-            if not c.title:
+            if not data_dict['title']:
                 c.error_summary['title'] = ["Please enter a title"]
-            if not c.description:
-                c.error_summary['description'] = ["Please provide a description of the issue"]
-            if not c.category:
-                c.error_summary['category'] = ["Please choose a category"]
             c.errors = c.error_summary
 
-            # Do we have a resource?
+            if not c.error_summary: # save and redirect
+                issue_dict = logic.get_action('issue_create')(context,
+                        data_dict)
+                h.flash_success(_("Your issue has been registered, thank you for the feedback"))
+                redirect(h.url_for('issue_page', package_id=c.pkg_dict['name']))
 
-            if not c.error_summary:
-                user = model.User.get(c.user)
-                issue = model.Issue(category_id=c.category,
-                                description=c.description,
-                                creator=user.id)
-                issue.package_id = c.pkg.id
-                if c.resource_name:
-                    issue.resource_id = resource.id
-                model.Session.add(issue)
-                model.Session.commit()
-
-                _notify(issue)
-
-                h.flash_success("Your issue has been registered, thank you for the feedback")
-                redirect(h.url_for('issue_page', package_id=c.pkg.name))
-
+        c.data_dict = data_dict
         return render("issues/add_issue.html")
 
     def issue_page(self, package_id):

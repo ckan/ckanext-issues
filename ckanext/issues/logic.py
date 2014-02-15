@@ -8,7 +8,8 @@ import ckan.logic as logic
 import ckan.plugins as p
 import ckan.model.meta as meta
 import ckanext.datastore.logic.schema as dsschema
-from ckanext.issues import model
+import ckan.model as model
+import ckanext.issues.model as issuemodel
 
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
@@ -24,7 +25,7 @@ def issue_show(context, data_dict=None):
     :rtype: dictionary
     '''
     id = _get_or_bust(data_dict, 'id')
-    issue = model.Issue.get(id)
+    issue = issuemodel.Issue.get(id)
     context['issue'] = issue
     if issue is None:
         raise NotFound
@@ -68,16 +69,10 @@ def issue_create(context, data_dict):
         })
     del data_dict['dataset_id']
 
-    try:
-        issue = model.Issue(**data_dict)
-        issue.dataset = dataset
-        meta.Session.add(issue)
-        meta.Session.commit()
-    except Exception as e:
-        log.warn("Database Error: " + str(e))
-        meta.Session.rollback()
-        raise e
-    meta.Session.remove()
+    issue = issuemodel.Issue(**data_dict)
+    issue.dataset = dataset
+    model.Session.add(issue)
+    model.repo.commit_and_remove()
 
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()

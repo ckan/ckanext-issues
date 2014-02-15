@@ -79,7 +79,8 @@ class IssuesPlugin(p.SingletonPlugin):
 
         with SubMapper(map, controller='ckanext.issues.controller:IssueController') as m:
             m.connect('issue_page', '/dataset/:package_id/issues', action='issue_page')
-            m.connect('add_issue', '/dataset/:package_id/issues/add', action='add')
+            m.connect('new_issue', '/dataset/:package_id/issues/new',
+                    action='new')
             m.connect('add_issue_with_resource', '/dataset/:package_id/issues/add/:resource_id', action='add')
             m.connect('all_issues_page', '/dataset/issues/all', action='all_issues_page')
             m.connect('publisher_issue_page', '/publisher/issues/:publisher_id', action='publisher_issue_page')
