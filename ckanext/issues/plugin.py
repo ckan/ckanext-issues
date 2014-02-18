@@ -78,10 +78,12 @@ class IssuesPlugin(p.SingletonPlugin):
         from ckan.config.routing import SubMapper
 
         with SubMapper(map, controller='ckanext.issues.controller:IssueController') as m:
-            m.connect('issue_page', '/dataset/:package_id/issues', action='issue_page')
-            m.connect('new_issue', '/dataset/:package_id/issues/new',
+            m.connect('issues_home', '/dataset/:package_id/issues', action='home')
+            m.connect('issues_new', '/dataset/:package_id/issues/new',
                     action='new')
-            m.connect('add_issue_with_resource', '/dataset/:package_id/issues/add/:resource_id', action='add')
+            m.connect('add_issue_with_resource', '/dataset/:package_id/issues/new/:resource_id', action='add')
+            m.connect('issues_show', '/dataset/:package_id/issues/:id',
+                    action='show')
             m.connect('all_issues_page', '/dataset/issues/all', action='all_issues_page')
             m.connect('publisher_issue_page', '/publisher/issues/:publisher_id', action='publisher_issue_page')
 

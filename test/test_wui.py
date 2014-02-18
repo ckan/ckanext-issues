@@ -7,6 +7,7 @@ import webtest
 from routes import url_for
 
 import ckan.model as model
+import ckan.logic as logic
 import ckan.tests as tests
 import ckan.plugins
 import ckan.new_tests.factories as factories
@@ -24,6 +25,16 @@ class TestController(HtmlCheckMethods):
         self.sysadmin_user = ckan.model.User.get('testsysadmin')
         self.dataset = model.Package.get('annakarenina')
         self.extra_environ_tester = {'REMOTE_USER': 'tester'}
+        context = {
+            'model': model,
+            'auth_user_obj': self.sysadmin_user,
+            'user': self.sysadmin_user.name
+        }
+        self.issue_fixture = logic.get_action('issue_create')(context, {
+            'title': 'General test issue',
+            'description': 'Abc\n\n## Section',
+            'dataset_id': self.dataset.id
+        })
 
     @classmethod
     def teardown_class(cls):
@@ -31,15 +42,13 @@ class TestController(HtmlCheckMethods):
         model.repo.rebuild_db()
 
     def test_issue_new_get(self):
-        # sysadmin = factories.Sysadmin()
-        offset = url_for('new_issue', package_id=self.dataset.name)
+        offset = url_for('issues_new', package_id=self.dataset.name)
         res = self.app.get(offset, status=200,
                 extra_environ=self.extra_environ_tester)
-        # res = self.strip_tags(unicode(res.body, 'utf8'))
         assert 'New Issue' in res.body, res.body
 
     def test_issue_new_post_bad_data(self):
-        offset = url_for('new_issue', package_id=self.dataset.name)
+        offset = url_for('issues_new', package_id=self.dataset.name)
         data = {
             'description': 'xxx'
             }
@@ -52,7 +61,7 @@ class TestController(HtmlCheckMethods):
         assert 'The form contains invalid entries:' in res
 
     def test_issue_new_post(self):
-        offset = url_for('new_issue', package_id=self.dataset.name)
+        offset = url_for('issues_new', package_id=self.dataset.name)
         data = {
             'title': 'Test new issue',
             'description': 'xxx'
@@ -62,4 +71,12 @@ class TestController(HtmlCheckMethods):
                 status=[302],
                 extra_environ=self.extra_environ_tester
                 )
+
+    def test_issue_show(self):
+        offset = url_for('issues_show', package_id=self.dataset.name,
+                id=self.issue_fixture['id'])
+        res = self.app.get(offset, status=200)
+        assert self.issue_fixture['title'] in res, res.body
+        # part of the markdown-ized version of the description
+        assert '<h2>Section</h2>' in res, res.body
 

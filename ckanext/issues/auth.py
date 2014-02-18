@@ -15,6 +15,7 @@ def issue_auth(context, data_dict, privilege='package_update'):
     else:
         return {'success': True}
 
+@p.toolkit.auth_allow_anonymous_access
 def issue_show(context, data_dict):
     return issue_auth(context, data_dict, 'package_show')
 

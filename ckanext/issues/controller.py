@@ -78,25 +78,27 @@ class IssueController(BaseController):
     The Issues Controller.
     """
 
-    def new(self, package_id, resource_id=None):
-        context = {'model': model, 'session': model.Session,
+    def _before(self, package_id):
+        self.context = {'model': model, 'session': model.Session,
                    'user': c.user or c.author, 'auth_user_obj': c.userobj,
                    'for_view': True}
+        try:
+            c.pkg = logic.get_action('package_show')(self.context, {'id':
+                package_id})
+        except logic.NotFound:
+            abort(404, _('Dataset not found'))
+
+    def new(self, package_id, resource_id=None):
+        self._before(package_id)
         if not c.user:
             abort(401, _('Please login to add a new issue'))
 
-        try:
-            c.pkg_dict = logic.get_action('package_show')(context, {'id':
-                package_id})
-        except logic.NotFound:
-            abort(404, _('Package not found'))
-
         data_dict = {
-            'dataset_id': c.pkg_dict['id'],
+            'dataset_id': c.pkg['id'],
             'creator_id': c.userobj.id
             }
         try:
-            logic.check_access('issue_create', context, data_dict)
+            logic.check_access('issue_create', self.context, data_dict)
         except logic.NotAuthorized:
             abort(401, _('Not authorized to add a new issue'))
 
@@ -122,25 +124,32 @@ class IssueController(BaseController):
             c.errors = c.error_summary
 
             if not c.error_summary: # save and redirect
-                issue_dict = logic.get_action('issue_create')(context,
+                issue_dict = logic.get_action('issue_create')(self.context,
                         data_dict)
                 h.flash_success(_("Your issue has been registered, thank you for the feedback"))
-                redirect(h.url_for('issue_page', package_id=c.pkg_dict['name']))
+                redirect(h.url_for('issue_page', package_id=c.pkg['name']))
 
         c.data_dict = data_dict
         return render("issues/add_issue.html")
 
-    def issue_page(self, package_id):
+    def show(self, id, package_id):
+        self._before(package_id)
+        data_dict = {
+            'id': id
+        }
+        c.issue = logic.get_action('issue_show')(self.context, data_dict)
+        return render('issues/show.html')
+
+    def home(self, package_id):
         """
         Display a page containing a list of all issues items, sorted by category.
         """
+        self._before()
         # categories
-        c.pkg = model.Package.get(package_id)
-        c.pkg_dict = c.pkg.as_dict()
-        c.issues = model.Session.query(model.Issue)\
-            .filter(model.Issue.package_id==c.pkg.id)\
-            .options(joinedload(model.Issue.comments))\
-            .order_by(model.Issue.created.desc())
+        c.issues = model.Session.query(issuemodel.Issue)\
+            .filter(issuemodel.Issue.dataset_id==c.pkg['id'])\
+            .options(joinedload(issuemodel.Issue.comments))\
+            .order_by(issuemodel.Issue.created.desc())
         c.resource_id = request.GET.get('resource', "")
         return render("issues/issues.html")
 

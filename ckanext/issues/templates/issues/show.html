@@ -1,0 +1,21 @@
+{% extends "issues/base.html" %}
+
+{% block subtitle %}{{ '%s #%s - %s' % (c.issue.title, c.issue.id, _('Issues')) }} {% endblock %}
+
+{% block breadcrumb_item %}{{ h.nav_link(c.issue.id, named_route='issues_show', package_id=c.pkg.name, id=c.issue.id) }}
+{% endblock %}
+
+{% block primary_content %}
+  <section class="module">
+    <div class="module-content">
+      <h1 class="page-heading">
+        {{c.issue.title}}
+        <span class="header-number">#{{c.issue.id}}</small>
+      </h1>
+      <div class="description">
+        {{ h.render_markdown(c.issue.description) }}
+      </div>
+    </div>
+  </section>
+{% endblock %}
+

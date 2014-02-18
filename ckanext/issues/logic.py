@@ -50,8 +50,7 @@ def issue_create(context, data_dict):
     :rtype: dictionary
     '''
     session = context['session']
-    user = context['user']
-    userobj = model.User.get(user)
+    userobj = context['auth_user_obj']
 
     p.toolkit.check_access('issue_create', context, data_dict)
 

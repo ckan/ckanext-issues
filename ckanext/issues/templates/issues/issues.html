@@ -20,7 +20,9 @@
     <ul class="issue-list">
     {% for issue in c.issues %}
       <li>
-        <h3>{{issue.title}}</h3>
+        <h3>
+          <a href="{{h.url_for('issue_show', package_id=pkg.name, id=issue.id)}}">{{issue.title}}</a>
+        </h3>
       </li>
     {% endfor %}
     </ul>
