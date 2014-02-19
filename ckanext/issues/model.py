@@ -110,22 +110,19 @@ meta.mapper(IssueCategory, issue_category_table)
 # ------------------------------------------------------------------------------
 
 issue_comment_table = Table('issue_comment', meta.metadata,
-    Column('id', types.Integer, primary_key = True,
-                autoincrement = True),
-    Column('comment', types.Unicode, nullable=False, unique=False),
+    Column('id', types.Integer, primary_key=True,
+                autoincrement=True),
+    Column('comment', types.Unicode, nullable=False),
     Column('author_id', types.Unicode,
-                ForeignKey('user.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
-                nullable=False, unique=False),
+        ForeignKey('user.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
+            nullable=False, index=True),
     Column('issue_id', types.Integer,
-                ForeignKey('issue.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
-                nullable=False, unique=False, index=True),
-    Column('created', types.DateTime, default = datetime.now, nullable = False))
+        ForeignKey('issue.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
+            nullable=False, index=True),
+    Column('created', types.DateTime, default=datetime.now, nullable=False))
 
-class IssueComment(object):
+class IssueComment(domain_object.DomainObject):
     """A Issue Comment Object"""
-    def __repr__(self):
-        return "<IssueComment('%s')>" % (self.comment)
-
     @classmethod
     def get_comments(cls, issue):
         """ Gets all comments for a given issue """

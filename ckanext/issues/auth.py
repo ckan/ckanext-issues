@@ -23,6 +23,10 @@ def issue_create(context, data_dict):
     # Any logged in user ...?
     return issue_auth(context, data_dict, 'package_create')
 
+def issue_comment_create(context, data_dict):
+    # Any logged in user ...?
+    return issue_auth(context, data_dict, 'package_create')
+
 def issue_upsert(context, data_dict):
     return issue_auth(context, data_dict)
 

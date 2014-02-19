@@ -94,6 +94,7 @@ class IssuesPlugin(p.SingletonPlugin):
         actions = {
             'issue_create': action.issue_create,
             'issue_show': action.issue_show,
+            'issue_comment_create': action.issue_comment_create,
             # 'issue_upsert': action.issue_upsert,
             # 'issue_delete': action.issue_delete,
             # 'issue_search': action.issue_search,
@@ -104,6 +105,7 @@ class IssuesPlugin(p.SingletonPlugin):
         return {
             'issue_show': auth.issue_show,
             'issue_create': auth.issue_create,
+            'issue_comment_create': auth.issue_comment_create,
             'issue_upsert': auth.issue_upsert,
             'issue_delete': auth.issue_delete,
         }

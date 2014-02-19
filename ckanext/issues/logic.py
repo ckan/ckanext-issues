@@ -76,3 +76,40 @@ def issue_create(context, data_dict):
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()
 
+def issue_comment_create(context, data_dict):
+    '''Add a new issue comment.
+
+    You must provide your API key in the Authorization header.
+
+    :param description: the description of the issue item
+    :type description: string
+    :param issue_id: the id of the issue the comment belongs to
+    :type dataset_id: integer
+
+    :returns: the newly created issue comment
+    :rtype: dictionary
+    '''
+    session = context['session']
+    userobj = context['auth_user_obj']
+
+    issue = issuemodel.Issue.get(data_dict['issue_id'])
+    if issue is None:
+        raise p.toolkit.ValidationError({
+            'issue_id': ['No issue exists with id %s' % data_dict['issue_id']]
+        })
+
+    auth_dict = {
+        'dataset_id': issue.dataset_id
+        }
+    p.toolkit.check_access('issue_comment_create', context, auth_dict)
+
+    data_dict["author_id"] = userobj.id
+
+    issue = issuemodel.IssueComment(**data_dict)
+    model.Session.add(issue)
+    model.repo.commit_and_remove()
+
+    log.debug('Created issue comment %s' % (issue.id))
+
+    return issue.as_dict()
+
