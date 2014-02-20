@@ -19,6 +19,8 @@ DEFAULT_CATEGORIES = {u"broken-resource-link": "Broken data link",
                       u"add-description": "No description of the data",
                       u"other": "Other"}
 
+ISSUE_STATUS = domain_object.Enum('open', 'closed')
+
 # ------------------------------------------------------------------------------
 
 issue_category_table = Table('issue_category', meta.metadata,
@@ -73,6 +75,8 @@ issue_table = Table('issue', meta.metadata,
         ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'), nullable=False),
     Column('resolver_id', types.UnicodeText,
         ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')),
+    Column('status', types.String(15), default=ISSUE_STATUS.open,
+        nullable=False),
     Column('resolved', types.DateTime),
     Column('created', types.DateTime, default = datetime.now, nullable=False)
     )

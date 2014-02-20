@@ -68,6 +68,7 @@ class TestLogic(object):
                 )
         assert out['title'] == issue['title'], out
         assert out['dataset_id'] == self.dataset.id, out
+        assert out['status'] == 'open'
 
     def test_show(self):
         new_issue_id = self.issue['id']
