@@ -10,6 +10,8 @@ from sqlalchemy.orm import joinedload
 from pylons.i18n import _
 from pylons.decorators import jsonify
 from pylons import request, config, tmpl_context as c
+import webhelpers.date
+
 from ckan.lib.base import BaseController, response, render, abort, redirect
 from ckan.lib.search import query_for
 import ckan.lib.helpers as h
@@ -85,6 +87,8 @@ class IssueController(BaseController):
         try:
             c.pkg = logic.get_action('package_show')(self.context, {'id':
                 package_id})
+            # need this as some templates in core explicitly reference c.pkg_dict
+            c.pkg_dict = c.pkg
         except logic.NotFound:
             abort(404, _('Dataset not found'))
 
@@ -127,7 +131,11 @@ class IssueController(BaseController):
                 issue_dict = logic.get_action('issue_create')(self.context,
                         data_dict)
                 h.flash_success(_("Your issue has been registered, thank you for the feedback"))
-                redirect(h.url_for('issue_page', package_id=c.pkg['name']))
+                redirect(h.url_for(
+                    'issues_show',
+                    package_id=c.pkg['name'],
+                    id=issue_dict['id']
+                    ))
 
         c.data_dict = data_dict
         return render("issues/add_issue.html")
@@ -138,13 +146,20 @@ class IssueController(BaseController):
             'id': id
         }
         c.issue = logic.get_action('issue_show')(self.context, data_dict)
+        # annoying we repeat what logic has done but easiest way to get proper datetime ...
+        issueobj = issuemodel.Issue.get(id)
+        c.creator = model.User.get(c.issue['creator_id'])
+        print c.creator
+        c.when_opened = webhelpers.date.time_ago_in_words(issueobj.created,
+                granularity='minute')
+        c.comment_count = len(issueobj.comments)
         return render('issues/show.html')
 
     def home(self, package_id):
         """
         Display a page containing a list of all issues items, sorted by category.
         """
-        self._before()
+        self._before(package_id)
         # categories
         c.issues = model.Session.query(issuemodel.Issue)\
             .filter(issuemodel.Issue.dataset_id==c.pkg['id'])\

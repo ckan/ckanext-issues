@@ -5,6 +5,8 @@
 {% block breadcrumb_item %}{{ h.nav_link(c.issue.id, named_route='issues_show', package_id=c.pkg.name, id=c.issue.id) }}
 {% endblock %}
 
+{% import 'macros/form.html' as form %}
+
 {% block primary_content %}
   <section class="module">
     <div class="module-content">
@@ -12,8 +14,29 @@
         {{c.issue.title}}
         <span class="header-number">#{{c.issue.id}}</small>
       </h1>
+      <div class="meta">
+        <a class="btn btn-success disabled"><i class="icon-exclamation-sign"></i> {{c.issue.status.title()}}</a>
+        <a href="{{h.url_for('user', id=c.issue.creator_id)}}">{{c.creator.name}}</a> opened this issue {{c.when_opened}} ago &middot; {{c.comment_count}} comments
+      </div>
       <div class="description">
-        {{ h.render_markdown(c.issue.description) }}
+        {{ h.render_markdown(c.issue.description or 'No description provided.') }}
+      </div>
+
+      <div class="new-comment">
+<form class="dataset-form" method="post" data-module="basic-form">
+
+  <div class="control-group control-full">
+    <div class="controls editor">
+    <textarea id="comment" name="comment" cols="20" rows="5" placeholder="Leave a comment"></textarea>
+    <span class="editor-info-block">You can use <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown formatting</a> here</span>
+    </div>
+  </div>
+
+  <div class="form-actions" style="border-top: none;">
+    <button class="btn btn-success" type="submit" name="save" tabindex="4">{{ _('Comment') }}</button>
+  </div>
+</form>
+        
       </div>
     </div>
   </section>

@@ -1,27 +1,22 @@
-{% extends "package/read_base.html" %}
+{% extends "issues/base.html" %}
 
 {% set pkg = c.pkg %}
 
 {% block subtitle %}{{ _('Issues') }} - {{ super() }}{% endblock %}
 
-{% block content_primary_nav %}
-  {{ super() }}
-  {{ h.build_nav_icon('issue_page', _('Issues'), package_id=pkg.name) }}
-{% endblock %}
-
-{% block primary_content_inner %}
-  {% block form_actions %}
+{% block primary_content %}
+<section class="module">
+  <div class="module-content">
     <div class="issues-actions" style="float: right;">
-      {{ h.nav_link(_('New Issue'), named_route='new_issue', package_id=pkg.name, class_='btn btn-success') }}
+      {{ h.nav_link(_('New Issue'), named_route='issues_new', package_id=pkg.name, class_='btn btn-success') }}
     </div>
-  {% endblock %}
   <h2>{% block page_heading %}{{ _('Issues') }}{% endblock %}</h2>
   {% if c.issues.count() %}
     <ul class="issue-list">
     {% for issue in c.issues %}
       <li>
         <h3>
-          <a href="{{h.url_for('issue_show', package_id=pkg.name, id=issue.id)}}">{{issue.title}}</a>
+          <a href="{{h.url_for('issues_show', package_id=pkg.name, id=issue.id)}}">{{issue.title}}</a>
         </h3>
       </li>
     {% endfor %}
@@ -29,4 +24,6 @@
   {% else %}
     <p class="empty">{{ _('No issues') }}</p>
   {% endif %}
+  </div>
+</section>
 {% endblock %}
