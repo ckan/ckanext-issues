@@ -35,6 +35,11 @@ class TestLogic(object):
             'description': 'Abc\n\n## Section',
             'dataset_id': self.dataset.id
         })
+        self.issue2 = logic.get_action('issue_create')(context, {
+            'title': 'General test issue 2',
+            'description': '',
+            'dataset_id': self.dataset.id
+        })
 
     @classmethod
     def teardown_class(cls):
@@ -69,6 +74,7 @@ class TestLogic(object):
         assert out['title'] == issue['title'], out
         assert out['dataset_id'] == self.dataset.id, out
         assert out['status'] == 'open'
+        assert len(out['comments']) == 0
 
     def test_show(self):
         new_issue_id = self.issue['id']
@@ -77,11 +83,12 @@ class TestLogic(object):
                 id=new_issue_id
                 )
         assert out['title'] == self.issue['title'], out
+        assert len(out['comments']) == 0, out
 
     def test_create_comment(self):
         comment = {
             'comment': u'xxx',
-            'issue_id': self.issue['id']
+            'issue_id': self.issue2['id']
         }
         out = tests.call_action_api(self.app, 'issue_comment_create',
                 apikey=self.user.apikey,

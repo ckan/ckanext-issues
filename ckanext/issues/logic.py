@@ -71,7 +71,7 @@ def issue_create(context, data_dict):
     issue = issuemodel.Issue(**data_dict)
     issue.dataset = dataset
     model.Session.add(issue)
-    model.repo.commit_and_remove()
+    model.Session.commit()
 
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()

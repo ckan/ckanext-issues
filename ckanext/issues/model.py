@@ -90,6 +90,11 @@ class Issue(domain_object.DomainObject):
         """Returns a Issue object referenced by its id."""
         return Session.query(cls).filter(cls.id == reference).first()
 
+    def as_dict(self):
+        out = super(Issue, self).as_dict()
+        out['comments'] = [ c.as_dict() for c in self.comments ]
+        return out
+
 meta.mapper(Issue, issue_table, properties={
     'creator': relation(model.User,
         backref=backref('issues', cascade='all, delete-orphan'),
