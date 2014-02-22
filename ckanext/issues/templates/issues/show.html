@@ -23,20 +23,19 @@
       </div>
 
       <div class="new-comment">
-<form class="dataset-form" method="post" data-module="basic-form">
-
-  <div class="control-group control-full">
-    <div class="controls editor">
-    <textarea id="comment" name="comment" cols="20" rows="5" placeholder="Leave a comment"></textarea>
-    <span class="editor-info-block">You can use <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown formatting</a> here</span>
-    </div>
-  </div>
-
-  <div class="form-actions" style="border-top: none;">
-    <button class="btn btn-success" type="submit" name="save" tabindex="4">{{ _('Comment') }}</button>
-  </div>
-</form>
-        
+        <form class="dataset-form" method="post"
+          data-module="basic-form"
+          action="{{h.url_for('issues_comments', id=c.issue.id, package_id=c.pkg.id)}}">
+          <div class="control-group control-full">
+            <div class="controls editor">
+            <textarea id="comment" name="comment" cols="20" rows="5" placeholder="Leave a comment"></textarea>
+            <span class="editor-info-block">You can use <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown formatting</a> here</span>
+            </div>
+          </div>
+          <div class="form-actions" style="border-top: none;">
+            <button class="btn btn-success" type="submit" name="save" tabindex="4">{{ _('Comment') }}</button>
+          </div>
+        </form>
       </div>
     </div>
   </section>

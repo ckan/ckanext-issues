@@ -155,6 +155,46 @@ class IssueController(BaseController):
         c.comment_count = len(issueobj.comments)
         return render('issues/show.html')
 
+    def comments(self, id, package_id):
+        self._before(package_id)
+        if not c.user:
+            abort(401, _('Please login to add an issue comment'))
+
+        auth_dict = {
+            'dataset_id': c.pkg['id']
+            }
+        data_dict = {
+            'issue_id': id,
+            'author_id': c.userobj.id
+            }
+        try:
+            logic.check_access('issue_create', self.context, auth_dict)
+        except logic.NotAuthorized:
+            abort(401, _('Not authorized'))
+
+        c.errors, c.error_summary = {}, {}
+        next_url = h.url_for(
+            'issues_show',
+            package_id=c.pkg['name'],
+            id=id
+            )
+
+        if request.method == 'POST':
+            comment = request.POST.get('comment')
+            if not comment or comment.strip() == '':
+                h.flash_error(_('Comment cannot be empty'))
+                redirect(next_url)
+                return
+
+            data_dict.update({
+                'comment': comment.strip()
+                })
+
+            issue_dict = logic.get_action('issue_comment_create')(self.context,
+                    data_dict)
+            h.flash_success(_("Your comment has been recorded."))
+            redirect(next_url)
+
     def home(self, package_id):
         """
         Display a page containing a list of all issues items, sorted by category.

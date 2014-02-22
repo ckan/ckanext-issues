@@ -25,12 +25,12 @@ class TestController(HtmlCheckMethods):
         self.sysadmin_user = ckan.model.User.get('testsysadmin')
         self.dataset = model.Package.get('annakarenina')
         self.extra_environ_tester = {'REMOTE_USER': 'tester'}
-        context = {
+        self.context = {
             'model': model,
             'auth_user_obj': self.sysadmin_user,
             'user': self.sysadmin_user.name
         }
-        self.issue_fixture = logic.get_action('issue_create')(context, {
+        self.issue_fixture = logic.get_action('issue_create')(self.context, {
             'title': 'General test issue',
             'description': 'Abc\n\n## Section',
             'dataset_id': self.dataset.id
@@ -79,4 +79,32 @@ class TestController(HtmlCheckMethods):
         assert self.issue_fixture['title'] in res, res.body
         # part of the markdown-ized version of the description
         assert '<h2>Section</h2>' in res, res.body
+
+    def test_issue_comment_new_post(self):
+        offset = url_for('issues_comments', package_id=self.dataset.name,
+                id=self.issue_fixture['id'])
+        data = {
+            'comment': ''
+            }
+        res = self.app.post(offset,
+                params=data,
+                status=[302],
+                extra_environ=self.extra_environ_tester
+                )
+        issueUpdate = logic.get_action('issue_show')(self.context, {
+            'id': self.issue_fixture['id']
+        })
+        # update should have failed so no comment
+        assert len(issueUpdate['comments']) == 0, issueUpdate
+
+        data['comment'] = 'A valid comment'
+        res = self.app.post(offset,
+                params=data,
+                status=[302],
+                extra_environ=self.extra_environ_tester
+                )
+        issueUpdate = logic.get_action('issue_show')(self.context, {
+            'id': self.issue_fixture['id']
+        })
+        assert len(issueUpdate['comments']) == 1, issueUpdate
 
