@@ -149,10 +149,17 @@ class IssueController(BaseController):
         # annoying we repeat what logic has done but easiest way to get proper datetime ...
         issueobj = issuemodel.Issue.get(id)
         c.creator = model.User.get(c.issue['creator_id'])
-        print c.creator
         c.when_opened = webhelpers.date.time_ago_in_words(issueobj.created,
                 granularity='minute')
         c.comment_count = len(issueobj.comments)
+        for idx, comment in enumerate(c.issue['comments']):
+            commentobj = issueobj.comments[idx]
+            comment['time_ago'] = webhelpers.date.time_ago_in_words(
+                commentobj.created,
+                granularity='minute'
+                )
+            author = commentobj.author
+            comment['author'] = author.as_dict()
         return render('issues/show.html')
 
     def comments(self, id, package_id):

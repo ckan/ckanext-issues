@@ -30,11 +30,15 @@ class TestController(HtmlCheckMethods):
             'auth_user_obj': self.sysadmin_user,
             'user': self.sysadmin_user.name
         }
-        self.issue_fixture = logic.get_action('issue_create')(self.context, {
+        self.issue = logic.get_action('issue_create')(self.context, {
             'title': 'General test issue',
             'description': 'Abc\n\n## Section',
             'dataset_id': self.dataset.id
         })
+        self.comment = logic.get_action('issue_comment_create')(self.context, {
+            'issue_id': self.issue['id'],
+            'comment': 'Test comment'
+            })
 
     @classmethod
     def teardown_class(cls):
@@ -74,15 +78,21 @@ class TestController(HtmlCheckMethods):
 
     def test_issue_show(self):
         offset = url_for('issues_show', package_id=self.dataset.name,
-                id=self.issue_fixture['id'])
+                id=self.issue['id'])
         res = self.app.get(offset, status=200)
-        assert self.issue_fixture['title'] in res, res.body
+        assert self.issue['title'] in res, res.body
         # part of the markdown-ized version of the description
         assert '<h2>Section</h2>' in res, res.body
+        assert self.comment['comment'] in res, res.body
 
     def test_issue_comment_new_post(self):
+        ourissue = logic.get_action('issue_create')(self.context, {
+            'title': 'General test issue',
+            'description': 'Abc\n\n## Section',
+            'dataset_id': self.dataset.id
+        })
         offset = url_for('issues_comments', package_id=self.dataset.name,
-                id=self.issue_fixture['id'])
+                id=ourissue['id'])
         data = {
             'comment': ''
             }
@@ -92,7 +102,7 @@ class TestController(HtmlCheckMethods):
                 extra_environ=self.extra_environ_tester
                 )
         issueUpdate = logic.get_action('issue_show')(self.context, {
-            'id': self.issue_fixture['id']
+            'id': ourissue['id']
         })
         # update should have failed so no comment
         assert len(issueUpdate['comments']) == 0, issueUpdate
@@ -104,7 +114,7 @@ class TestController(HtmlCheckMethods):
                 extra_environ=self.extra_environ_tester
                 )
         issueUpdate = logic.get_action('issue_show')(self.context, {
-            'id': self.issue_fixture['id']
+            'id': ourissue['id']
         })
         assert len(issueUpdate['comments']) == 1, issueUpdate
 

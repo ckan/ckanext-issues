@@ -22,6 +22,15 @@
         {{ h.render_markdown(c.issue.description or 'No description provided.') }}
       </div>
 
+      {% for comment in c.issue.comments %}
+      <div class="issue-comment">
+        <div class="meta">
+          {{ comment.author.name}} commented {{ comment.time_ago }} ago
+        </div>
+        {{h.render_markdown(comment.comment)}}
+      </div>
+      {% endfor %}
+
       <div class="new-comment">
         <form class="dataset-form" method="post"
           data-module="basic-form"
