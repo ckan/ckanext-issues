@@ -140,6 +140,14 @@ class IssueController(BaseController):
         c.data_dict = data_dict
         return render("issues/add_issue.html")
 
+    # make a nice user dict object
+    def _user_dict(self, user):
+        out = user.as_dict()
+        out['ckan_url'] = h.url_for('user_datasets',
+                id=user.name)
+        out['gravatar'] = h.gravatar(user.email_hash, size=48)
+        return out
+
     def show(self, id, package_id):
         self._before(package_id)
         data_dict = {
@@ -148,8 +156,9 @@ class IssueController(BaseController):
         c.issue = logic.get_action('issue_show')(self.context, data_dict)
         # annoying we repeat what logic has done but easiest way to get proper datetime ...
         issueobj = issuemodel.Issue.get(id)
-        c.creator = model.User.get(c.issue['creator_id'])
-        c.when_opened = webhelpers.date.time_ago_in_words(issueobj.created,
+        c.issue['author'] = self._user_dict(issueobj.creator)
+        c.issue['comment'] = c.issue['description'] or _('No description provided')
+        c.issue['time_ago'] = webhelpers.date.time_ago_in_words(issueobj.created,
                 granularity='minute')
         c.comment_count = len(issueobj.comments)
         for idx, comment in enumerate(c.issue['comments']):
@@ -158,8 +167,9 @@ class IssueController(BaseController):
                 commentobj.created,
                 granularity='minute'
                 )
-            author = commentobj.author
-            comment['author'] = author.as_dict()
+            comment['author'] = self._user_dict(commentobj.author)
+        c.current_user = self._user_dict(c.userobj)
+
         return render('issues/show.html')
 
     def comments(self, id, package_id):

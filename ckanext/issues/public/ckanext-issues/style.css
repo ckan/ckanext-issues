@@ -1,0 +1,98 @@
+.issue-header {
+  margin-bottom: 15px;
+}
+
+.issue-header h1.page-heading {
+  word-wrap: break-word;
+  margin-bottom: 0;
+}
+
+.issue-header .header-number {
+  color: #aaa;
+}
+
+.issue-header-meta {
+  margin-top: 9px;
+  font-size: 14px;
+  line-height: 28px;
+  color: #777;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.issue-header-status {
+  padding: 6px 12px;
+  margin-right: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 20px;
+  color: #fff;
+  border-radius: 3px;
+}
+
+.issue-header-status.open {
+  background-color: #6cc644;
+}
+
+.issue-comment-wrapper {
+  position: relative;
+  padding-left: 64px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  border-top: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+}
+
+.issue-comment {
+  position: relative;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.issue-comment-avatar {
+  float: left;
+  margin-left: -64px;
+  border-radius: 4px;
+}
+
+.issue-comment-header {
+  padding-left: 15px;
+  padding-right: 15px;
+  color: #777;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #eee;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.issue-comment-header .author {
+  font-weight: bold;
+  color: #555;
+}
+
+.issue-header-text {
+  max-width: 78%;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.issue-comment-content {
+  padding: 15px;
+  font-size: 14px
+}
+
+.issue-comment-new {
+  border-top: 2px solid #f3f3f3;
+  background-color: #fff;
+}
+
+.issue-comment-new textarea {
+  margin-bottom: 0;
+}
+
+.issue-comment-new .form-actions {
+  margin: 0;
+  padding: 0;
+}
+
