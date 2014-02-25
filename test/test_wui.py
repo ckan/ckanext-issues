@@ -84,6 +84,7 @@ class TestController(HtmlCheckMethods):
         # part of the markdown-ized version of the description
         assert '<h2>Section</h2>' in res, res.body
         assert self.comment['comment'] in res, res.body
+        assert 'Login to comment' in res, res.body
 
     def test_issue_comment_new_post(self):
         ourissue = logic.get_action('issue_create')(self.context, {

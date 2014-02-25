@@ -49,12 +49,13 @@
         {{ issue_comment(comment) }}
       {% endfor %}
 
-    <div class="issue-comment-new">
-      <div class="issue-comment-wrapper">
-        <a href="{{c.current_user.ckan_url}}"
-          class="issue-comment-avatar">
-          {{c.current_user.gravatar}}
-        </a>
+      <div class="issue-comment-new">
+        <div class="issue-comment-wrapper">
+          {% if c.user %}
+          <a href="{{c.current_user.ckan_url}}"
+            class="issue-comment-avatar">
+            {{c.current_user.gravatar}}
+          </a>
           <form class="dataset-form" method="post"
             data-module="basic-form"
             action="{{h.url_for('issues_comments', id=c.issue.id, package_id=c.pkg.id)}}">
@@ -65,11 +66,18 @@
               </div>
             </div>
             <div class="form-actions" style="border-top: none;">
-              <button class="btn btn-success" type="submit" name="save" tabindex="4">{{ _('Comment') }}</button>
+              <button class="btn btn-success" type="submit" name="save" tabindex="2">
+                {{ _('Comment') }}
+              </button>
             </div>
           </form>
+          {% else %}
+          <div class="not-logged-in">
+            <a href="{{h.url_for('login')}}" class="btn">{{ _('Login to comment') }}</a>
+          </div>
+          {% endif %}
+        </div>
       </div>
-    </div>
   </section>
 {% endblock %}
 

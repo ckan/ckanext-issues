@@ -168,7 +168,8 @@ class IssueController(BaseController):
                 granularity='minute'
                 )
             comment['author'] = self._user_dict(commentobj.author)
-        c.current_user = self._user_dict(c.userobj)
+        if c.userobj:
+            c.current_user = self._user_dict(c.userobj)
 
         return render('issues/show.html')
 
