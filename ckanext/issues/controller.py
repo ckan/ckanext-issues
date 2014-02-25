@@ -138,7 +138,7 @@ class IssueController(BaseController):
                     ))
 
         c.data_dict = data_dict
-        return render("issues/add_issue.html")
+        return render("issues/add.html")
 
     # make a nice user dict object
     def _user_dict(self, user):
@@ -223,7 +223,7 @@ class IssueController(BaseController):
             .options(joinedload(issuemodel.Issue.comments))\
             .order_by(issuemodel.Issue.created.desc())
         c.resource_id = request.GET.get('resource', "")
-        return render("issues/issues.html")
+        return render("issues/home.html")
 
     def publisher_issue_page(self, publisher_id):
         """
