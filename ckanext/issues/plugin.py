@@ -96,7 +96,7 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_create': action.issue_create,
             'issue_show': action.issue_show,
             'issue_comment_create': action.issue_comment_create,
-            # 'issue_upsert': action.issue_upsert,
+            'issue_update': action.issue_update,
             # 'issue_delete': action.issue_delete,
             # 'issue_search': action.issue_search,
         }
@@ -107,7 +107,7 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_show': auth.issue_show,
             'issue_create': auth.issue_create,
             'issue_comment_create': auth.issue_comment_create,
-            'issue_upsert': auth.issue_upsert,
+            'issue_update': auth.issue_update,
             'issue_delete': auth.issue_delete,
         }
 

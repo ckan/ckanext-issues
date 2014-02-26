@@ -7,6 +7,7 @@ import webtest
 from routes import url_for
 
 import ckan.model as model
+import ckanext.issues.model as issuemodel
 import ckan.logic as logic
 import ckan.tests as tests
 import ckan.plugins
@@ -20,22 +21,25 @@ class TestLogic(object):
         self.app = webtest.TestApp(app)
         ckan.plugins.load('issues')
         ckan.tests.CreateTestData.create()
-        self.sysadmin_user = ckan.model.User.get('testsysadmin')
         self.user = model.User.get('tester')
+        # user who is not owner of the datasets
+        self.otherUser = model.User(name='issues')
+        model.Session.add(self.otherUser)
+        model.Session.commit()
         self.dataset = model.Package.get('annakarenina')
         # test fixture
-        context = {
+        self.context = {
             'model': model,
-            'auth_user_obj': self.sysadmin_user,
-            'user': self.sysadmin_user.name
+            'auth_user_obj': self.user,
+            'user': self.user.name
         }
         # fixture issue
-        self.issue = logic.get_action('issue_create')(context, {
+        self.issue = logic.get_action('issue_create')(self.context, {
             'title': 'General test issue',
             'description': 'Abc\n\n## Section',
             'dataset_id': self.dataset.id
         })
-        self.issue2 = logic.get_action('issue_create')(context, {
+        self.issue2 = logic.get_action('issue_create')(self.context, {
             'title': 'General test issue 2',
             'description': '',
             'dataset_id': self.dataset.id
@@ -75,6 +79,72 @@ class TestLogic(object):
         assert out['dataset_id'] == self.dataset.id, out
         assert out['status'] == 'open'
         assert len(out['comments']) == 0
+
+    def test_update(self):
+        # Note no way to check permissions properly here as ...
+        #
+        # Default setup for testing is one in which all authenticated users
+        # are "dataset editors" and hence can edit issues too (including
+        # changing the status flag)
+        #
+        # Expected behaviour
+        # Not-Auth user: NO
+        # Dataset Editor: YES
+        # Issue Owner (not Dataset Editor): YES but not status change
+
+        # context with non-dataset owner user
+        context = self._context(self.otherUser)
+        issue = logic.get_action('issue_create')(context, {
+            'title': 'General test issue',
+            'description': 'Abc\n\n## Section',
+            'dataset_id': self.dataset.id
+        })
+        newdata = dict(issue)
+        newdata.update({
+            'title': 'A new title',
+            # should fail really but see above
+            'status': issuemodel.ISSUE_STATUS.closed
+            })
+
+        updated = logic.get_action('issue_update')(context, newdata)
+        assert updated['title'] == newdata['title'], updated
+        assert updated['status'] == issuemodel.ISSUE_STATUS.closed
+        assert updated['resolved'] != None
+        assert updated['resolver_id'] == self.otherUser.id
+        # TODO: test non owner user cannot update ...
+
+    def _context(self, user):
+        return {
+            'model': model,
+            'auth_user_obj': user,
+            'user': user.name if user else None
+        }
+
+    # disabled as cannot properly test with default permission setup
+    # see above note
+    def _test_update_status_change(self):
+        context = self._context(self.otherUser)
+        # context with non-dataset owner user
+        issue = logic.get_action('issue_create')(context, {
+            'title': 'General test issue',
+            'description': 'Abc\n\n## Section',
+            'dataset_id': self.dataset.id
+        })
+        error = False
+        newdata = dict(issue)
+        newdata.update({
+            'status': issuemodel.ISSUE_STATUS.closed
+            })
+        try:
+            updated = logic.get_action('issue_update')(context, newdata)
+        except logic.NotAuthorized:
+            error = True
+            pass
+        assert error, 'Allowed unauthorized user to update issue'
+
+        updated = logic.get_action('issue_update')(
+                    self._context(self.tester), newdata)
+        assert updated['status'] == issuemodel.ISSUE_STATUS.closed
 
     def test_show(self):
         new_issue_id = self.issue['id']

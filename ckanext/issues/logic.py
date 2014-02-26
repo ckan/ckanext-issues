@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime
 import pylons
 import sqlalchemy
 
@@ -34,7 +35,7 @@ def issue_show(context, data_dict=None):
     return issue_dict
 
 def issue_create(context, data_dict):
-    '''Add a new issue for a dataset.
+    '''Add a new issue.
 
     You must provide your API key in the Authorization header.
 
@@ -49,7 +50,6 @@ def issue_create(context, data_dict):
     :returns: the newly created issue item
     :rtype: dictionary
     '''
-    session = context['session']
     userobj = context['auth_user_obj']
 
     p.toolkit.check_access('issue_create', context, data_dict)
@@ -76,6 +76,41 @@ def issue_create(context, data_dict):
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()
 
+def issue_update(context, data_dict):
+    '''Update an issue.
+
+    You must provide your API key in the Authorization header.
+
+    :param title: the title of the issue
+    :type title: string
+    :param description: the description of the issue item (optional)
+    :type description: string
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to (optional)
+    :type dataset_id: string
+
+    :returns: the newly updated issue item
+    :rtype: dictionary
+    '''
+    p.toolkit.check_access('issue_update', context, data_dict)
+    issue = issuemodel.Issue.get(data_dict['id'])
+    status_change = data_dict['status'] and (data_dict['status'] !=
+            issue.status)
+    for k,v in [(k,v) for k,v in data_dict.items() if k not in ['id', 'created']]:
+        setattr(issue, k, v)
+
+    if status_change:
+        if data_dict['status'] == issuemodel.ISSUE_STATUS.closed:
+            issue.resolved = datetime.now()
+            issue.resolver = context['auth_user_obj']
+        elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
+            issue.resolved = None
+            issue.resolver = None
+
+    model.Session.add(issue)
+    model.Session.commit()
+    return issue.as_dict()
+
 def issue_comment_create(context, data_dict):
     '''Add a new issue comment.
 
@@ -89,7 +124,6 @@ def issue_comment_create(context, data_dict):
     :returns: the newly created issue comment
     :rtype: dictionary
     '''
-    session = context['session']
     userobj = context['auth_user_obj']
 
     issue = issuemodel.Issue.get(data_dict['issue_id'])
