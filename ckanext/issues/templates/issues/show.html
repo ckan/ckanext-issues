@@ -38,7 +38,9 @@
           <span class="header-number">#{{c.issue.id}}</small>
         </h1>
         <div class="issue-header-meta">
-          <span class="issue-header-status open"><i class="icon-exclamation-sign"></i> {{c.issue.status.title()}}</span>
+          <span class="issue-header-status {{c.issue.status}}">
+            <i class="icon-exclamation-sign"></i> {{c.issue.status.title()}}
+          </span>
           <a href="">{{c.issue.author.name}}</a> opened this issue {{c.issue.time_ago}} ago &middot; {{c.comment_count}} comments
         </div>
       </div>
@@ -61,12 +63,25 @@
             action="{{h.url_for('issues_comments', id=c.issue.id, package_id=c.pkg.id)}}">
             <div class="control-group control-full">
               <div class="controls editor">
-              <textarea id="comment" name="comment" cols="20" rows="5" placeholder="Leave a comment"></textarea>
-              <span class="editor-info-block">You can use <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown formatting</a> here</span>
+                <textarea id="comment" name="comment" cols="20" rows="5"
+                  placeholder="Leave a comment"
+                  tabindex="1"></textarea>
+                <span class="editor-info-block">
+                  You can use <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown formatting</a> here</span>
               </div>
             </div>
             <div class="form-actions" style="border-top: none;">
-              <button class="btn btn-success" type="submit" name="save" tabindex="2">
+              {% if c.issue.status == 'open' %}
+              <button class="btn" type="submit" name="close" tabindex="3">
+                {{ _('Close') }}
+              </button>
+              {% else %}
+              <button class="btn" type="submit" name="reopen" tabindex="3">
+                {{ _('Re-open') }}
+              </button>
+              {% endif %}
+              <button class="btn btn-success" type="submit" name="save"
+                tabindex="2">
                 {{ _('Comment') }}
               </button>
             </div>

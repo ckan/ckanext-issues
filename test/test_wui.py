@@ -119,3 +119,17 @@ class TestController(HtmlCheckMethods):
         })
         assert len(issueUpdate['comments']) == 1, issueUpdate
 
+        # lastly we will update with change in status as well
+        # note user MUST be editor on dataset
+        data['comment'] = 'A valid comment'
+        data['close'] = ''
+        res = self.app.post(offset,
+                params=data,
+                status=[302],
+                extra_environ=self.extra_environ_tester
+                )
+        issueUpdate = logic.get_action('issue_show')(self.context, {
+            'id': ourissue['id']
+        })
+        assert issueUpdate['status'] == 'closed'
+

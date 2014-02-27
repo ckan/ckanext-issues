@@ -34,6 +34,10 @@
   background-color: #6cc644;
 }
 
+.issue-header-status.closed {
+  background-color: red;
+}
+
 .issue-comment-wrapper {
   position: relative;
   padding-left: 64px;

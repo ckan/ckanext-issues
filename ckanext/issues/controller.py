@@ -18,6 +18,7 @@ import ckan.lib.helpers as h
 import ckan.model as model
 import ckanext.issues.model as issuemodel
 import ckan.logic as logic
+import ckan.plugins as p
 import re
 
 AUTOCOMPLETE_LIMIT = 10
@@ -168,8 +169,18 @@ class IssueController(BaseController):
                 granularity='minute'
                 )
             comment['author'] = self._user_dict(commentobj.author)
+        # can they administer the issue (update, close etc)
+        c.issue_admin = False
         if c.userobj:
             c.current_user = self._user_dict(c.userobj)
+            try:
+                p.toolkit.check_access('issue_update', self.context, {
+                    'id': id,
+                    'dataset_id': package_id
+                    })
+                c.issue_admin = True
+            except logic.NotAuthorized:
+                pass
 
         return render('issues/show.html')
 
@@ -181,12 +192,15 @@ class IssueController(BaseController):
         self._before(package_id)
 
         auth_dict = {
-            'dataset_id': c.pkg['id']
+            'dataset_id': c.pkg['id'],
+            'id': id
             }
+        # Are we not repeating stuff in logic ???
         try:
             logic.check_access('issue_create', self.context, auth_dict)
         except logic.NotAuthorized:
             abort(401, _('Not authorized'))
+
 
         next_url = h.url_for(
             'issues_show',
@@ -200,14 +214,29 @@ class IssueController(BaseController):
             redirect(next_url)
             return
 
+        # do this first because will error here if not allowed and do not want
+        # comment created in that case
+        if 'close' in request.POST or 'reopen' in request.POST:
+            status = (issuemodel.ISSUE_STATUS.closed if 'close' in request.POST
+                    else issuemodel.ISSUE_STATUS.open)
+            issue_dict = {
+                'id': id,
+                'dataset_id': package_id,
+                'status': status
+                }
+            logic.get_action('issue_update')(self.context, issue_dict)
+            if 'close' in request.POST:
+                h.flash_success(_("Issue closed"))
+            else:
+                h.flash_success(_("Issue re-opened"))
+
         data_dict = {
             'issue_id': id,
             'author_id': c.userobj.id,
             'comment': comment.strip()
             }
-        issue_dict = logic.get_action('issue_comment_create')(self.context,
-                data_dict)
-        h.flash_success(_("Your comment has been recorded."))
+        logic.get_action('issue_comment_create')(self.context, data_dict)
+
         redirect(next_url)
 
     def home(self, package_id):
