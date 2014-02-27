@@ -9,14 +9,14 @@
 
 {%- macro issue_comment(comment) %}
 <div class="issue-comment-wrapper">
-  <a href="{{comment.author.ckan_url}}"
+  <a href="{{comment.user.ckan_url}}"
     class="issue-comment-avatar">
-    {{comment.author.gravatar}}
+    {{comment.user.gravatar}}
   </a>
   <div class="issue-comment">
     <div class="issue-comment-header">
       <div class="issue-header-text">
-        <a href="{{comment.author.ckan_url}}" class="author">{{ comment.author.name}}</a>
+        <a href="{{comment.user.ckan_url}}" class="author">{{ comment.user.name}}</a>
         commented
         <span title="{{comment.created}}">{{ comment.time_ago }}</span> ago
       </div>
@@ -41,7 +41,7 @@
           <span class="issue-header-status {{c.issue.status}}">
             <i class="icon-exclamation-sign"></i> {{c.issue.status.title()}}
           </span>
-          <a href="">{{c.issue.author.name}}</a> opened this issue {{c.issue.time_ago}} ago &middot; {{c.comment_count}} comments
+          <a href="{{c.issue.user.ckan_url}}">{{c.issue.user.name}}</a> opened this issue {{c.issue.time_ago}} ago &middot; {{c.comment_count}} comments
         </div>
       </div>
 
@@ -71,14 +71,16 @@
               </div>
             </div>
             <div class="form-actions" style="border-top: none;">
-              {% if c.issue.status == 'open' %}
-              <button class="btn" type="submit" name="close" tabindex="3">
-                {{ _('Close') }}
-              </button>
-              {% else %}
-              <button class="btn" type="submit" name="reopen" tabindex="3">
-                {{ _('Re-open') }}
-              </button>
+              {% if c.issue_admin %}
+                {% if c.issue.status == 'open' %}
+                <button class="btn" type="submit" name="close" tabindex="3">
+                  {{ _('Close') }}
+                </button>
+                {% else %}
+                <button class="btn" type="submit" name="reopen" tabindex="3">
+                  {{ _('Re-open') }}
+                </button>
+                {% endif %}
               {% endif %}
               <button class="btn btn-success" type="submit" name="save"
                 tabindex="2">

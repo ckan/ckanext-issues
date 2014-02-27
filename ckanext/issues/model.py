@@ -8,6 +8,7 @@ from sqlalchemy.orm import relation, backref
 from ckan import model
 from ckan.model import meta, User, Package, Session, Resource, Group
 from ckan.model.types import make_uuid
+import ckan.lib.helpers as h
 import ckan.model.domain_object as domain_object
 from datetime import datetime
 
@@ -71,7 +72,7 @@ issue_table = Table('issue', meta.metadata,
     Column('resource_id', types.UnicodeText,
         ForeignKey('resource.id', onupdate='CASCADE', ondelete='CASCADE')
         ),
-    Column('creator_id', types.UnicodeText,
+    Column('user_id', types.UnicodeText,
         ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'), nullable=False),
     Column('resolver_id', types.UnicodeText,
         ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')),
@@ -80,6 +81,14 @@ issue_table = Table('issue', meta.metadata,
     Column('resolved', types.DateTime),
     Column('created', types.DateTime, default = datetime.now, nullable=False)
     )
+
+# make a nice user dict object
+def _user_dict(user):
+    out = user.as_dict()
+    out['ckan_url'] = h.url_for('user_datasets',
+            id=user.name)
+    out['gravatar'] = h.gravatar(user.email_hash, size=48)
+    return out
 
 class Issue(domain_object.DomainObject):
     """A Issue Object"""
@@ -93,12 +102,13 @@ class Issue(domain_object.DomainObject):
     def as_dict(self):
         out = super(Issue, self).as_dict()
         out['comments'] = [ c.as_dict() for c in self.comments ]
+        out['user'] = _user_dict(self.user)
         return out
 
 meta.mapper(Issue, issue_table, properties={
-    'creator': relation(model.User,
+    'user': relation(model.User,
         backref=backref('issues', cascade='all, delete-orphan'),
-        primaryjoin=issue_table.c.creator_id.__eq__(User.id)
+        primaryjoin=issue_table.c.user_id.__eq__(User.id)
     ),
     'resolver': relation(model.User,
         backref=backref('resolved_issues', cascade='all, delete-orphan'),
@@ -122,7 +132,7 @@ issue_comment_table = Table('issue_comment', meta.metadata,
     Column('id', types.Integer, primary_key=True,
                 autoincrement=True),
     Column('comment', types.Unicode, nullable=False),
-    Column('author_id', types.Unicode,
+    Column('user_id', types.Unicode,
         ForeignKey('user.id', onupdate = 'CASCADE', ondelete = 'CASCADE'),
             nullable=False, index=True),
     Column('issue_id', types.Integer,
@@ -144,10 +154,15 @@ class IssueComment(domain_object.DomainObject):
         return model.Session.query(cls).\
             filter(cls.issue_id==issue.id).count()
 
+    def as_dict(self):
+        out = super(IssueComment, self).as_dict()
+        out['user'] = _user_dict(self.user)
+        return out
+
 meta.mapper(IssueComment, issue_comment_table, properties={
-    'author': relation(model.User,
+    'user': relation(model.User,
         backref=backref('issue_comments', cascade='all, delete-orphan'),
-        primaryjoin=issue_comment_table.c.author_id.__eq__(User.id)
+        primaryjoin=issue_comment_table.c.user_id.__eq__(User.id)
     ),
     'issue': relation(Issue,
         backref=backref('comments', cascade='all, delete-orphan'),

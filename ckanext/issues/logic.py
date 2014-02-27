@@ -54,7 +54,7 @@ def issue_create(context, data_dict):
 
     p.toolkit.check_access('issue_create', context, data_dict)
 
-    data_dict["creator_id"] = userobj.id
+    data_dict["user_id"] = userobj.id
     #data, errors = _validate(
     #    data_dict, ckan.logic.schema.default_related_schema(), context)
     #if errors:
@@ -96,13 +96,13 @@ def issue_update(context, data_dict):
     issue = issuemodel.Issue.get(data_dict['id'])
     status_change = data_dict['status'] and (data_dict['status'] !=
             issue.status)
-    for k,v in [(k,v) for k,v in data_dict.items() if k not in ['id', 'created']]:
+    for k,v in [(k,v) for k,v in data_dict.items() if k not in ['id', 'created', 'user']]:
         setattr(issue, k, v)
 
     if status_change:
         if data_dict['status'] == issuemodel.ISSUE_STATUS.closed:
             issue.resolved = datetime.now()
-            issue.resolver = context['auth_user_obj']
+            issue.resolver_id = context['auth_user_obj'].id
         elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
             issue.resolved = None
             issue.resolver = None
@@ -137,11 +137,11 @@ def issue_comment_create(context, data_dict):
         }
     p.toolkit.check_access('issue_comment_create', context, auth_dict)
 
-    data_dict["author_id"] = userobj.id
+    data_dict["user_id"] = userobj.id
 
     issue = issuemodel.IssueComment(**data_dict)
     model.Session.add(issue)
-    model.repo.commit_and_remove()
+    model.Session.commit()
 
     log.debug('Created issue comment %s' % (issue.id))
 

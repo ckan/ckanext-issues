@@ -141,14 +141,6 @@ class IssueController(BaseController):
         c.data_dict = data_dict
         return render("issues/add.html")
 
-    # make a nice user dict object
-    def _user_dict(self, user):
-        out = user.as_dict()
-        out['ckan_url'] = h.url_for('user_datasets',
-                id=user.name)
-        out['gravatar'] = h.gravatar(user.email_hash, size=48)
-        return out
-
     def show(self, id, package_id):
         self._before(package_id)
         data_dict = {
@@ -157,7 +149,7 @@ class IssueController(BaseController):
         c.issue = logic.get_action('issue_show')(self.context, data_dict)
         # annoying we repeat what logic has done but easiest way to get proper datetime ...
         issueobj = issuemodel.Issue.get(id)
-        c.issue['author'] = self._user_dict(issueobj.creator)
+
         c.issue['comment'] = c.issue['description'] or _('No description provided')
         c.issue['time_ago'] = webhelpers.date.time_ago_in_words(issueobj.created,
                 granularity='minute')
@@ -168,11 +160,10 @@ class IssueController(BaseController):
                 commentobj.created,
                 granularity='minute'
                 )
-            comment['author'] = self._user_dict(commentobj.author)
         # can they administer the issue (update, close etc)
         c.issue_admin = False
         if c.userobj:
-            c.current_user = self._user_dict(c.userobj)
+            c.current_user = issuemodel._user_dict(c.userobj)
             try:
                 p.toolkit.check_access('issue_update', self.context, {
                     'id': id,
