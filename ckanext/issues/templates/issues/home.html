@@ -15,20 +15,20 @@
         </div>
       </h1>
     </div>
-  {% if c.issues.count() %}
+  {% if c.issues %}
     <ul class="issue-list-group list-group">
     {% for issue in c.issues %}
       <li class="list-group-item">
         <span class="list-group-item-number">#{{issue.id}}</span>
         <h4 class="list-group-item-name">
-          <span class="open icon" title="Open issue"><i class="icon-exclamation-sign"></i></span>
+          <span class="{{issue.status}} icon" title="{{issue.status}} issue"><i class="icon-exclamation-sign"></i></span>
           <a href="{{issue.ckan_url}}">{{issue.title}}</a>
         </h4>
         <ul class="list-group-item-meta">
           <li>Opened by <a href="{{issue.user.ckan_url}}">{{issue.user.name}}</a></li>
           <li>
             <i class="icon-clock"></i>
-            <span class="timeago" title="{{issue.created}}"> updated {{h.time_ago(issue.created)}} ago</span>
+            <span class="timeago" title="{{issue.created}}"> updated {{issue.created_time_ago}} ago</span>
           </li>
           <li>
             <i class="icon-comments"></i>
@@ -46,3 +46,14 @@
   </div>
 </section>
 {% endblock %}
+
+{% block secondary_content %}
+<div class="issue-home-sidebar">
+  <div class="btn-group">
+    {% for status in ['open', 'closed'] %}
+    <a class="btn {% if c.query.status==status%}active{% endif %}" href="?status={{status}}">{{_(status.title())}}</a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+

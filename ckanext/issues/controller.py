@@ -17,6 +17,7 @@ from ckan.lib.search import query_for
 import ckan.lib.helpers as h
 import ckan.model as model
 import ckanext.issues.model as issuemodel
+import ckanext.issues.lib.util as util
 import ckan.logic as logic
 import ckan.plugins as p
 import re
@@ -235,11 +236,22 @@ class IssueController(BaseController):
         Display a page containing a list of all issues items, sorted by category.
         """
         self._before(package_id)
+        c.query = {
+            'status': issuemodel.ISSUE_STATUS.open
+            }
+        c.query.update(dict(request.GET))
         # categories
         c.issues = model.Session.query(issuemodel.Issue)\
             .filter(issuemodel.Issue.dataset_id==c.pkg['id'])\
+            .filter(issuemodel.Issue.status==c.query['status'])\
             .options(joinedload(issuemodel.Issue.comments))\
             .order_by(issuemodel.Issue.created.desc())
+        c.count = c.issues.count()
+        def _convert(issue):
+            out = issue.as_dict()
+            out.created_time_ago = util.time_ago(issue.created)
+            return out
+        c.issues = map(_convert, c.issues)
         c.resource_id = request.GET.get('resource', "")
         return render("issues/home.html")
 

@@ -1,3 +1,7 @@
+/*****************************************
+  Issue Show
+  ****************************************/
+
 .issue-header {
   margin-bottom: 15px;
 }
@@ -100,6 +104,10 @@
   padding: 0;
 }
 
+/*****************************************
+  Issue Home
+  ****************************************/
+
 .issues-home .header .page-heading h1 {
   float: left;
 }
@@ -172,5 +180,15 @@
 
 .list-group-item-name .icon.open {
   color: #6cc644;
+}
+
+.list-group-item-name .icon.closed {
+  color: #fe4c30;
+}
+
+/* Sidebar */
+
+.issue-home-sidebar {
+  margin: 20px 0 0 15px;
 }
 
