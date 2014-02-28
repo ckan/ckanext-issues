@@ -1,5 +1,11 @@
+import webhelpers.date
+
 import ckanext.issues.model as issue_model
 import ckan.model as model
+
+# TODO: move this to standard lib
+def time_ago(date):
+    return webhelpers.date.time_ago_in_words(date, granularity='minute')
 
 def issue_count(package):
   return model.Session.query(issue_model.Issue)\
