@@ -103,6 +103,10 @@ class Issue(domain_object.DomainObject):
         out = super(Issue, self).as_dict()
         out['comments'] = [ c.as_dict() for c in self.comments ]
         out['user'] = _user_dict(self.user)
+        # some cases dataset not yet set ...
+        if self.dataset:
+            out['ckan_url'] = h.url_for('issues_show',
+                    package_id=self.dataset.name, id=self.id)
         return out
 
 meta.mapper(Issue, issue_table, properties={

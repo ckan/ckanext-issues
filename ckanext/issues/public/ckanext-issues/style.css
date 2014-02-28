@@ -100,3 +100,77 @@
   padding: 0;
 }
 
+.issues-home .header .page-heading h1 {
+  float: left;
+}
+
+.issues-home .header .issues-actions {
+  float: right;
+}
+
+.list-group {
+  margin-left: 0;
+}
+
+.list-group-item:first-child {
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
+.list-group-item {
+  position: relative;
+  display: block;
+  margin-bottom: -1px;
+  padding: 8px 10px 10px 40px;
+  border: 1px solid #e5e5e5;
+}
+
+.list-group-item-name {
+  margin: 0 60px 0 0;
+  font-size: 15px;
+  line-height: 1.3;
+  margin-bottom: 2px;
+  word-wrap: break-word;
+}
+
+.list-group-item-meta {
+  font-size: 11px;
+  line-height: 17px;
+  list-style-type: none;
+  overflow: hidden;
+  color: #999999;
+  margin: 0;
+}
+
+.list-group-item .list-group-item-name a, .list-group-item .list-group-item-meta a {
+  color: #333;
+}
+
+.list-group-item-meta>li {
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.list-group-item-number {
+  position: relative;
+  top: 2px;
+  float: right;
+  margin-left: 12px;
+  font-size: 13px;
+  color: #999;
+}
+
+.list-group-item-name .icon {
+  float: left;
+  margin-left: -24px;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+}
+
+.list-group-item-name .icon.open {
+  color: #6cc644;
+}
+

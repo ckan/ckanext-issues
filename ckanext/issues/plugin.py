@@ -5,6 +5,8 @@ import os
 from logging import getLogger
 log = getLogger(__name__)
 
+import webhelpers.date
+
 import ckan.plugins as p
 from ckan.plugins import implements, toolkit
 
@@ -41,10 +43,13 @@ class IssuesPlugin(p.SingletonPlugin):
         A dictionary of extra helpers that will be available to provide
         ga report info to templates.
         """
+        def time_ago(date):
+            return webhelpers.date.time_ago_in_words(date, granularity='minute')
         return {
             'issues_installed': lambda: True,
             'issue_count': util.issue_count,
             'issue_comment_count': util.issue_comment_count,
+            'time_ago': time_ago,
         }
 
     def configure(self, config):
