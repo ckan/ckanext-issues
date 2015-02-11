@@ -1,3 +1,4 @@
+from ckan import model
 import ckan.plugins as p
 import ckanext.issues.model as issuemodel
 
@@ -5,15 +6,15 @@ def issue_auth(context, data_dict, privilege='package_update'):
     auth_data_dict = dict(data_dict)
     # we're checking package access so it is dataset/package id
     auth_data_dict['id'] = auth_data_dict['dataset_id']
-    authorized = p.toolkit.check_access(privilege, context, auth_data_dict)
-    if not authorized:
+    try:
+        p.toolkit.check_access(privilege, context, auth_data_dict)
+        return {'success': True}
+    except p.toolkit.NotAuthorized:
         return {
             'success': False,
             'msg': p.toolkit._('User {0} not authorized for action on issue {1}'
-                    .format(str(user), data_dict['id']))
+                    .format(str(context['user']), data_dict['id']))
         }
-    else:
-        return {'success': True}
 
 @p.toolkit.auth_allow_anonymous_access
 def issue_show(context, data_dict):
@@ -43,10 +44,12 @@ def issue_update(context, data_dict):
         return out
     # now check if we created the issue
     issue = issuemodel.Issue.get(data_dict['id'])
+    user = context['user']
+    user_obj = model.User.get(user)
     if (
-        (issue.creator.id == context['auth_user_obj'].id) # we're the creator
+        (issue.user_id == user_obj.id) # we're the creator
         and # we are not trying to change status
-        not (data_dict['status'] and (issue.status != data_dict['status']))
+        not (data_dict.get('status') and (issue.status != data_dict['status']))
         ):
         return {'success': True}
     # all other cases not allowed
