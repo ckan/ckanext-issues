@@ -93,6 +93,9 @@ class IssueController(BaseController):
             c.pkg_dict = c.pkg
         except logic.NotFound:
             abort(404, _('Dataset not found'))
+        except p.toolkit.NotAuthorized:
+            p.toolkit.abort(401,
+                            _('Unauthorized to view issues for this dataset'))
 
     def new(self, package_id, resource_id=None):
         self._before(package_id)
