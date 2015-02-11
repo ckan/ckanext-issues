@@ -1,0 +1,6 @@
+{% ckan_extends "package/read_base.html" %}
+
+{% block content_primary_nav %}
+  {{ super() }}
+  {{ h.build_nav_icon('issues_home', _('Issues'), package_id=pkg.name) }}
+{% endblock %}
