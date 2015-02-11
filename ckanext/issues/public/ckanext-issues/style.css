@@ -79,6 +79,10 @@
   color: #555;
 }
 
+.issue-comment-header .issue-comment-actions {
+  float: right;
+}
+
 .issue-header-text {
   max-width: 78%;
   padding-top: 10px;

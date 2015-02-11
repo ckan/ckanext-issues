@@ -179,6 +179,44 @@ class IssueController(BaseController):
 
         return render('issues/show.html')
 
+    def edit(self, id, package_id):
+        self._before(package_id)
+        show_context = {'model': model, 'session': model.Session,
+            'user': p.toolkit.c.user or p.toolkit.c.author,
+            'auth_user_obj': p.toolkit.c.userobj}
+
+        issue = p.toolkit.get_action('issue_show')(show_context, {'id': id})
+        if request.method == 'GET':
+            return p.toolkit.render(
+                'issues/edit.html',
+                extra_vars={
+                    'issue': issue,
+                    'errors': None,
+                },
+            )
+        elif request.method == 'POST':
+            update_context = {'model': model, 'session': model.Session,
+                'user': p.toolkit.c.user or p.toolkit.c.author,
+                'auth_user_obj': p.toolkit.c.userobj}
+            try:
+                data_dict = dict(request.params)
+                data_dict['id'] = id
+                data_dict['dataset_id'] = package_id
+                update = p.toolkit.get_action('issue_update')(update_context,
+                                                              data_dict)
+                return p.toolkit.redirect_to('issues_show', id=id,
+                                             package_id=package_id)
+            except p.toolkit.ValidationError, e:
+                errors = e.error_dict
+                return p.toolkit.render(
+                    'issues/edit.html',
+                    extra_vars={
+                        'issue': issue,
+                        'errors': errors,
+                    },
+                )
+
+
     def comments(self, id, package_id):
         # POST only
         if request.method != 'POST':

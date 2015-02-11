@@ -11,7 +11,7 @@ from ckan.plugins import implements, toolkit
 from ckanext.issues.lib import util
 from ckanext.issues import model
 from ckanext.issues import controller
-import ckanext.issues.logic as action
+import ckanext.issues.logic.action as action
 import ckanext.issues.auth as auth
 
 class IssuesPlugin(p.SingletonPlugin):
@@ -81,6 +81,8 @@ class IssuesPlugin(p.SingletonPlugin):
             m.connect('issues_home', '/dataset/:package_id/issues', action='home')
             m.connect('issues_new', '/dataset/:package_id/issues/new',
                     action='new')
+            m.connect('issues_edit', '/dataset/:package_id/issues/:id/edit',
+                    action='edit')
             m.connect('issues_comments', '/dataset/:package_id/issues/:id/comments',
                     action='comments')
             m.connect('add_issue_with_resource', '/dataset/:package_id/issues/new/:resource_id', action='add')

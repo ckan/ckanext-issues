@@ -11,11 +11,13 @@ import ckan.model.meta as meta
 import ckanext.datastore.logic.schema as dsschema
 import ckan.model as model
 import ckanext.issues.model as issuemodel
+from ckanext.issues.logic import schema
 
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 
 log = logging.getLogger(__name__)
+
 
 def issue_show(context, data_dict=None):
     '''Return a single issue.
@@ -50,11 +52,11 @@ def issue_create(context, data_dict):
     :returns: the newly created issue item
     :rtype: dictionary
     '''
-    userobj = context['auth_user_obj']
-
     p.toolkit.check_access('issue_create', context, data_dict)
+    user = context['user']
+    user_obj = model.User.get(user)
+    data_dict['user_id'] = user_obj.id
 
-    data_dict["user_id"] = userobj.id
     #data, errors = _validate(
     #    data_dict, ckan.logic.schema.default_related_schema(), context)
     #if errors:
@@ -93,16 +95,32 @@ def issue_update(context, data_dict):
     :rtype: dictionary
     '''
     p.toolkit.check_access('issue_update', context, data_dict)
+    validated_data_dict, errors = p.toolkit.navl_validate(
+        data_dict, 
+        schema.issue_update_schema(), 
+        context
+    )
+    if errors:
+        raise p.toolkit.ValidationError(errors)
+
+    # TODO:fix below to use validated_data_dict, 
+    #      and move validation into the schema
+
     issue = issuemodel.Issue.get(data_dict['id'])
-    status_change = data_dict['status'] and (data_dict['status'] !=
+    status_change = data_dict.get('status') and (data_dict.get('status') !=
             issue.status)
-    for k,v in [(k,v) for k,v in data_dict.items() if k not in ['id', 'created', 'user']]:
-        setattr(issue, k, v)
+
+    ignored_keys = ['id', 'created', 'user', 'dataset_id']
+    for k, v in data_dict.items():
+        if k not in ignored_keys:
+            setattr(issue, k, v)
 
     if status_change:
         if data_dict['status'] == issuemodel.ISSUE_STATUS.closed:
             issue.resolved = datetime.now()
-            issue.resolver_id = context['auth_user_obj'].id
+            user = context['user']
+            user_obj = model.User.get(user)
+            issue.resolver_id = user_obj.id
         elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
             issue.resolved = None
             issue.resolver = None
