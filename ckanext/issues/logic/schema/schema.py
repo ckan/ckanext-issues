@@ -12,7 +12,7 @@ user_exists = toolkit.get_validator('user_id_or_name_exists')
 def issue_update_schema():
     return {
         'id': [not_missing, unicode],
-        'title': [not_missing, unicode],
+        'title': [ignore_missing, unicode],
         'description': [ignore_missing, unicode],
         'dataset_id': [ignore_missing, unicode, package_exists],
         'resource_id': [ignore_missing, unicode, resource_id_exists],

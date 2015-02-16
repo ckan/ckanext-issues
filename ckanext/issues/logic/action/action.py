@@ -134,15 +134,16 @@ def issue_comment_create(context, data_dict):
 
     You must provide your API key in the Authorization header.
 
-    :param description: the description of the issue item
-    :type description: string
+    :param comment: the comment text
+    :type comment: string
     :param issue_id: the id of the issue the comment belongs to
     :type dataset_id: integer
 
     :returns: the newly created issue comment
     :rtype: dictionary
     '''
-    userobj = context['auth_user_obj']
+    user = context['user']
+    user_obj = model.User.get(user)
 
     issue = issuemodel.Issue.get(data_dict['issue_id'])
     if issue is None:
@@ -150,12 +151,10 @@ def issue_comment_create(context, data_dict):
             'issue_id': ['No issue exists with id %s' % data_dict['issue_id']]
         })
 
-    auth_dict = {
-        'dataset_id': issue.dataset_id
-        }
+    auth_dict = { 'dataset_id': issue.dataset_id }
     p.toolkit.check_access('issue_comment_create', context, auth_dict)
 
-    data_dict["user_id"] = userobj.id
+    data_dict['user_id'] = user_obj.id
 
     issue = issuemodel.IssueComment(**data_dict)
     model.Session.add(issue)
