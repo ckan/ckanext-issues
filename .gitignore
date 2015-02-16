@@ -2,3 +2,7 @@
 *.pyc
 *.egg-info/*
 .DS_Store
+.coverage
+.noseids
+test-custom.ini
+issue-test.db
