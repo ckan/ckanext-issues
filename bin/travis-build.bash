@@ -21,10 +21,10 @@ sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
 sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
 sudo -u postgres psql -c 'CREATE DATABASE json_datastore_test WITH OWNER ckan_default;'
 
-echo "Initialising the database..."
-cd ckan
-paster db init -c test-core.ini
-cd -
+#echo "Initialising the database..."
+#cd ckan
+#paster db init -c test-core.ini
+#cd -
 
 echo "Installing ckanext-issues and its requirements..."
 python setup.py develop
