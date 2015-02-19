@@ -1,13 +1,12 @@
+[![Build Status](https://travis-ci.org/okfn/ckanext-issues.svg?branch=master)](https://travis-ci.org/okfn/ckanext-issues)
+[![Coverage](https://coveralls.io/repos/okfn/ckanext-issues/badge.png?branch=master)](https://coveralls.io/r/okfn/ckanext-issues?branch=master)
+
 # CKAN Issues Extension
 
 This extension allows users to to report issues with datasets and resources in
 a CKAN instance.
 
 **Current Status:** Beta
-### Status
-[![Build Status](https://travis-ci.org/okfn/ckanext-issues.svg?branch=master)](https://travis-ci.org/okfn/ckanext-issues)
-[![Coverage](https://coveralls.io/repos/okfn/ckanext-issues/badge.png?branch=master)](https://coveralls.io/r/okfn/ckanext-issues?branch=master)
-
 
 ## What it does
 
