@@ -1,14 +1,16 @@
 """
 CKAN Issue Extension Data Model
 """
-import logging
-from sqlalchemy import types, Table, ForeignKey, Column
-from sqlalchemy.orm import relation, backref
 from ckan import model
 from ckan.model import meta, User, Package, Session, Resource
 import ckan.lib.helpers as h
+
 import ckan.model.domain_object as domain_object
 from datetime import datetime
+import logging
+
+from sqlalchemy import types, Table, ForeignKey, Column
+from sqlalchemy.orm import relation, backref
 
 log = logging.getLogger(__name__)
 
@@ -152,7 +154,6 @@ def define_issue_tables():
         Column('description', types.Unicode, nullable=False, unique=False),
         Column('created', types.DateTime, default=datetime.now,
                nullable=False))
-    # ------------------------------------------------------------------------------
 
     issue_table = Table(
         'issue',
@@ -177,7 +178,6 @@ def define_issue_tables():
         Column('resolved', types.DateTime),
         Column('created', types.DateTime, default=datetime.now, nullable=False)
         )
-    # ------------------------------------------------------------------------------
 
     issue_comment_table = Table(
         'issue_comment',
@@ -192,8 +192,6 @@ def define_issue_tables():
                nullable=False, index=True),
         Column('created', types.DateTime, default=datetime.now,
                nullable=False))
-
-    # ------------------------------------------------------------------------------
 
     meta.mapper(
         Issue,
