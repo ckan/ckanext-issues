@@ -13,7 +13,7 @@ def issue_auth(context, data_dict, privilege='package_update'):
         return {
             'success': False,
             'msg': p.toolkit._('User {0} not authorized for action on issue {1}'
-                    .format(str(context['user']), data_dict['id']))
+                    .format(str(context['user']), auth_data_dict['id']))
         }
 
 @p.toolkit.auth_allow_anonymous_access

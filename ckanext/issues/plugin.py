@@ -1,7 +1,6 @@
 """
 CKAN Issue Extension
 """
-import os
 from logging import getLogger
 log = getLogger(__name__)
 
@@ -9,11 +8,10 @@ import ckan.plugins as p
 from ckan.plugins import implements, toolkit
 
 from ckanext.issues.lib import util
-from ckanext.issues import model
-from ckanext.issues import controller
 from ckanext.issues.model import setup as model_setup
 import ckanext.issues.logic.action as action
 import ckanext.issues.auth as auth
+
 
 class IssuesPlugin(p.SingletonPlugin):
     """
@@ -74,15 +72,9 @@ class IssuesPlugin(p.SingletonPlugin):
         return map
 
     def get_actions(self):
-        actions = {
-            'issue_create': action.issue_create,
-            'issue_show': action.issue_show,
-            'issue_comment_create': action.issue_comment_create,
-            'issue_update': action.issue_update,
-            # 'issue_delete': action.issue_delete,
-            # 'issue_search': action.issue_search,
-        }
-        return actions
+        return dict((name, function) for name, function
+            in action.__dict__.items()
+            if callable(function))
 
     def get_auth_functions(self):
         return {

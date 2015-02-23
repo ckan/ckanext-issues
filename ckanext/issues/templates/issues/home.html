@@ -15,9 +15,9 @@
         </div>
       </h1>
     </div>
-  {% if c.issues %}
+  {% if issues %}
     <ul class="issue-list-group list-group">
-    {% for issue in c.issues %}
+    {% for issue in issues %}
       <li class="list-group-item">
         <span class="list-group-item-number">#{{issue.id}}</span>
         <h4 class="list-group-item-name">
@@ -50,8 +50,8 @@
 {% block secondary_content %}
 <div class="issue-home-sidebar">
   <div class="btn-group">
-    {% for status in ['open', 'closed'] %}
-    <a class="btn {% if c.query.status==status%}active{% endif %}" href="?status={{status}}">{{_(status.title())}}</a>
+    {% for valid_status in ['open', 'closed'] %}
+    <a class="btn {% if status==valid_status%}active{% endif %}" href="?status={{valid_status}}">{{_(valid_status.title())}}</a>
     {% endfor %}
   </div>
 </div>

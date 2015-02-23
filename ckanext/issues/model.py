@@ -10,7 +10,7 @@ from datetime import datetime
 import logging
 
 from sqlalchemy import types, Table, ForeignKey, Column
-from sqlalchemy.orm import relation, backref
+from sqlalchemy.orm import relation, backref, joinedload
 
 log = logging.getLogger(__name__)
 
@@ -104,14 +104,39 @@ class Issue(domain_object.DomainObject):
     pass
 
     @classmethod
-    def get(cls, reference):
+    def get(cls, reference, session=Session):
         """Returns a Issue object referenced by its id."""
-        return Session.query(cls).filter(cls.id == reference).first()
+        return session.query(cls).filter(cls.id == reference).first()
 
-    def as_dict(self):
+    @classmethod
+    def get_issues_for_dataset(cls, dataset_id, offset=None, limit=None,
+                               status=None, sort=None, session=Session):
+        # FIXME: dataset_id could be name or id
+        dataset_id = model.Package.get(dataset_id).id
+        query = session.query(cls).filter(cls.dataset_id == dataset_id)
+        if status:
+            query = query.filter(cls.status == status)
+
+        if sort:
+            if sort == 'descending':
+                query = query.order_by(cls.created.desc())
+            elif sort == 'ascending':
+                query = query.order_by(cls.created.asc())
+
+        if offset:
+            query = query.offset(offset)
+        if limit:
+            query = query.limit(limit)
+        query = query.options(joinedload(cls.comments))
+        return (i.as_dict() for i in query.all())
+
+    def as_dict(self, include_comments=True, include_user=True):
         out = super(Issue, self).as_dict()
-        out['comments'] = [c.as_dict() for c in self.comments]
-        out['user'] = _user_dict(self.user)
+
+        if include_comments:
+            out['comments'] = [c.as_dict() for c in self.comments]
+        if include_user:
+            out['user'] = _user_dict(self.user)
         # some cases dataset not yet set ...
         if self.dataset:
             out['ckan_url'] = h.url_for('issues_show',

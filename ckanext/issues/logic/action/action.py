@@ -1,15 +1,11 @@
 import logging
 
 from datetime import datetime
-import pylons
-import sqlalchemy
 
-import ckan.lib.navl.dictization_functions
 import ckan.logic as logic
 import ckan.plugins as p
-import ckan.model.meta as meta
-import ckanext.datastore.logic.schema as dsschema
 import ckan.model as model
+from ckan.logic import validate
 import ckanext.issues.model as issuemodel
 from ckanext.issues.logic import schema
 
@@ -36,6 +32,7 @@ def issue_show(context, data_dict=None):
     p.toolkit.check_access('issue_show', context, issue_dict)
     return issue_dict
 
+
 def issue_create(context, data_dict):
     '''Add a new issue.
 
@@ -53,20 +50,30 @@ def issue_create(context, data_dict):
     :rtype: dictionary
     '''
     p.toolkit.check_access('issue_create', context, data_dict)
+    # validated_data_dict, errors = p.toolkit.navl_validate(
+    #     data_dict,
+    #     schema.issue_create_schema(),
+    #     context
+    # )
+    # if errors:
+    #    raise p.toolkit.ValidationError(errors)
+
     user = context['user']
     user_obj = model.User.get(user)
     data_dict['user_id'] = user_obj.id
 
-    #data, errors = _validate(
-    #    data_dict, ckan.logic.schema.default_related_schema(), context)
-    #if errors:
-    #    model.Session.rollback()
-    #    raise ValidationError(errors)
+    # data, errors = _validate(
+    #     data_dict, ckan.logic.schema.default_related_schema(), context)
+    # if errors:
+    #     model.Session.rollback()
+    #     raise ValidationError(errors)
     dataset = model.Package.get(data_dict['dataset_id'])
     # TODO propoer validation?
     if dataset is None:
         raise p.toolkit.ValidationError({
-            'dataset_id': ['No dataset exists with id %s' % data_dict['dataset_id']]
+            'dataset_id': [
+                'No dataset exists with id %s' % data_dict['dataset_id']
+            ]
         })
     del data_dict['dataset_id']
 
@@ -77,6 +84,7 @@ def issue_create(context, data_dict):
 
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()
+
 
 def issue_update(context, data_dict):
     '''Update an issue.
@@ -96,19 +104,19 @@ def issue_update(context, data_dict):
     '''
     p.toolkit.check_access('issue_update', context, data_dict)
     validated_data_dict, errors = p.toolkit.navl_validate(
-        data_dict, 
-        schema.issue_update_schema(), 
+        data_dict,
+        schema.issue_update_schema(),
         context
     )
     if errors:
         raise p.toolkit.ValidationError(errors)
 
-    # TODO:fix below to use validated_data_dict, 
+    # TODO:fix below to use validated_data_dict,
     #      and move validation into the schema
 
     issue = issuemodel.Issue.get(data_dict['id'])
     status_change = data_dict.get('status') and (data_dict.get('status') !=
-            issue.status)
+                                                 issue.status)
 
     ignored_keys = ['id', 'created', 'user', 'dataset_id']
     for k, v in data_dict.items():
@@ -128,6 +136,7 @@ def issue_update(context, data_dict):
     model.Session.add(issue)
     model.Session.commit()
     return issue.as_dict()
+
 
 def issue_comment_create(context, data_dict):
     '''Add a new issue comment.
@@ -151,7 +160,7 @@ def issue_comment_create(context, data_dict):
             'issue_id': ['No issue exists with id %s' % data_dict['issue_id']]
         })
 
-    auth_dict = { 'dataset_id': issue.dataset_id }
+    auth_dict = {'dataset_id': issue.dataset_id}
     p.toolkit.check_access('issue_comment_create', context, auth_dict)
 
     data_dict['user_id'] = user_obj.id
@@ -164,3 +173,13 @@ def issue_comment_create(context, data_dict):
 
     return issue.as_dict()
 
+
+@p.toolkit.side_effect_free
+@validate(schema.issue_list_schema)
+def issue_list(context, data_dict):
+    '''List issues for a given dataset'''
+    p.toolkit.check_access('issue_show', context, data_dict)
+
+    return list(issuemodel.Issue.get_issues_for_dataset(
+        session=context['session'],
+        **data_dict))

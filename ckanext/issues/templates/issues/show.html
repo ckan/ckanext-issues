@@ -16,9 +16,13 @@
   <div class="issue-comment">
     <div class="issue-comment-header">
       <div class="issue-comment-actions">
-        <a href={{h.url_for('issues_edit', package_id=c.pkg.name, id=c.issue.id)}} class=btn>
-          <i class="icon-pencil"></i>
-        </a>
+        {% if h.check_access('issue_update', {'dataset_id': c.pkg.id, 'id': c.issue.id }) %}
+          <div class="issue-edit-button">
+            <a href={{h.url_for('issues_edit', package_id=c.pkg.name, id=c.issue.id)}} class=btn>
+              <i class="icon-pencil"></i>
+            </a>
+          </div>
+        {% endif %}
       </div>
       <div class="issue-header-text">
         <a href="{{comment.user.ckan_url}}" class="author">{{ comment.user.name}}</a>

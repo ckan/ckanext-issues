@@ -6,24 +6,24 @@ from logging import getLogger
 log = getLogger(__name__)
 
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload
 from pylons.i18n import _
-from pylons.decorators import jsonify
 from pylons import request, config, tmpl_context as c
 import webhelpers.date
 
-from ckan.lib.base import BaseController, response, render, abort, redirect
-from ckan.lib.search import query_for
+from ckan.lib.base import BaseController, render, abort, redirect
 import ckan.lib.helpers as h
 import ckan.model as model
 import ckanext.issues.model as issuemodel
 import ckanext.issues.lib.util as util
 import ckan.logic as logic
 import ckan.plugins as p
+from ckan.plugins import toolkit
+
 import re
 
 AUTOCOMPLETE_LIMIT = 10
 VALID_CATEGORY = re.compile(r"[0-9a-z\-\._]+")
+
 
 def _notify(issue):
     # Depending on configuration, and availability of data we
@@ -36,9 +36,9 @@ def _notify(issue):
     from ckan.lib.mailer import mail_recipient
     from genshi.template.text import NewTextTemplate
 
-
     admin_address = config.get('email_to')
-    from_address = config.get('ckanext.issues.from_address', 'admin@localhost.local')
+    # from_address = config.get('ckanext.issues.from_address',
+    #  'admin@localhost.local')
 
     publisher = issue.package.get_groups('publisher')[0]
     if 'contact-address' in issue.package.extras:
@@ -54,10 +54,14 @@ def _notify(issue):
     cc_address = admin_address if contact_address else None
 
     extra_vars = {
-        'issue' : issue,
+        'issue': issue,
         'username': issue.reporter.fullname or issue.reporter.name,
-        'site_url'   : h.url_for(controller='ckanext.issues.controller:IssueController',
-                         action='issue_page', package_id=issue.package.name, qualified=True)
+        'site_url': h.url_for(
+            controller='ckanext.issues.controller:IssueController',
+            action='issue_page',
+            package_id=issue.package.name,
+            qualified=True
+        )
     }
 
     email_msg = render("issues/email/new_issue.txt", extra_vars=extra_vars,
@@ -74,8 +78,9 @@ def _notify(issue):
         mail_recipient(contact_name, to_address,
                        "Dataset issue",
                        email_msg, headers=headers)
-    except Exception, e:
+    except Exception:
         log.error('Failed to send an email message for issue notification')
+
 
 class IssueController(BaseController):
     """
@@ -83,13 +88,12 @@ class IssueController(BaseController):
     """
 
     def _before(self, package_id):
-        self.context = {'model': model, 'session': model.Session,
-                   'user': c.user or c.author, 'auth_user_obj': c.userobj,
-                   'for_view': True}
+        self.context = {'for_view': True}
         try:
             c.pkg = logic.get_action('package_show')(self.context, {'id':
-                package_id})
-            # need this as some templates in core explicitly reference c.pkg_dict
+                                                     package_id})
+            # need this as some templates in core explicitly reference
+            # c.pkg_dict
             c.pkg_dict = c.pkg
         except logic.NotFound:
             abort(404, _('Dataset not found'))
@@ -132,10 +136,12 @@ class IssueController(BaseController):
                 c.error_summary['title'] = ["Please enter a title"]
             c.errors = c.error_summary
 
-            if not c.error_summary: # save and redirect
-                issue_dict = logic.get_action('issue_create')(self.context,
-                        data_dict)
-                h.flash_success(_("Your issue has been registered, thank you for the feedback"))
+            if not c.error_summary:  # save and redirect
+                issue_dict = logic.get_action('issue_create')(
+                    data_dict=data_dict
+                )
+                h.flash_success(_('Your issue has been registered, '
+                                  'thank you for the feedback'))
                 redirect(h.url_for(
                     'issues_show',
                     package_id=c.pkg['name'],
@@ -150,8 +156,9 @@ class IssueController(BaseController):
         data_dict = {
             'id': id
         }
-        c.issue = logic.get_action('issue_show')(self.context, data_dict)
-        # annoying we repeat what logic has done but easiest way to get proper datetime ...
+        c.issue = logic.get_action('issue_show')(data_dict=data_dict)
+        # annoying we repeat what logic has done but easiest way to get proper
+        # datetime ...
         issueobj = issuemodel.Issue.get(id)
 
         c.issue['comment'] = c.issue['description'] or _('No description provided')
@@ -169,7 +176,10 @@ class IssueController(BaseController):
         if c.userobj:
             c.current_user = issuemodel._user_dict(c.userobj)
             try:
-                p.toolkit.check_access('issue_update', self.context, {
+                p.toolkit.check_access(
+                    'issue_update',
+                    context=self.context,
+                    data_dict={
                     'id': id,
                     'dataset_id': package_id
                     })
@@ -181,11 +191,7 @@ class IssueController(BaseController):
 
     def edit(self, id, package_id):
         self._before(package_id)
-        show_context = {'model': model, 'session': model.Session,
-            'user': p.toolkit.c.user or p.toolkit.c.author,
-            'auth_user_obj': p.toolkit.c.userobj}
-
-        issue = p.toolkit.get_action('issue_show')(show_context, {'id': id})
+        issue = p.toolkit.get_action('issue_show')(data_dict={'id': id})
         if request.method == 'GET':
             return p.toolkit.render(
                 'issues/edit.html',
@@ -195,15 +201,11 @@ class IssueController(BaseController):
                 },
             )
         elif request.method == 'POST':
-            update_context = {'model': model, 'session': model.Session,
-                'user': p.toolkit.c.user or p.toolkit.c.author,
-                'auth_user_obj': p.toolkit.c.userobj}
+            data_dict = dict(request.params)
+            data_dict['id'] = id
+            data_dict['dataset_id'] = package_id
             try:
-                data_dict = dict(request.params)
-                data_dict['id'] = id
-                data_dict['dataset_id'] = package_id
-                update = p.toolkit.get_action('issue_update')(update_context,
-                                                              data_dict)
+                p.toolkit.get_action('issue_update')(data_dict=data_dict)
                 return p.toolkit.redirect_to('issues_show', id=id,
                                              package_id=package_id)
             except p.toolkit.ValidationError, e:
@@ -215,7 +217,8 @@ class IssueController(BaseController):
                         'errors': errors,
                     },
                 )
-
+            except p.toolkit.NotAuthorized, e:
+                p.toolkit.abort(401, e.message)
 
     def comments(self, id, package_id):
         # POST only
@@ -277,24 +280,21 @@ class IssueController(BaseController):
         Display a page containing a list of all issues items, sorted by category.
         """
         self._before(package_id)
-        c.query = {
-            'status': issuemodel.ISSUE_STATUS.open
-            }
-        c.query.update(dict(request.GET))
-        # categories
-        c.issues = model.Session.query(issuemodel.Issue)\
-            .filter(issuemodel.Issue.dataset_id==c.pkg['id'])\
-            .filter(issuemodel.Issue.status==c.query['status'])\
-            .options(joinedload(issuemodel.Issue.comments))\
-            .order_by(issuemodel.Issue.created.desc())
-        c.count = c.issues.count()
-        def _convert(issue):
-            out = issue.as_dict()
-            out.created_time_ago = util.time_ago(issue.created)
-            return out
-        c.issues = map(_convert, c.issues)
+        status = request.GET.get('status', issuemodel.ISSUE_STATUS.open)
+        sort = request.GET.get('sort', 'descending')
+
+        issues = _get_issues_list( package_id, status, sort)
+
+        # do we need resource_id?
         c.resource_id = request.GET.get('resource', "")
-        return render("issues/home.html")
+        return render(
+            "issues/home.html",
+            extra_vars={
+                'issues': issues,
+                'status': status,
+                'sort': sort,
+            }
+        )
 
     def publisher_issue_page(self, publisher_id):
         """
@@ -351,3 +351,20 @@ class IssueController(BaseController):
         # sort into alphabetical order
         c.categories.sort(key = lambda x: x.name)
         return render("issues/all_issues.html")
+
+
+def _get_issues_list( package_id, status, sort):
+    issues = toolkit.get_action('issue_list')(
+        data_dict={
+            'dataset_id': package_id,
+            'status': status,
+            'sort': sort,
+        }
+    )
+
+    def _add_time_since(issue):
+        issue['created_time_ago'] = util.time_ago(issue['created'])
+        return issue
+
+    issues = map(_add_time_since, issues)
+    return issues
