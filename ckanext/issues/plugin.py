@@ -11,6 +11,7 @@ from ckan.plugins import implements, toolkit
 from ckanext.issues.lib import util
 from ckanext.issues import model
 from ckanext.issues import controller
+from ckanext.issues.model import setup as model_setup
 import ckanext.issues.logic.action as action
 import ckanext.issues.auth as auth
 
@@ -48,28 +49,7 @@ class IssuesPlugin(p.SingletonPlugin):
         }
 
     def configure(self, config):
-        """
-        Called at the end of CKAN setup.
-
-        Create issue and issue_category tables in the database.
-        Prepopulate issue_category table with default categories.
-        """
-        model.issue_category_table.create(checkfirst=True)
-        model.issue_table.create(checkfirst=True)
-        model.issue_comment_table.create(checkfirst=True)
-
-        # add default categories if they don't already exist
-        session = model.meta.Session()
-        for category_name, category_desc in model.DEFAULT_CATEGORIES.iteritems():
-            if not category_name:
-                continue
-
-            category = model.IssueCategory.get(category_name)
-            if not category:
-                category = model.IssueCategory(category_name)
-                category.description = category_desc
-                session.add(category)
-        session.commit()
+        model_setup()
 
     def before_map(self, map):
         """
