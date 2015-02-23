@@ -12,6 +12,7 @@ git clone https://github.com/ckan/ckan
 cd ckan
 git checkout master
 python setup.py develop
+cp ./ckan/public/base/css/main.css ./ckan/public/base/css/main.debug.css
 pip install -r requirements.txt --allow-all-external
 pip install -r dev-requirements.txt --allow-all-external
 cd -
