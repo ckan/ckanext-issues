@@ -44,16 +44,102 @@
     <p class="empty">{{ _('No issues') }}</p>
   {% endif %}
   </div>
+  <div class="pagination pagination-small span6" id="page">
+    <ul>
+    {% if pagination.has_previous %}
+      <li>
+        {% set href = h.replace_url_param(new_params={'page': pagination.page - 1}, extras={'package_id':pkg['id']}) %}
+        <a href={{ href }}>«</a>
+      </li>
+    {% endif %}
+    {% if pagination.show_previous %}
+      <li>
+        {% set href = h.replace_url_param(new_params={'page': 1}, extras={'package_id':pkg['id']}) %}
+        <a href={{ href }}>1</a>
+      </li>
+      <li class="disabled">
+        <a href="#">...</a>
+      </li>
+    {% endif %}
+    {% for page in pagination.iter_pages() %}
+      {% if page %}
+        {% set href = h.replace_url_param(new_params={'page': page}, extras={'package_id':pkg['id']}) %}
+        {% if page != pagination.page %}
+          <li>
+            <a href={{ href }}>{{ page }}</a>
+          </li>
+        {% else %}
+          <li class="disabled">
+            <a href="#">{{ page }}</a>
+          </li>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    {% if pagination.show_next %}
+      <li class="disabled">
+        <a href="#">...</a>
+      </li>
+      <li>
+        {% set href = h.replace_url_param(new_params={'page': pagination.pages }, extras={'package_id':pkg['id']}) %}
+        <a href={{ href }}>{{ pagination.pages }}</a>
+      </li>
+    {% endif %}
+    {% if pagination.has_next %}
+      <li>
+      {% set href = h.replace_url_param(new_params={'page': pagination.page + 1}, extras={'package_id':pkg['id']}) %}
+        <a href={{ href }}>»</a>
+      </li>
+    {% endif %}
+    </ul>
+  </div>
+  <div class="pagination pagination-small span3" id="per_page">
+    <ul>
+      {% for per_page_option in issues_per_page %}
+        <li{% if per_page_option==pagination.per_page %} class="active"{% endif %}>
+        {% set href = h.replace_url_param(new_params={'per_page': per_page_option, 'page': 1}, extras={'package_id':pkg['id']}) %}
+        <a href={{ href }}>{{ per_page_option }}</a>
+        </li>
+      {% endfor %}
+        <li class="disabled">
+        <a href="#">per page</a>
+        </li>
+    </ul>
+  </div>
 </section>
 {% endblock %}
 
 {% block secondary_content %}
-<div class="issue-home-sidebar">
-  <div class="btn-group">
+<div class="module module-narrow module-shallow">
+  <h2 class="module-heading">
+    <i class="icon-medium icon-filter"></i>
+    Status
+  </h2>
+  <ul class="unstyled nav nav-simple nav-facet">
     {% for valid_status in ['open', 'closed'] %}
-    <a class="btn {% if status==valid_status%}active{% endif %}" href="?status={{valid_status}}">{{_(valid_status.title())}}</a>
+    <li class="nav-item {% if status==valid_status%}active{% endif %}">
+    {% set href = h.replace_url_param(new_params={'status': valid_status}, extras={'package_id':pkg['id']}) %}
+    <a href={{ href }}>
+      <span>{{_(valid_status.title())}}</span>
+    </a>
+    </li>
     {% endfor %}
-  </div>
+  </ul>
 </div>
+  <section class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      <i class="icon-medium icon-filter"></i>
+      Filters
+    </h2>
+    <ul class="unstyled nav nav-simple nav-facet">
+      {% for filter_ in filters %}
+      <li class="nav-item {% if filter_==sort %}active{%endif%}">
+      {% set href = h.replace_url_param(new_params={'sort': filter_}, extras={'package_id':pkg['id']}) %}
+      <a href={{ href }}>
+        <span>{{ filter_.title() }}</span>
+      </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
 {% endblock %}
 

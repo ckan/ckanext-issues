@@ -7,7 +7,7 @@ log = getLogger(__name__)
 import ckan.plugins as p
 from ckan.plugins import implements, toolkit
 
-from ckanext.issues.lib import util
+from ckanext.issues.lib import util, helpers
 from ckanext.issues.model import setup as model_setup
 import ckanext.issues.logic.action as action
 import ckanext.issues.auth as auth
@@ -44,6 +44,7 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_count': util.issue_count,
             'issue_comment_count': util.issue_comment_count,
             'time_ago': util.time_ago,
+            'replace_url_param': helpers.replace_url_param,
         }
 
     def configure(self, config):
@@ -79,9 +80,9 @@ class IssuesPlugin(p.SingletonPlugin):
     def get_auth_functions(self):
         return {
             'issue_show': auth.issue_show,
+            'issue_count': auth.issue_show,
             'issue_create': auth.issue_create,
             'issue_comment_create': auth.issue_comment_create,
             'issue_update': auth.issue_update,
             'issue_delete': auth.issue_delete,
         }
-

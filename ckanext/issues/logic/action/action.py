@@ -183,3 +183,14 @@ def issue_list(context, data_dict):
     return list(issuemodel.Issue.get_issues_for_dataset(
         session=context['session'],
         **data_dict))
+
+
+@p.toolkit.side_effect_free
+@validate(schema.issue_list_schema)
+def issue_count(context, data_dict):
+    '''Get the total number of issues for a given dataset'''
+    p.toolkit.check_access('issue_show', context, data_dict)
+
+    return issuemodel.Issue.get_count_for_dataset(
+        session=context['session'],
+        **data_dict)

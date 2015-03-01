@@ -71,7 +71,7 @@ class TestIssueList(object):
         issues_list = helpers.call_action('issue_list',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
-                                          sort='ascending')
+                                          sort='oldest')
         assert_equals(range(1, 11), [i['id'] for i in issues_list])
 
     def test_list_all_issues_for_dataset_without_dataset_id_fails(self):
@@ -92,7 +92,7 @@ class TestIssueList(object):
         issues_list = helpers.call_action('issue_list',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
-                                          sort='ascending',
+                                          sort='oldest',
                                           limit=5)
         assert_equals(range(1, 6), [i['id'] for i in issues_list])
 
@@ -106,7 +106,7 @@ class TestIssueList(object):
         issues_list = helpers.call_action('issue_list',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
-                                          sort='ascending',
+                                          sort='oldest',
                                           offset=5)
         assert_equals(range(6, 11), [i['id'] for i in issues_list])
 
@@ -120,7 +120,21 @@ class TestIssueList(object):
         issues_list = helpers.call_action('issue_list',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
-                                          sort='ascending',
+                                          sort='oldest',
                                           offset=5,
                                           limit=3)
         assert_equals(range(6, 9), [i['id'] for i in issues_list])
+
+    def test_filter_newest(self):
+        user = factories.User()
+        dataset = factories.Dataset()
+
+        [issue_factories.Issue(user=user, user_id=user['id'],
+                               dataset_id=dataset['id'], description=i)
+            for i in range(0, 10)]
+        issues_list = helpers.call_action('issue_list',
+                                          context={'user': user['name']},
+                                          dataset_id=dataset['id'],
+                                          sort='newest')
+        assert_equals(list(reversed(range(1, 11))),
+                      [i['id'] for i in issues_list])

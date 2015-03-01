@@ -9,7 +9,8 @@ import ckan.model.domain_object as domain_object
 from datetime import datetime
 import logging
 
-from sqlalchemy import types, Table, ForeignKey, Column
+import enum
+from sqlalchemy import func, types, Table, ForeignKey, Column
 from sqlalchemy.orm import relation, backref, joinedload
 
 log = logging.getLogger(__name__)
@@ -99,6 +100,11 @@ def _user_dict(user):
     return out
 
 
+class IssueFilter(enum.Enum):
+    newest = 1
+    oldest = 2
+
+
 class Issue(domain_object.DomainObject):
     """A Issue Object"""
     pass
@@ -111,16 +117,14 @@ class Issue(domain_object.DomainObject):
     @classmethod
     def get_issues_for_dataset(cls, dataset_id, offset=None, limit=None,
                                status=None, sort=None, session=Session):
-        # FIXME: dataset_id could be name or id
-        dataset_id = model.Package.get(dataset_id).id
         query = session.query(cls).filter(cls.dataset_id == dataset_id)
         if status:
             query = query.filter(cls.status == status)
 
         if sort:
-            if sort == 'descending':
+            if sort == IssueFilter.newest:
                 query = query.order_by(cls.created.desc())
-            elif sort == 'ascending':
+            elif sort == IssueFilter.oldest:
                 query = query.order_by(cls.created.asc())
 
         if offset:
@@ -129,6 +133,12 @@ class Issue(domain_object.DomainObject):
             query = query.limit(limit)
         query = query.options(joinedload(cls.comments))
         return (i.as_dict() for i in query.all())
+
+    @classmethod
+    def get_count_for_dataset(cls, dataset_id, session):
+        query = session.query(func.count(cls.id)).\
+            filter(cls.dataset_id == dataset_id).one()[0]
+        return query
 
     def as_dict(self, include_comments=True, include_user=True):
         out = super(Issue, self).as_dict()

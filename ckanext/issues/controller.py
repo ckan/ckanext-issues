@@ -3,7 +3,7 @@ CKAN Issues Extension
 """
 import collections
 from logging import getLogger
-log = getLogger(__name__)
+import re
 
 from sqlalchemy import func
 from pylons.i18n import _
@@ -13,16 +13,21 @@ import webhelpers.date
 from ckan.lib.base import BaseController, render, abort, redirect
 import ckan.lib.helpers as h
 import ckan.model as model
-import ckanext.issues.model as issuemodel
-import ckanext.issues.lib.util as util
 import ckan.logic as logic
 import ckan.plugins as p
 from ckan.plugins import toolkit
 
-import re
+import ckanext.issues.model as issuemodel
+from ckanext.issues.lib import util
+from ckanext.issues.logic import schema
+from ckanext.issues.lib.helpers import Pagination
+
+
+log = getLogger(__name__)
 
 AUTOCOMPLETE_LIMIT = 10
 VALID_CATEGORY = re.compile(r"[0-9a-z\-\._]+")
+ISSUES_PER_PAGE = (15, 30, 50)
 
 
 def _notify(issue):
@@ -280,19 +285,55 @@ class IssueController(BaseController):
         Display a page containing a list of all issues items, sorted by category.
         """
         self._before(package_id)
-        status = request.GET.get('status', issuemodel.ISSUE_STATUS.open)
-        sort = request.GET.get('sort', 'descending')
+        query, errors = toolkit.navl_validate(
+            dict(request.GET),
+            schema.issue_home_controller_schema()
+        )
+        if errors:
+            error_summary = toolkit.ValidationError(errors).error_summary
+            msg = toolkit._("Validation error: {0}".format(error_summary))
+            h.flash(msg, category='alert-error')
+            return p.toolkit.redirect_to('issues_home', package_id=package_id)
 
-        issues = _get_issues_list( package_id, status, sort)
+        status = query.get('status', issuemodel.ISSUE_STATUS.open)
+        sort = query.get('sort')
+        if not sort:
+            sort = 'newest'
 
-        # do we need resource_id?
+        try:
+            issues_per_page = [int(i) for i in
+                               config['ckan.issues.issues_per_page']]
+        except (ValueError, KeyError):
+            issues_per_page = ISSUES_PER_PAGE
+
+        page = query.get('page', 1)
+        per_page = query.get('per_page', issues_per_page[0])
+
+        try:
+            issues = _get_issues_list(package_id, status, sort, page, per_page)
+            issue_count = toolkit.get_action('issue_count')(
+                data_dict={'dataset_id': package_id}
+            )
+        except toolkit.ValidationError, e:
+            msg = toolkit._("Validation error: {0}".format(e.error_summary))
+            h.flash(msg, category='alert-error')
+            return p.toolkit.redirect_to('issues_home', package_id=package_id)
+
+        # do we need resource_id? is this needed for the template?
         c.resource_id = request.GET.get('resource', "")
+        filters = issuemodel.IssueFilter.__members__.keys()
+        pagination = Pagination(page, per_page, issue_count)
+
         return render(
             "issues/home.html",
             extra_vars={
                 'issues': issues,
                 'status': status,
                 'sort': sort,
+                'pagination': pagination,
+                #
+                'issues_per_page': issues_per_page,
+                'filters': filters,
             }
         )
 
@@ -353,12 +394,15 @@ class IssueController(BaseController):
         return render("issues/all_issues.html")
 
 
-def _get_issues_list( package_id, status, sort):
+def _get_issues_list(dataset_id, status, sort, page=1, per_page=15):
+    offset = (page - 1) * per_page
     issues = toolkit.get_action('issue_list')(
         data_dict={
-            'dataset_id': package_id,
+            'dataset_id': dataset_id,
             'status': status,
             'sort': sort,
+            'offset': offset,
+            'limit': per_page,
         }
     )
 
