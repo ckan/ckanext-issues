@@ -68,7 +68,12 @@ Please open an issue in the github [issue tracker][issues].
 Normal requirements for CKAN Extensions (including an installation of CKAN and
 its dev requirements).
 
-Testing:
+### Testing with Postgres
+To run full production tests on postgres run. These are the tests that the travis build will run
 
-    nosetests test/ --ckan --nologcapture
+    nosetests --ckan --with-pylons=test.ini -v --with-id ckanext/issues --with-coverage --cover-package=ckanext.issues --nologcapture
 
+### Testing with sqlite
+For quick development tests run. --reset-db is necessary when running sqlite tests in memory
+
+    nosetests --reset-db --ckan --with-pylons=test-sqlite.ini -v --with-id ckanext/issues --with-coverage --cover-package=ckanext.issues --nologcapture
