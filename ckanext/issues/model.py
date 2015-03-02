@@ -108,6 +108,29 @@ class IssueFilter(enum.Enum):
     recently_updated = 5
     least_recently_updated = 6
 
+    @classmethod
+    def get_filter(cls, issue_filter):
+        sort_functions = {
+            cls.newest: lambda q: q.order_by(Issue.created.desc()),
+            cls.oldest: lambda q: q.order_by(Issue.created.asc()),
+            cls.least_commented: 
+                lambda q: q.order_by(func.count(IssueComment.id).asc()),
+            cls.most_commented: 
+                lambda q: q.order_by(func.count(IssueComment.id).desc()),
+            cls.recently_updated: 
+                lambda q: q.order_by(func.max(IssueComment.created).asc()),
+            cls.least_recently_updated: 
+                lambda q: q.order_by(func.max(IssueComment.created).desc()),
+        }
+        try:
+            return sort_functions[issue_filter]
+        except KeyError:
+            raise InvalidIssueFilterException()
+
+
+class InvalidIssueFilterException(object):
+    pass
+
 
 class Issue(domain_object.DomainObject):
     """A Issue Object"""
@@ -126,27 +149,20 @@ class Issue(domain_object.DomainObject):
         query = session.query(cls,
                               model.User.name,
                               comment_count,
-                              last_updated,
-            ).filter(cls.dataset_id == dataset_id)\
+                              last_updated
+                              )\
+             .filter(cls.dataset_id == dataset_id)\
              .join(User, Issue.user_id == User.id)\
              .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
              .group_by(model.User.name, Issue.id)
+
         if status:
             query = query.filter(cls.status == status)
         if sort:
-            if sort == IssueFilter.newest:
-                query = query.order_by(cls.created.desc())
-            elif sort == IssueFilter.oldest:
-                query = query.order_by(cls.created.asc())
-            elif sort == IssueFilter.least_commented:
-                query = query.order_by(func.count(IssueComment.id).asc())
-            elif sort == IssueFilter.most_commented:
-                query = query.order_by(func.count(IssueComment.id).desc())
-            elif sort == IssueFilter.recently_updated:
-                query = query.order_by(func.max(IssueComment.created).asc())
-            elif sort == IssueFilter.least_recently_updated:
-                query = query.order_by(func.max(IssueComment.created).desc())
-
+            try:
+                query = IssueFilter.get_filter(sort)(query)
+            except InvalidIssueFilterException:
+                pass
         if offset:
             query = query.offset(offset)
         if limit:
