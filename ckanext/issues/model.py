@@ -110,6 +110,10 @@ class IssueFilter(enum.Enum):
 
     @classmethod
     def get_filter(cls, issue_filter):
+        '''Takes an IssueFilter, and returns a sqlalchemy filtering function
+
+        The filtering function returned takes and sqlalchemy query and applies 
+        the filter to the sqlalchemy query'''
         sort_functions = {
             cls.newest: lambda q: q.order_by(Issue.created.desc()),
             cls.oldest: lambda q: q.order_by(Issue.created.asc()),
