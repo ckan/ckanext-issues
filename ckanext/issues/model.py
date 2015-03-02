@@ -11,7 +11,7 @@ import logging
 
 import enum
 from sqlalchemy import func, types, Table, ForeignKey, Column
-from sqlalchemy.orm import relation, backref, joinedload
+from sqlalchemy.orm import relation, backref
 
 log = logging.getLogger(__name__)
 
@@ -103,6 +103,10 @@ def _user_dict(user):
 class IssueFilter(enum.Enum):
     newest = 1
     oldest = 2
+    most_commented = 3
+    least_commented = 4
+    recently_updated = 5
+    least_recently_updated = 6
 
 
 class Issue(domain_object.DomainObject):
@@ -117,22 +121,39 @@ class Issue(domain_object.DomainObject):
     @classmethod
     def get_issues_for_dataset(cls, dataset_id, offset=None, limit=None,
                                status=None, sort=None, session=Session):
-        query = session.query(cls).filter(cls.dataset_id == dataset_id)
+        comment_count = func.count(IssueComment.id).label('comment_count')
+        last_updated = func.max(IssueComment.created).label('updated')
+        query = session.query(cls,
+                              model.User.name,
+                              comment_count,
+                              last_updated,
+            ).filter(cls.dataset_id == dataset_id)\
+             .join(User, Issue.user_id == User.id)\
+             .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
+             .group_by(model.User.name, Issue.id)
         if status:
             query = query.filter(cls.status == status)
-
         if sort:
             if sort == IssueFilter.newest:
                 query = query.order_by(cls.created.desc())
             elif sort == IssueFilter.oldest:
                 query = query.order_by(cls.created.asc())
+            elif sort == IssueFilter.least_commented:
+                query = query.order_by(func.count(IssueComment.id).asc())
+            elif sort == IssueFilter.most_commented:
+                query = query.order_by(func.count(IssueComment.id).desc())
+            elif sort == IssueFilter.recently_updated:
+                query = query.order_by(func.max(IssueComment.created).asc())
+            elif sort == IssueFilter.least_recently_updated:
+                query = query.order_by(func.max(IssueComment.created).desc())
 
         if offset:
             query = query.offset(offset)
         if limit:
             query = query.limit(limit)
-        query = query.options(joinedload(cls.comments))
-        return (i.as_dict() for i in query.all())
+
+        return (issue.as_plain_dict(user, comment_count, updated)
+                for (issue, user, comment_count, updated) in query.all())
 
     @classmethod
     def get_count_for_dataset(cls, dataset_id, session):
@@ -140,18 +161,32 @@ class Issue(domain_object.DomainObject):
             filter(cls.dataset_id == dataset_id).one()[0]
         return query
 
-    def as_dict(self, include_comments=True, include_user=True):
+    def as_dict(self):
         out = super(Issue, self).as_dict()
 
-        if include_comments:
-            out['comments'] = [c.as_dict() for c in self.comments]
-        if include_user:
-            out['user'] = _user_dict(self.user)
+        out['comments'] = [c.as_dict() for c in self.comments]
+        out['user'] = _user_dict(self.user)
         # some cases dataset not yet set ...
         if self.dataset:
             out['ckan_url'] = h.url_for('issues_show',
                                         package_id=self.dataset.name,
                                         id=self.id)
+        return out
+
+    def as_plain_dict(self, user, comment_count, updated):
+        '''Used for listing issues against a dataset
+
+        Similar to as_dict, but we're not including full comments or the full
+        user dict
+
+        returns an issue_dict with a comment_count and a user as a string.
+        '''
+        out = super(Issue, self).as_dict()
+        out.update({
+            'user': user,
+            'comment_count': comment_count,
+            'updated': updated,
+        })
         return out
 
 

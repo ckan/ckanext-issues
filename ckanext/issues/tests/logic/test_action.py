@@ -57,7 +57,7 @@ class TestIssueComment(object):
 
 
 class TestIssueList(object):
-    def teardown(self):
+    def setup(self):
         helpers.reset_db()
         search.clear()
 
@@ -65,14 +65,16 @@ class TestIssueList(object):
         user = factories.User()
         dataset = factories.Dataset()
 
-        [issue_factories.Issue(user=user, user_id=user['id'],
-                               dataset_id=dataset['id'], description=i)
-            for i in range(0, 10)]
+        created_issues = [issue_factories.Issue(user=user, user_id=user['id'],
+                                                dataset_id=dataset['id'],
+                                                description=i)
+                          for i in range(0, 10)]
         issues_list = helpers.call_action('issue_list',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest')
-        assert_equals(range(1, 11), [i['id'] for i in issues_list])
+        assert_equals([i['id'] for i in created_issues],
+                      [i['id'] for i in issues_list])
 
     def test_list_all_issues_for_dataset_without_dataset_id_fails(self):
         user = factories.User()
@@ -86,44 +88,50 @@ class TestIssueList(object):
         user = factories.User()
         dataset = factories.Dataset()
 
-        [issue_factories.Issue(user=user, user_id=user['id'],
-                               dataset_id=dataset['id'], description=i)
-            for i in range(0, 10)]
+        created_issues = [issue_factories.Issue(user=user, user_id=user['id'],
+                                                dataset_id=dataset['id'],
+                                                description=i)
+                          for i in range(0, 10)]
         issues_list = helpers.call_action('issue_list',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest',
                                           limit=5)
-        assert_equals(range(1, 6), [i['id'] for i in issues_list])
+        assert_equals([i['id'] for i in created_issues][:5],
+                      [i['id'] for i in issues_list])
 
     def test_offset(self):
         user = factories.User()
         dataset = factories.Dataset()
 
-        [issue_factories.Issue(user=user, user_id=user['id'],
-                               dataset_id=dataset['id'], description=i)
-            for i in range(0, 10)]
+        created_issues = [issue_factories.Issue(user=user, user_id=user['id'],
+                                                dataset_id=dataset['id'],
+                                                description=i)
+                          for i in range(0, 10)]
         issues_list = helpers.call_action('issue_list',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest',
                                           offset=5)
-        assert_equals(range(6, 11), [i['id'] for i in issues_list])
+        assert_equals([i['id'] for i in created_issues][5:],
+                      [i['id'] for i in issues_list])
 
     def test_pagination(self):
         user = factories.User()
         dataset = factories.Dataset()
 
-        [issue_factories.Issue(user=user, user_id=user['id'],
-                               dataset_id=dataset['id'], description=i)
-            for i in range(0, 10)]
+        created_issues = [issue_factories.Issue(user=user, user_id=user['id'],
+                                                dataset_id=dataset['id'],
+                                                description=i)
+                          for i in range(0, 10)]
         issues_list = helpers.call_action('issue_list',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest',
                                           offset=5,
                                           limit=3)
-        assert_equals(range(6, 9), [i['id'] for i in issues_list])
+        assert_equals([i['id'] for i in created_issues][5:8],
+                      [i['id'] for i in issues_list])
 
     def test_filter_newest(self):
         user = factories.User()
@@ -138,3 +146,55 @@ class TestIssueList(object):
                                           sort='newest')
         assert_equals(list(reversed(range(1, 11))),
                       [i['id'] for i in issues_list])
+
+    def test_filter_least_commented(self):
+        user = factories.User()
+        dataset = factories.Dataset()
+
+        # issue#1 has 3 comment. #2 has 1 comments, etc
+        comment_count = [3, 1, 2]
+        issue_ids = []
+        for i in comment_count:
+            issue = issue_factories.Issue(user_id=user['id'],
+                                          dataset_id=dataset['id'],
+                                          description=i)
+            issue_ids.append(issue['id'])
+
+            for j in range(0, i):
+                issue_factories.IssueComment(user_id=user['id'],
+                                             issue_id=issue['id'])
+        reordered_ids = [issue_ids[1], issue_ids[2], issue_ids[0]]
+
+        issues_list = helpers.call_action('issue_list',
+                                          context={'user': user['name']},
+                                          dataset_id=dataset['id'],
+                                          sort='least_commented')
+        assert_equals(reordered_ids, [i['id'] for i in issues_list])
+        assert_equals([1, 2, 3], [i['comment_count'] for i in issues_list])
+
+    def test_filter_most_commented(self):
+        user = factories.User()
+        dataset = factories.Dataset()
+
+        # issue#1 has 3 comment. #2 has 1 comments, etc
+        comment_count = [3, 1, 2, 0]
+        issue_ids = []
+        for i in comment_count:
+            issue = issue_factories.Issue(user_id=user['id'],
+                                          dataset_id=dataset['id'],
+                                          description=i)
+            issue_ids.append(issue['id'])
+
+            for j in range(0, i):
+                issue_factories.IssueComment(user_id=user['id'],
+                                             issue_id=issue['id'])
+
+        reordered_ids = [issue_ids[0], issue_ids[2], issue_ids[1],
+                         issue_ids[3]]
+
+        issues_list = helpers.call_action('issue_list',
+                                          context={'user': user['name']},
+                                          dataset_id=dataset['id'],
+                                          sort='most_commented')
+        assert_equals(reordered_ids, [i['id'] for i in issues_list])
+        assert_equals([3, 2, 1, 0], [i['comment_count'] for i in issues_list])

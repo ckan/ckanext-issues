@@ -55,7 +55,8 @@ class Pagination(object):
     def show_next(self):
         return self.page < self.pages - self.show_right
 
-    def iter_pages(self, show_left=2, show_right=2):
-        for i in range(self.page - show_left, self.page + show_right + 1):
+    def iter_pages(self):
+        for i in range(self.page - self.show_left,
+                       self.page + self.show_right + 1):
             if i > 0 and i <= self.pages:
                 yield i

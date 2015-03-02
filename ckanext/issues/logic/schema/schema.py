@@ -12,6 +12,7 @@ resource_id_exists = toolkit.get_validator('resource_id_exists')
 user_exists = toolkit.get_validator('user_id_or_name_exists')
 is_natural_number = toolkit.get_validator('natural_number_validator')
 is_positive_integer = toolkit.get_validator('is_positive_integer')
+boolean_validator = toolkit.get_validator('boolean_validator')
 
 
 def issue_update_schema():

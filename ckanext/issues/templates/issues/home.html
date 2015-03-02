@@ -22,7 +22,7 @@
         <span class="list-group-item-number">#{{issue.id}}</span>
         <h4 class="list-group-item-name">
           <span class="{{issue.status}} icon" title="{{issue.status}} issue"><i class="icon-exclamation-sign"></i></span>
-          <a href="{{issue.ckan_url}}">{{issue.title}}</a>
+          <a href="{{ h.url_for('issues_show', package_id=pkg.id, id=issue.id) }}">{{issue.title}}</a>
         </h4>
         <ul class="list-group-item-meta">
           <li>Opened by <a href="{{issue.user.ckan_url}}">{{issue.user.name}}</a></li>
@@ -33,7 +33,7 @@
           <li>
             <i class="icon-comments"></i>
             <a href="{{issue.ckan_url}}">
-              {{ _('%s comments') % (issue.comments | length) }}
+              {{ _('%s comments') % (issue.comment_count) }}
             </a>
           </li>
         </ul>
