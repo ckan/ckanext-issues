@@ -20,7 +20,7 @@ from ckan.plugins import toolkit
 import ckanext.issues.model as issuemodel
 from ckanext.issues.lib import util
 from ckanext.issues.logic import schema
-from ckanext.issues.lib.helpers import Pagination
+from ckanext.issues.lib.helpers import Pagination, get_issues_per_page
 
 
 log = getLogger(__name__)
@@ -300,17 +300,14 @@ class IssueController(BaseController):
         if not sort:
             sort = 'newest'
 
-        try:
-            issues_per_page = [int(i) for i in
-                               config['ckan.issues.issues_per_page']]
-        except (ValueError, KeyError):
-            issues_per_page = ISSUES_PER_PAGE
-
         page = query.get('page', 1)
+        issues_per_page = get_issues_per_page()
         per_page = query.get('per_page', issues_per_page[0])
+        q = query.get('q', '')
 
         try:
-            issues = _get_issues_list(package_id, status, sort, page, per_page)
+            issues = _get_issues_list(package_id, status, sort, q, 
+                                      page, per_page)
             issue_count = toolkit.get_action('issue_count')(
                 data_dict={'dataset_id': package_id}
             )
@@ -319,9 +316,6 @@ class IssueController(BaseController):
             h.flash(msg, category='alert-error')
             return p.toolkit.redirect_to('issues_home', package_id=package_id)
 
-        # do we need resource_id? is this needed for the template?
-        c.resource_id = request.GET.get('resource', "")
-        filters = issuemodel.IssueFilter.__members__.keys()
         pagination = Pagination(page, per_page, issue_count)
 
         return render(
@@ -330,10 +324,8 @@ class IssueController(BaseController):
                 'issues': issues,
                 'status': status,
                 'sort': sort,
+                'q': q,
                 'pagination': pagination,
-                #
-                'issues_per_page': issues_per_page,
-                'filters': filters,
             }
         )
 
@@ -394,7 +386,7 @@ class IssueController(BaseController):
         return render("issues/all_issues.html")
 
 
-def _get_issues_list(dataset_id, status, sort, page=1, per_page=15):
+def _get_issues_list(dataset_id, status, sort, q=None, page=1, per_page=15):
     offset = (page - 1) * per_page
     issues = toolkit.get_action('issue_list')(
         data_dict={
@@ -403,6 +395,7 @@ def _get_issues_list(dataset_id, status, sort, page=1, per_page=15):
             'sort': sort,
             'offset': offset,
             'limit': per_page,
+            'q': q,
         }
     )
 

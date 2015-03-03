@@ -1,6 +1,12 @@
 from math import ceil
+
+from pylons import config
+
 from ckan.plugins import toolkit
 from ckan.lib import helpers
+from ckanext.issues.model import IssueFilter
+
+ISSUES_PER_PAGE = (15, 30, 50)
 
 
 def replace_url_param(new_params, alternative_url=None, controller=None,
@@ -60,3 +66,17 @@ class Pagination(object):
                        self.page + self.show_right + 1):
             if i > 0 and i <= self.pages:
                 yield i
+
+
+def get_issue_filter_types():
+    return [(f.value, k) for k, f in IssueFilter.__members__.items()]
+
+
+def get_issues_per_page():
+    try:
+        issues_per_page = [int(i) for i in
+                           config['ckan.issues.issues_per_page']]
+    except (ValueError, KeyError):
+        issues_per_page = ISSUES_PER_PAGE
+    return issues_per_page
+

@@ -45,6 +45,8 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_comment_count': util.issue_comment_count,
             'time_ago': util.time_ago,
             'replace_url_param': helpers.replace_url_param,
+            'get_issue_filter_types': helpers.get_issue_filter_types,
+            'get_issues_per_page': helpers.get_issues_per_page,
         }
 
     def configure(self, config):

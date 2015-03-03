@@ -50,4 +50,5 @@ def issue_home_controller_schema():
         'sort': [ignore_missing, unicode ],
         'page': [ignore_missing, is_positive_integer],
         'per_page': [ignore_missing, is_positive_integer],
+        'q': [ignore_missing, unicode],
     }

@@ -101,12 +101,12 @@ def _user_dict(user):
 
 
 class IssueFilter(enum.Enum):
-    newest = 1
-    oldest = 2
-    most_commented = 3
-    least_commented = 4
-    recently_updated = 5
-    least_recently_updated = 6
+    newest = 'Newest'
+    oldest = 'Oldest'
+    most_commented = 'Most Commented'
+    least_commented = 'Least Commented'
+    recently_updated = 'Recently Update'
+    least_recently_updated = 'Least Recently Updated'
 
     @classmethod
     def get_filter(cls, issue_filter):

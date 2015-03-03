@@ -97,3 +97,53 @@ class TestEditButton(helpers.FunctionalTestBase):
         soup = bs4.BeautifulSoup(response.body)
         edit_button = soup.find('div', {'class': 'issue-edit-button'})
         assert_is_none(edit_button)
+
+
+class TestSearchBox(helpers.FunctionalTestBase):
+    def setup(self):
+        super(TestSearchBox, self).setup()
+        self.owner = factories.User()
+        self.org = factories.Organization(user=self.owner)
+        self.dataset = factories.Dataset(user=self.owner,
+                                         owner_org=self.org['name'])
+        self.issue = issue_factories.Issue(user=self.owner,
+                                           dataset_id=self.dataset['id'])
+
+        self.app = self._get_test_app()
+
+    def test_search_box_appears_issue_home_page(self):
+        response = self.app.get(
+            url=toolkit.url_for('issues_home',
+                                package_id=self.dataset['id'],
+                                id=self.issue['id']),
+        )
+
+        soup = bs4.BeautifulSoup(response.body)
+        edit_button = soup.find('form', {'class': 'search-form'})
+        assert_is_not_none(edit_button)
+
+    def test_search_box_submits_q_get(self):
+        in_search = [issue_factories.Issue(user_id=self.owner['id'],
+                                        dataset_id=self.dataset['id'],
+                                        title=title)
+                     for title in ['some titLe', 'another Title']]
+
+        not_in_search = [issue_factories.Issue(user_id=self.owner['id'],
+                                               dataset_id=self.dataset['id'],
+                                               title=title)
+                         for title in ['blah', 'issue']]
+
+        issue_home = self.app.get(
+            url=toolkit.url_for('issues_home',
+                                package_id=self.dataset['id'],
+                                id=self.issue['id']),
+        )
+
+        search_form = issue_home.forms[1]
+        search_form['q'] = 'title'
+
+        res = search_form.submit()
+        soup = bs4.BeautifulSoup(res.body)
+        issue_links = soup.find(id='issue-list').find_all('h4')
+        titles = set([i.a.text for i in issue_links])
+        assert_equals(set([i['title'] for i in in_search]), titles)
