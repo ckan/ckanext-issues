@@ -57,7 +57,7 @@ class TestIssueComment(object):
 
 
 class TestIssueList(object):
-    def setup(self):
+    def teardown(self):
         helpers.reset_db()
         search.clear()
 
