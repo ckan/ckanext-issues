@@ -309,7 +309,11 @@ class IssueController(BaseController):
             issues = _get_issues_list(package_id, status, sort, q, 
                                       page, per_page)
             issue_count = toolkit.get_action('issue_count')(
-                data_dict={'dataset_id': package_id}
+                data_dict={
+                    'dataset_id': package_id,
+                    'status': status,
+                    'q': q,
+                }
             )
         except toolkit.ValidationError, e:
             msg = toolkit._("Validation error: {0}".format(e.error_summary))

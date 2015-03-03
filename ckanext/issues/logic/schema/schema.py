@@ -41,6 +41,8 @@ def issue_list_schema():
 def issue_count_schema():
     return {
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+        'status': [ignore_missing, unicode, is_valid_status],
+        'q': [ignore_missing, unicode],
     }
 
 

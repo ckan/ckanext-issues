@@ -18,7 +18,8 @@
       </h1>
     </div>
     <div>
-      {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=false, no_title=true %}
+      {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=true, no_title=true %}
+      <h2>{{ pagination.total_count }} issues found</h2>
     </div>
   {% if issues %}
     <ul id="issue-list" class="issue-list-group list-group">

@@ -180,10 +180,16 @@ class Issue(domain_object.DomainObject):
                 for (issue, user, comment_count, updated) in query.all())
 
     @classmethod
-    def get_count_for_dataset(cls, dataset_id, session):
+    def get_count_for_dataset(cls, dataset_id, status=None, sort=None, q=None,
+                              session=Session):
         query = session.query(func.count(cls.id)).\
-            filter(cls.dataset_id == dataset_id).one()[0]
-        return query
+            filter(cls.dataset_id == dataset_id)
+        if q:
+            query = query.filter(cls.title.ilike('%{0}%'.format(q)))
+
+        if status:
+            query = query.filter(cls.status == status)
+        return query.one()[0]
 
     def as_dict(self):
         out = super(Issue, self).as_dict()
