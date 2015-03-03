@@ -5,4 +5,5 @@
 .coverage
 .noseids
 test-custom.ini
+custom-test-sqlite.ini
 issue-test.db
