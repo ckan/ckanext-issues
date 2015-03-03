@@ -18,9 +18,7 @@ import ckan.plugins as p
 from ckan.plugins import toolkit
 
 import ckanext.issues.model as issuemodel
-from ckanext.issues.lib import util
-from ckanext.issues.logic import schema
-from ckanext.issues.lib.helpers import Pagination, get_issues_per_page
+from ckanext.issues.controller import home
 
 
 log = getLogger(__name__)
@@ -281,53 +279,11 @@ class IssueController(BaseController):
         Display a page containing a list of all issues items, sorted by category.
         """
         self._before(package_id)
-        query, errors = toolkit.navl_validate(
-            dict(request.GET),
-            schema.issue_home_controller_schema()
-        )
-        if errors:
-            error_summary = toolkit.ValidationError(errors).error_summary
-            msg = toolkit._("Validation error: {0}".format(error_summary))
-            h.flash(msg, category='alert-error')
-            return p.toolkit.redirect_to('issues_home', package_id=package_id)
-
-        status = query.get('status', issuemodel.ISSUE_STATUS.open)
-        sort = query.get('sort')
-        if not sort:
-            sort = 'newest'
-
-        page = query.get('page', 1)
-        issues_per_page = get_issues_per_page()
-        per_page = query.get('per_page', issues_per_page[0])
-        q = query.get('q', '')
-
         try:
-            issues = _get_issues_list(package_id, status, sort, q, 
-                                      page, per_page)
-            issue_count = toolkit.get_action('issue_count')(
-                data_dict={
-                    'dataset_id': package_id,
-                    'status': status,
-                    'q': q,
-                }
-            )
+            extra_vars = home.home(package_id, request.GET)
         except toolkit.ValidationError, e:
-            msg = toolkit._("Validation error: {0}".format(e.error_summary))
-            h.flash(msg, category='alert-error')
-            return p.toolkit.redirect_to('issues_home', package_id=package_id)
-
-        pagination = Pagination(page, per_page, issue_count)
-
-        return render(
-            "issues/home.html",
-            extra_vars={
-                'issues': issues,
-                'status': status,
-                'sort': sort,
-                'q': q,
-                'pagination': pagination,
-            }
-        )
+            _home_handle_error(e)
+        return render("issues/home.html", extra_vars=extra_vars)
 
     def publisher_issue_page(self, publisher_id):
         """
@@ -386,22 +342,7 @@ class IssueController(BaseController):
         return render("issues/all_issues.html")
 
 
-def _get_issues_list(dataset_id, status, sort, q=None, page=1, per_page=15):
-    offset = (page - 1) * per_page
-    issues = toolkit.get_action('issue_list')(
-        data_dict={
-            'dataset_id': dataset_id,
-            'status': status,
-            'sort': sort,
-            'offset': offset,
-            'limit': per_page,
-            'q': q,
-        }
-    )
-
-    def _add_time_since(issue):
-        issue['created_time_ago'] = util.time_ago(issue['created'])
-        return issue
-
-    issues = map(_add_time_since, issues)
-    return issues
+def _home_handle_error(package_id, exc):
+    msg = toolkit._("Validation error: {0}".format(exc.error_summary))
+    h.flash(msg, category='alert-error')
+    return p.toolkit.redirect_to('issues_home', package_id=package_id)
