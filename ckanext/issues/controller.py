@@ -88,10 +88,6 @@ def _notify(issue):
 
 
 class IssueController(BaseController):
-    """
-    The Issues Controller.
-    """
-
     def _before(self, package_id):
         self.context = {'for_view': True}
         try:

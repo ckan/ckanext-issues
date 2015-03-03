@@ -10,6 +10,10 @@ from nose.tools import assert_true, assert_raises
 
 
 class TestIssueUpdate(object):
+    def setup(self):
+        helpers.reset_db()
+        search.clear()
+
     def teardown(self):
         helpers.reset_db()
         search.clear()
