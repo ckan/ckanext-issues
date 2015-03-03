@@ -112,18 +112,18 @@ class IssueFilter(enum.Enum):
     def get_filter(cls, issue_filter):
         '''Takes an IssueFilter, and returns a sqlalchemy filtering function
 
-        The filtering function returned takes and sqlalchemy query and applies 
+        The filtering function returned takes and sqlalchemy query and applies
         the filter to the sqlalchemy query'''
         sort_functions = {
             cls.newest: lambda q: q.order_by(Issue.created.desc()),
             cls.oldest: lambda q: q.order_by(Issue.created.asc()),
-            cls.least_commented: 
+            cls.least_commented:
                 lambda q: q.order_by(func.count(IssueComment.id).asc()),
-            cls.most_commented: 
+            cls.most_commented:
                 lambda q: q.order_by(func.count(IssueComment.id).desc()),
-            cls.recently_updated: 
+            cls.recently_updated:
                 lambda q: q.order_by(func.max(IssueComment.created).asc()),
-            cls.least_recently_updated: 
+            cls.least_recently_updated:
                 lambda q: q.order_by(func.max(IssueComment.created).desc()),
         }
         try:
@@ -147,18 +147,22 @@ class Issue(domain_object.DomainObject):
 
     @classmethod
     def get_issues_for_dataset(cls, dataset_id, offset=None, limit=None,
-                               status=None, sort=None, session=Session):
+                               status=None, sort=None, q=None,
+                               session=Session):
         comment_count = func.count(IssueComment.id).label('comment_count')
         last_updated = func.max(IssueComment.created).label('updated')
-        query = session.query(cls,
-                              model.User.name,
-                              comment_count,
-                              last_updated
-                              )\
-             .filter(cls.dataset_id == dataset_id)\
-             .join(User, Issue.user_id == User.id)\
-             .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
-             .group_by(model.User.name, Issue.id)
+        query = session.query(
+            cls,
+            model.User.name,
+            comment_count,
+            last_updated
+        ).filter(cls.dataset_id == dataset_id)\
+         .join(User, Issue.user_id == User.id)\
+         .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
+         .group_by(model.User.name, Issue.id)
+
+        if q:
+            query = query.filter(cls.title.ilike('%{0}%'.format(q)))
 
         if status:
             query = query.filter(cls.status == status)

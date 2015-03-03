@@ -34,6 +34,7 @@ def issue_list_schema():
         'sort': [ignore_missing, unicode, is_valid_sort],
         'limit': [ignore_missing, is_natural_number],
         'offset': [ignore_missing, is_natural_number],
+        'q': [ignore_missing, unicode],
     }
 
 

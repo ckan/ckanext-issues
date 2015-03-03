@@ -198,3 +198,21 @@ class TestIssueList(object):
                                           sort='most_commented')
         assert_equals(reordered_ids, [i['id'] for i in issues_list])
         assert_equals([3, 2, 1, 0], [i['comment_count'] for i in issues_list])
+
+
+    def test_filter_by_title_string_search(self):
+        user = factories.User()
+        dataset = factories.Dataset()
+
+        issues = [issue_factories.Issue(user_id=user['id'],
+                                        dataset_id=dataset['id'],
+                                        title=title)
+                  for title in ['some title', 'another Title', 'issue']]
+
+        filtered_issues = helpers.call_action('issue_list',
+                                              context={'user': user['name']},
+                                              dataset_id=dataset['id'],
+                                              q='title')
+
+        expected_issue_ids = [i['id'] for i in issues[:2]]
+        assert_equals(expected_issue_ids, [i['id'] for i in filtered_issues])
