@@ -215,3 +215,36 @@ class TestIssueList(object):
 
         expected_issue_ids = [i['id'] for i in issues[:2]]
         assert_equals(expected_issue_ids, [i['id'] for i in filtered_issues])
+
+
+class TestIssueUpdate(object):
+    def teardown(object):
+        helpers.reset_db()
+
+    def test_reopen_an_issue(object):
+        '''This test is resolve a bug where updating/reopening an issue
+        deletes it. Magical'''
+        user = factories.User()
+        dataset = factories.Dataset()
+        issue = issue_factories.Issue(user=user, user_id=user['id'],
+                                      dataset_id=dataset['id'])
+
+        closed = helpers.call_action('issue_update',
+                                     context={'user': user['name']},
+                                     id=issue['id'], status='closed')
+
+        assert_equals('closed', closed['status'])
+
+        after_closed = helpers.call_action('issue_show',
+                                       context={'user': user['name']},
+                                       id=issue['id'])
+        assert_equals('closed', after_closed['status'])
+
+        helpers.call_action('issue_update',
+                            context={'user': user['name']},
+                            id=issue['id'], status='open')
+
+        reopened = helpers.call_action('issue_show',
+                                       context={'user': user['name']},
+                                       id=issue['id'])
+        assert_equals('open', reopened['status'])

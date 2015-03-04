@@ -305,7 +305,7 @@ def define_issue_tables():
             'resolver': relation(
                 model.User,
                 backref=backref('resolved_issues',
-                                cascade='all, delete-orphan'),
+                                cascade='all'),
                 primaryjoin=issue_table.c.resolver_id.__eq__(User.id)
             ),
             'dataset': relation(
@@ -315,7 +315,7 @@ def define_issue_tables():
             ),
             'resource': relation(
                 model.Resource,
-                backref=backref('issues', cascade='all, delete-orphan'),
+                backref=backref('issues', cascade='all'),
                 primaryjoin=issue_table.c.resource_id.__eq__(Resource.id)
             ),
         }

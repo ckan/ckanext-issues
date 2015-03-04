@@ -113,8 +113,10 @@ def issue_update(context, data_dict):
 
     # TODO:fix below to use validated_data_dict,
     #      and move validation into the schema
+    model = context['model']
+    session = context['session']
 
-    issue = issuemodel.Issue.get(data_dict['id'])
+    issue = issuemodel.Issue.get(data_dict['id'], session=session)
     status_change = data_dict.get('status') and (data_dict.get('status') !=
                                                  issue.status)
 
@@ -133,8 +135,8 @@ def issue_update(context, data_dict):
             issue.resolved = None
             issue.resolver = None
 
-    model.Session.add(issue)
-    model.Session.commit()
+    session.add(issue)
+    session.commit()
     return issue.as_dict()
 
 
