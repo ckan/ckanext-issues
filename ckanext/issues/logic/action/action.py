@@ -175,9 +175,9 @@ def issue_comment_create(context, data_dict):
 
 
 @p.toolkit.side_effect_free
-@validate(schema.issue_list_schema)
-def issue_list(context, data_dict):
-    '''List issues for a given dataset'''
+@validate(schema.issue_search_schema)
+def issue_search(context, data_dict):
+    '''Search issues for a given dataset'''
     p.toolkit.check_access('issue_show', context, data_dict)
 
     return list(issuemodel.Issue.get_issues_for_dataset(
@@ -186,7 +186,7 @@ def issue_list(context, data_dict):
 
 
 @p.toolkit.side_effect_free
-@validate(schema.issue_list_schema)
+@validate(schema.issue_count_schema)
 def issue_count(context, data_dict):
     '''Get the total number of issues for a given dataset'''
     p.toolkit.check_access('issue_show', context, data_dict)

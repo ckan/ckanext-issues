@@ -27,7 +27,7 @@ def issue_update_schema():
     }
 
 
-def issue_list_schema():
+def issue_search_schema():
     return {
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
         'status': [ignore_missing, unicode, is_valid_status],

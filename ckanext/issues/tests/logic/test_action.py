@@ -69,7 +69,7 @@ class TestIssueList(object):
                                                 dataset_id=dataset['id'],
                                                 description=i)
                           for i in range(0, 10)]
-        issues_list = helpers.call_action('issue_list',
+        issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest')
@@ -81,7 +81,7 @@ class TestIssueList(object):
         assert_raises(
             toolkit.ValidationError,
             helpers.call_action,
-            'issue_list',
+            'issue_search',
             context={'user': user['name']})
 
     def test_limit(self):
@@ -92,7 +92,7 @@ class TestIssueList(object):
                                                 dataset_id=dataset['id'],
                                                 description=i)
                           for i in range(0, 10)]
-        issues_list = helpers.call_action('issue_list',
+        issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest',
@@ -108,7 +108,7 @@ class TestIssueList(object):
                                                 dataset_id=dataset['id'],
                                                 description=i)
                           for i in range(0, 10)]
-        issues_list = helpers.call_action('issue_list',
+        issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest',
@@ -124,7 +124,7 @@ class TestIssueList(object):
                                                 dataset_id=dataset['id'],
                                                 description=i)
                           for i in range(0, 10)]
-        issues_list = helpers.call_action('issue_list',
+        issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest',
@@ -140,7 +140,7 @@ class TestIssueList(object):
         [issue_factories.Issue(user=user, user_id=user['id'],
                                dataset_id=dataset['id'], description=i)
             for i in range(0, 10)]
-        issues_list = helpers.call_action('issue_list',
+        issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='newest')
@@ -165,7 +165,7 @@ class TestIssueList(object):
                                              issue_id=issue['id'])
         reordered_ids = [issue_ids[1], issue_ids[2], issue_ids[0]]
 
-        issues_list = helpers.call_action('issue_list',
+        issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='least_commented')
@@ -192,7 +192,7 @@ class TestIssueList(object):
         reordered_ids = [issue_ids[0], issue_ids[2], issue_ids[1],
                          issue_ids[3]]
 
-        issues_list = helpers.call_action('issue_list',
+        issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='most_commented')

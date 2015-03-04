@@ -8,7 +8,7 @@ from ckanext.issues.lib.helpers import Pagination, get_issues_per_page
 
 def home(dataset_id, get_query_dict):
     status, sort, page, per_page, q = _validate_home(get_query_dict)
-    issues, pagination = _get_issues_list(dataset_id, status, sort, q, 
+    issues, pagination = _search_issues(dataset_id, status, sort, q,
         page, per_page)
     return {
         'issues': issues,
@@ -19,13 +19,13 @@ def home(dataset_id, get_query_dict):
     }
 
 
-def _get_issues_list(dataset_id, status, sort, q=None, page=1, per_page=15):
+def _search_issues(dataset_id, status, sort, q=None, page=1, per_page=15):
     def _add_time_since(issue):
         issue['created_time_ago'] = util.time_ago(issue['created'])
         return issue
 
     offset = (page - 1) * per_page
-    issues = toolkit.get_action('issue_list')(
+    issues = toolkit.get_action('issue_search')(
         data_dict={
             'dataset_id': dataset_id,
             'status': status,
