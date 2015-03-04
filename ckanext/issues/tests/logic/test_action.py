@@ -199,7 +199,6 @@ class TestIssueList(object):
         assert_equals(reordered_ids, [i['id'] for i in issues_list])
         assert_equals([3, 2, 1, 0], [i['comment_count'] for i in issues_list])
 
-
     def test_filter_by_title_string_search(self):
         user = factories.User()
         dataset = factories.Dataset()
@@ -209,7 +208,7 @@ class TestIssueList(object):
                                         title=title)
                   for title in ['some title', 'another Title', 'issue']]
 
-        filtered_issues = helpers.call_action('issue_list',
+        filtered_issues = helpers.call_action('issue_search',
                                               context={'user': user['name']},
                                               dataset_id=dataset['id'],
                                               q='title')
