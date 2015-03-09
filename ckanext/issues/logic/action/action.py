@@ -113,7 +113,6 @@ def issue_update(context, data_dict):
 
     # TODO:fix below to use validated_data_dict,
     #      and move validation into the schema
-    model = context['model']
     session = context['session']
 
     issue = issuemodel.Issue.get(data_dict['id'], session=session)
@@ -129,8 +128,9 @@ def issue_update(context, data_dict):
         if data_dict['status'] == issuemodel.ISSUE_STATUS.closed:
             issue.resolved = datetime.now()
             user = context['user']
-            user_obj = model.User.get(user)
-            issue.resolver_id = user_obj.id
+            user_dict = p.toolkit.get_action('user_show')(
+                data_dict={'id': user})
+            issue.resolver_id = user_dict['id']
         elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
             issue.resolved = None
             issue.resolver = None
@@ -196,3 +196,15 @@ def issue_count(context, data_dict):
     return issuemodel.Issue.get_count_for_dataset(
         session=context['session'],
         **data_dict)
+
+
+@validate(schema.issue_delete_schema)
+def issue_delete(context, data_dict):
+    p.toolkit.check_access('issue_delete', context, data_dict)
+    session = context['session']
+    issue_id = data_dict['id']
+    issue = issuemodel.Issue.get(issue_id, session=session)
+    if not issue:
+        raise NotFound('{0} was not found.'.format(issue_id))
+    session.delete(issue)
+    session.commit()

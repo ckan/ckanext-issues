@@ -218,10 +218,11 @@ class TestIssueList(object):
 
 
 class TestIssueUpdate(object):
-    def teardown(object):
+    def teardown(self):
         helpers.reset_db()
+        search.clear()
 
-    def test_reopen_an_issue(object):
+    def test_reopen_an_issue(self):
         '''This test is resolve a bug where updating/reopening an issue
         deletes it. Magical'''
         user = factories.User()
@@ -248,3 +249,34 @@ class TestIssueUpdate(object):
                                        context={'user': user['name']},
                                        id=issue['id'])
         assert_equals('open', reopened['status'])
+
+
+class TestIssueDelete(object):
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_deletion(self):
+        user = factories.User()
+        dataset = factories.Dataset()
+        issue = issue_factories.Issue(user=user, user_id=user['id'],
+                                      dataset_id=dataset['id'])
+
+        deleted = helpers.call_action('issue_delete',
+                                      context={'user': user['name']},
+                                      id=issue['id'])
+
+        assert_raises(toolkit.ObjectNotFound,
+                      helpers.call_action,
+                      'issue_delete',
+                      dataset_id=dataset['id'],
+                      id=issue['id'])
+
+    def test_delete_nonexistent_issue_raises_not_found(self):
+        user = factories.User()
+        dataset = factories.Dataset()
+        assert_raises(toolkit.ObjectNotFound,
+                      helpers.call_action,
+                      'issue_delete',
+                      context={'user': user['name']},
+                      id='huh')

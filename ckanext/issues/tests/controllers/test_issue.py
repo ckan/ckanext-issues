@@ -1,3 +1,4 @@
+from ckan.lib import search
 from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
@@ -147,3 +148,43 @@ class TestSearchBox(helpers.FunctionalTestBase):
         issue_links = soup.find(id='issue-list').find_all('h4')
         titles = set([i.a.text for i in issue_links])
         assert_equals(set([i['title'] for i in in_search]), titles)
+
+
+class TestShow(helpers.FunctionalTestBase):
+    def setup(self):
+        super(TestShow, self).setup()
+        self.owner = factories.User()
+        self.org = factories.Organization(user=self.owner)
+        self.dataset = factories.Dataset(user=self.owner,
+                                         owner_org=self.org['name'])
+        self.app = self._get_test_app()
+
+
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_not_found_issue_raises_404(self):
+        super(TestShow, self).setup()
+        import ipdb; ipdb.set_trace()
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.get(
+            url=toolkit.url_for('issues_show',
+                                package_id=self.dataset['id'],
+                                id=1),
+            extra_environ=env,
+            expect_errors=True,
+        )
+        assert_equals(response.status_int, 404)
+
+    def test_issue_show_with_non_existing_package_404s(self):
+        super(TestShow, self).setup()
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.get(
+            url=toolkit.url_for('issues_show',
+                                package_id='does not exist',
+                                id=1),
+            extra_environ=env,
+            expect_errors=True,
+        )
+        assert_equals(response.status_int, 404)

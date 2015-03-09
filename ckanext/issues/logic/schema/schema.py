@@ -3,6 +3,7 @@ from ckanext.issues.logic.validators import (
     as_package_id,
     is_valid_sort,
     is_valid_status,
+    issue_exists,
 )
 
 not_missing = toolkit.get_validator('not_missing')
@@ -43,6 +44,12 @@ def issue_count_schema():
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
         'status': [ignore_missing, unicode, is_valid_status],
         'q': [ignore_missing, unicode],
+    }
+
+
+def issue_delete_schema():
+    return {
+        'id': [not_missing, unicode],
     }
 
 

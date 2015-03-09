@@ -1,6 +1,3 @@
-"""
-CKAN Issues Extension
-"""
 import collections
 from logging import getLogger
 import re
@@ -89,11 +86,17 @@ class IssueController(BaseController):
     def _before(self, package_id):
         self.context = {'for_view': True}
         try:
-            c.pkg = logic.get_action('package_show')(self.context, {'id':
+            pkg = logic.get_action('package_show')(self.context, {'id':
                                                      package_id})
             # need this as some templates in core explicitly reference
             # c.pkg_dict
+            c.pkg = pkg
             c.pkg_dict = c.pkg
+
+            # keep the above lines to keep current code working till it's all
+            # refactored out, otherwise, we should pass pkg as an extra_var
+            # directly that's returned from this function
+            return pkg
         except logic.NotFound:
             abort(404, _('Dataset not found'))
         except p.toolkit.NotAuthorized:
