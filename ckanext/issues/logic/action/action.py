@@ -8,6 +8,10 @@ import ckan.model as model
 from ckan.logic import validate
 import ckanext.issues.model as issuemodel
 from ckanext.issues.logic import schema
+from ckanext.issues.lib import judgement
+
+from pylons import config
+
 
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
@@ -31,6 +35,30 @@ def issue_show(context, data_dict=None):
     issue_dict = issue.as_dict()
     p.toolkit.check_access('issue_show', context, issue_dict)
     return issue_dict
+
+
+class StopAction(Exception):
+    pass
+
+
+def make_issue_hidden(data_dict):
+    data_dict['state'] = issuemodel.ISSUE_STATUS.hidden
+    return data_dict
+
+
+def silently_ignore(data_dict):
+    raise StopAction('issue is judged to be spam')
+
+def impose_sentence(verdict):
+    issue_create_sentences = {
+        judgement.Verdict.guilty: silently_ignore,
+        judgement.Verdict.not_guilty: lambda x: x,
+        judgement.Verdict.no_verdict: make_issue_hidden,
+    }
+    return issue_create_sentences.get(
+        verdict,
+        issue_create_sentences[judgement.Verdict.not_guilty]
+    )
 
 
 def issue_create(context, data_dict):
@@ -58,6 +86,7 @@ def issue_create(context, data_dict):
     # if errors:
     #    raise p.toolkit.ValidationError(errors)
 
+
     user = context['user']
     user_obj = model.User.get(user)
     data_dict['user_id'] = user_obj.id
@@ -76,6 +105,14 @@ def issue_create(context, data_dict):
             ]
         })
     del data_dict['dataset_id']
+
+    judge = judgement.summon_judge(config.get('ckanext.issues.issue_judge'))
+    verdict = judge.pass_judgement(data_dict['description'])
+    try:
+        data_dict = impose_sentence(verdict)(data_dict)
+    except StopAction, e:
+        log.debug(e.message)
+        return
 
     issue = issuemodel.Issue(**data_dict)
     issue.dataset = dataset

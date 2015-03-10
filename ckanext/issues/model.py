@@ -60,7 +60,7 @@ DEFAULT_CATEGORIES = {u"broken-resource-link": "Broken data link",
                       u"add-description": "No description of the data",
                       u"other": "Other"}
 
-ISSUE_STATUS = domain_object.Enum('open', 'closed')
+ISSUE_STATUS = domain_object.Enum('open', 'closed', 'hidden')
 
 
 class IssueCategory(object):
