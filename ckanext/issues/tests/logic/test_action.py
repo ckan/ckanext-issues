@@ -264,6 +264,7 @@ class TestIssueDelete(object):
 
         deleted = helpers.call_action('issue_delete',
                                       context={'user': user['name']},
+                                      dataset_id=dataset['id'],
                                       id=issue['id'])
 
         assert_raises(toolkit.ObjectNotFound,
@@ -279,6 +280,7 @@ class TestIssueDelete(object):
                       helpers.call_action,
                       'issue_delete',
                       context={'user': user['name']},
+                      dataset_id=dataset['id'],
                       id='2')
 
     def test_delete_non_integer_parameter_issue_raises_not_found(self):
@@ -289,4 +291,5 @@ class TestIssueDelete(object):
                       helpers.call_action,
                       'issue_delete',
                       context={'user': user['name']},
+                      dataset_id=dataset['id'],
                       id='huh')
