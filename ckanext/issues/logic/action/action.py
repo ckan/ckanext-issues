@@ -130,10 +130,10 @@ def issue_update(context, data_dict):
             user = context['user']
             user_dict = p.toolkit.get_action('user_show')(
                 data_dict={'id': user})
-            issue.resolver_id = user_dict['id']
+            issue.asignee_id = user_dict['id']
         elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
             issue.resolved = None
-            issue.resolver = None
+            issue.asignee = None
 
     session.add(issue)
     session.commit()
