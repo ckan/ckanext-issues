@@ -5,7 +5,6 @@ import re
 from sqlalchemy import func
 from pylons.i18n import _
 from pylons import request, config, tmpl_context as c
-import webhelpers.date
 
 from ckan.lib.base import BaseController, render, abort, redirect
 import ckan.lib.helpers as h
@@ -15,7 +14,7 @@ import ckan.plugins as p
 from ckan.plugins import toolkit
 
 import ckanext.issues.model as issuemodel
-from ckanext.issues.controller import home
+from ckanext.issues.controller import home, show
 
 
 log = getLogger(__name__)
@@ -154,46 +153,18 @@ class IssueController(BaseController):
         return render("issues/add.html")
 
     def show(self, id, package_id):
-        self._before(package_id)
-        data_dict = {
-            'id': id
-        }
-        c.issue = logic.get_action('issue_show')(data_dict=data_dict)
-        # annoying we repeat what logic has done but easiest way to get proper
-        # datetime ...
-        issueobj = issuemodel.Issue.get(id)
-
-        c.issue['comment'] = c.issue['description'] or _('No description provided')
-        c.issue['time_ago'] = webhelpers.date.time_ago_in_words(issueobj.created,
-                granularity='minute')
-        c.comment_count = len(issueobj.comments)
-        for idx, comment in enumerate(c.issue['comments']):
-            commentobj = issueobj.comments[idx]
-            comment['time_ago'] = webhelpers.date.time_ago_in_words(
-                commentobj.created,
-                granularity='minute'
-                )
-        # can they administer the issue (update, close etc)
-        c.issue_admin = False
-        if c.userobj:
-            c.current_user = issuemodel._user_dict(c.userobj)
-            try:
-                p.toolkit.check_access(
-                    'issue_update',
-                    context=self.context,
-                    data_dict={
-                    'id': id,
-                    'dataset_id': package_id
-                    })
-                c.issue_admin = True
-            except logic.NotAuthorized:
-                pass
-
-        return render('issues/show.html')
+        dataset = self._before(package_id)
+        try:
+            extra_vars = show.show(id, package_id, session=model.Session)
+        except toolkit.ValidationError, e:
+            p.toolkit.abort(
+                404, toolkit._('Issue not found: {0}'.format(e.error_summary)))
+        extra_vars['dataset'] = dataset
+        return p.toolkit.render('issues/show.html', extra_vars=extra_vars)
 
     def edit(self, id, package_id):
         self._before(package_id)
-        issue = p.toolkit.get_action('issue_show')(data_dict={'id': id})
+        issue = p.toolkit.get_action('issue_show')(data_dict={'id': id,})
         if request.method == 'GET':
             return p.toolkit.render(
                 'issues/edit.html',
@@ -287,6 +258,28 @@ class IssueController(BaseController):
         except toolkit.ValidationError, e:
             _home_handle_error(e)
         return render("issues/home.html", extra_vars=extra_vars)
+
+    def delete(self, dataset_id, issue_id):
+        dataset = self._before(dataset_id)
+        if 'cancel' in request.params:
+            h.redirect_to('issues_show', package_id=dataset_id, id=issue_id)
+
+        if request.method == 'POST':
+            try:
+                toolkit.get_action('issue_delete')(
+                    data_dict={'id': issue_id, 'dataset_id': dataset_id})
+            except toolkit.NotAuthorized:
+                msg = _('Unauthorized to delete issue {0}'.format(issue_id))
+                toolkit.abort(401, msg)
+
+            h.flash_notice(_('Issue {0} has been deleted.'.format(issue_id)))
+            h.redirect_to('issues_home', package_id=dataset_id)
+        else:
+            return render('issues/confirm_delete.html',
+                          extra_vars={
+                              'issue_id': issue_id,
+                              'pkg': dataset,
+                          })
 
     def publisher_issue_page(self, publisher_id):
         """

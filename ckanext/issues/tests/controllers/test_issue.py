@@ -6,7 +6,8 @@ import ckan.new_tests.factories as factories
 from ckanext.issues.tests import factories as issue_factories
 
 import bs4
-from nose.tools import assert_equals, assert_is_not_none, assert_is_none
+from nose.tools import (assert_equals, assert_is_not_none, assert_is_none,
+                        assert_raises, assert_in, assert_not_in)
 
 
 class TestIssuesController(helpers.FunctionalTestBase):
@@ -125,14 +126,15 @@ class TestSearchBox(helpers.FunctionalTestBase):
 
     def test_search_box_submits_q_get(self):
         in_search = [issue_factories.Issue(user_id=self.owner['id'],
-                                        dataset_id=self.dataset['id'],
-                                        title=title)
+                                           dataset_id=self.dataset['id'],
+                                           title=title)
                      for title in ['some titLe', 'another Title']]
 
-        not_in_search = [issue_factories.Issue(user_id=self.owner['id'],
-                                               dataset_id=self.dataset['id'],
-                                               title=title)
-                         for title in ['blah', 'issue']]
+        # some issues not in the search
+        [issue_factories.Issue(user_id=self.owner['id'],
+                               dataset_id=self.dataset['id'],
+                               title=title)
+         for title in ['blah', 'issue']]
 
         issue_home = self.app.get(
             url=toolkit.url_for('issues_home',
@@ -159,26 +161,21 @@ class TestShow(helpers.FunctionalTestBase):
                                          owner_org=self.org['name'])
         self.app = self._get_test_app()
 
-
     def teardown(self):
         helpers.reset_db()
         search.clear()
 
     def test_not_found_issue_raises_404(self):
-        super(TestShow, self).setup()
-        import ipdb; ipdb.set_trace()
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_show',
-                                package_id=self.dataset['id'],
-                                id=1),
+            url=toolkit.url_for('issues_show', package_id=self.dataset['id'],
+                                id='some nonsense'),
             extra_environ=env,
             expect_errors=True,
         )
         assert_equals(response.status_int, 404)
 
     def test_issue_show_with_non_existing_package_404s(self):
-        super(TestShow, self).setup()
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
             url=toolkit.url_for('issues_show',
@@ -188,3 +185,104 @@ class TestShow(helpers.FunctionalTestBase):
             expect_errors=True,
         )
         assert_equals(response.status_int, 404)
+
+
+class TestDelete(helpers.FunctionalTestBase):
+    def setup(self):
+        super(TestDelete, self).setup()
+        self.owner = factories.User()
+        self.org = factories.Organization(user=self.owner)
+        self.dataset = factories.Dataset(user=self.owner,
+                                         owner_org=self.org['name'])
+        self.issue = issue_factories.Issue(user=self.owner,
+                                           user_id=self.owner['id'],
+                                           dataset_id=self.dataset['id'])
+        self.app = self._get_test_app()
+
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_delete(self):
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.post(
+            url=toolkit.url_for('issues_delete', dataset_id=self.dataset['id'],
+                                issue_id=self.issue['id']),
+            extra_environ=env,
+        )
+        # check we get redirected back to the issues overview page
+        assert_equals(302, response.status_int)
+        response = response.follow()
+        assert_equals(200, response.status_int)
+        assert_equals(
+            toolkit.url_for('issues_home', package_id=self.dataset['id']),
+            response.request.path
+        )
+        # check the issue is now deleted.
+        assert_raises(toolkit.ObjectNotFound, helpers.call_action,
+                      'issue_show', id=self.issue['id'])
+
+    def test_delete_unauthed_401s(self):
+        user = factories.User()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = self.app.post(
+            url=toolkit.url_for('issues_delete', dataset_id=self.dataset['id'],
+                                issue_id=self.issue['id']),
+            extra_environ=env,
+            expect_errors=True
+        )
+        assert_equals(401, response.status_int)
+
+
+    def test_delete_button_appears_for_authed_user(self):
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.get(
+            url=toolkit.url_for('issues_show', package_id=self.dataset['id'],
+                                id=self.issue['id']),
+            extra_environ=env,
+        )
+        form = response.forms['issue-comment-form']
+        soup = bs4.BeautifulSoup(form.text)
+        delete_link = soup.find_all('a')[-1]
+        # check the link of the delete
+        assert_equals('Delete', delete_link.text)
+        assert_equals(
+            toolkit.url_for('issues_delete', dataset_id=self.dataset['id'],
+                            issue_id=self.issue['id']),
+            delete_link.attrs['href']
+        )
+
+    def test_delete_confirm_page(self):
+        '''test the confirmation page renders and cancels correctly'''
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.get(
+            url=toolkit.url_for('issues_delete', dataset_id=self.dataset['id'],
+                                issue_id=self.issue['id']),
+            extra_environ=env,
+        )
+        form = response.forms['ckanext-issues-confirm-delete']
+        # check the form target
+        assert_equals(
+            toolkit.url_for('issues_delete', dataset_id=self.dataset['id'],
+                            issue_id=self.issue['id']),
+            form.action
+        )
+        assert_equals([u'cancel', u'delete'], form.fields.keys())
+        response = helpers.submit_and_follow(self.app, form, env, 'cancel')
+        # check we have been redirected without deletion
+        assert_equals(
+            toolkit.url_for('issues_show', package_id=self.dataset['id'],
+                            id=self.issue['id']),
+            response.request.path_qs
+        )
+
+    def test_delete_button_not_present_for_unauthed_user(self):
+        user = factories.User()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = self.app.get(
+            url=toolkit.url_for('issues_show', package_id=self.dataset['id'],
+                                id=self.issue['id']),
+            extra_environ=env,
+        )
+        form = response.forms['issue-comment-form']
+        assert_not_in('Delete', form.text)

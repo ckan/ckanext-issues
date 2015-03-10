@@ -50,6 +50,7 @@ def issue_count_schema():
 def issue_delete_schema():
     return {
         'id': [not_missing, unicode],
+        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
     }
 
 
@@ -60,4 +61,11 @@ def issue_home_controller_schema():
         'page': [ignore_missing, is_positive_integer],
         'per_page': [ignore_missing, is_positive_integer],
         'q': [ignore_missing, unicode],
+    }
+
+
+def issue_show_controller_schema():
+    return {
+        'id': [not_missing, unicode, issue_exists],
+        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
     }

@@ -279,4 +279,14 @@ class TestIssueDelete(object):
                       helpers.call_action,
                       'issue_delete',
                       context={'user': user['name']},
+                      id='2')
+
+    def test_delete_non_integer_parameter_issue_raises_not_found(self):
+        '''issue ids are a postgres seqeunce currently'''
+        user = factories.User()
+        dataset = factories.Dataset()
+        assert_raises(toolkit.ObjectNotFound,
+                      helpers.call_action,
+                      'issue_delete',
+                      context={'user': user['name']},
                       id='huh')

@@ -27,11 +27,13 @@ set           {% for key, error in errors.items() %}
     {{ form.input('resource', label=_('Resource'), id='resource', attrs={'disabled':'1'}) }}
   {% endblock %}
 
+  {% block form_actions %}
   <div class="form-actions">
     {{ h.nav_link(_('Cancel'), controller='related', action='list', id=c.id,
     class_='btn') }}
     <button class="btn btn-primary" type="submit" name="save" tabindex="4">{{ _('Update') }}</button>
   </div>
+  {% endblock %}
 </form>
 
 {% endblock %}

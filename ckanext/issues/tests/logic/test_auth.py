@@ -63,3 +63,61 @@ class TestIssueUpdate(object):
         assert_raises(toolkit.NotAuthorized, helpers.call_auth, 'issue_update',
                       context, id=issue['id'], dataset_id=dataset['id'],
                       status='open')
+
+
+class TestIssueDelete(object):
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_dataset_owner_can_delete_issue(self):
+        user = factories.User()
+        org = factories.Organization(user=user)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user=user,
+                                      user_id=user['id'],
+                                      dataset_id=dataset['id'])
+
+        context = {
+            'user': user['name'],
+            'auth_user_obj': user,
+            'model': model,
+            'session': model.Session,
+        }
+        helpers.call_auth('issue_delete', context, id=issue['id'],
+                          dataset_id=dataset['id'])
+
+    def test_issue_owner_cannot_delete_on_a_dataset_they_do_not_own(self):
+        user = factories.User()
+        # they aren't part of the org
+        org = factories.Organization()
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user=user,
+                                      user_id=user['id'],
+                                      dataset_id=dataset['id'])
+
+        context = {
+            'user': user['name'],
+            'auth_user_obj': user,
+            'model': model,
+            'session': model.Session,
+        }
+        assert_raises(toolkit.NotAuthorized, helpers.call_auth, 'issue_delete',
+                      context, id=issue['id'], dataset_id=dataset['id'])
+
+    def test_user_cannot_delete_issue_they_do_not_own(self):
+        user = factories.User()
+        # they aren't part of the org
+        org = factories.Organization()
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user_id=user['id'],
+                                      dataset_id=dataset['id'])
+
+        context = {
+            'user': user['name'],
+            'auth_user_obj': user,
+            'model': model,
+            'session': model.Session,
+        }
+        assert_raises(toolkit.NotAuthorized, helpers.call_auth, 'issue_delete',
+                      context, id=issue['id'], dataset_id=dataset['id'])

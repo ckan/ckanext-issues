@@ -25,20 +25,10 @@ class IssuesPlugin(p.SingletonPlugin):
     implements(p.IAuthFunctions)
 
     def update_config(self, config):
-        """
-        Called during CKAN setup.
-
-        Add the public folder to CKAN's list of public folders,
-        and add the templates folder to CKAN's list of template
-        folders.
-        """
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_public_directory(config, 'public')
 
     def get_helpers(self):
-        """
-        A dictionary of extra helpers that will be available in templates
-        """
         return {
             'issues_installed': lambda: True,
             'issue_count': util.issue_count,
@@ -53,9 +43,6 @@ class IssuesPlugin(p.SingletonPlugin):
         model_setup()
 
     def before_map(self, map):
-        """
-        Expose the issue API.
-        """
         from ckan.config.routing import SubMapper
 
         with SubMapper(map, controller='ckanext.issues.controller:IssueController') as m:
@@ -64,6 +51,8 @@ class IssuesPlugin(p.SingletonPlugin):
                     action='new')
             m.connect('issues_edit', '/dataset/:package_id/issues/:id/edit',
                     action='edit')
+            m.connect('issues_delete', '/dataset/:dataset_id/issues/:issue_id/delete',
+                    action='delete')
             m.connect('issues_comments', '/dataset/:package_id/issues/:id/comments',
                     action='comments')
             m.connect('add_issue_with_resource', '/dataset/:package_id/issues/new/:resource_id', action='add')

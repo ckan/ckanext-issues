@@ -2,6 +2,9 @@ from ckan.plugins import toolkit
 from ckanext.issues import model as issuemodel
 
 
+is_positive_integer = toolkit.get_validator('is_positive_integer')
+
+
 def is_valid_status(value, context):
     if value in issuemodel.ISSUE_STATUS:
         return value
@@ -28,6 +31,7 @@ def as_package_id(package_id_or_name, context):
 
 
 def issue_exists(issue_id, context):
+    issue_id = is_positive_integer(issue_id, context)
     result = issuemodel.Issue.get(issue_id, session=context['session'])
     if not result:
         raise toolkit.Invalid(toolkit._('Issue not found') + ': %s' % issue_id)

@@ -1,8 +1,8 @@
 {% extends "issues/base.html" %}
 
-{% block subtitle %}{{ '%s #%s - %s' % (c.issue.title, c.issue.id, _('Issues')) }} {% endblock %}
+{% block subtitle %}{{ '%s #%s - %s' % (issue.title, issue.id, _('Issues')) }} {% endblock %}
 
-{% block breadcrumb_item %}{{ h.nav_link(c.issue.id, named_route='issues_show', package_id=c.pkg.name, id=c.issue.id) }}
+{% block breadcrumb_item %}{{ h.nav_link(issue.id, named_route='issues_show', package_id=dataset.name, id=issue.id) }}
 {% endblock %}
 
 {% import 'macros/form.html' as form %}
@@ -16,9 +16,9 @@
   <div class="issue-comment">
     <div class="issue-comment-header">
       <div class="issue-comment-actions">
-        {% if h.check_access('issue_update', {'dataset_id': c.pkg.id, 'id': c.issue.id }) %}
+        {% if h.check_access('issue_update', {'dataset_id': dataset.id, 'id': issue.id }) %}
           <div class="issue-edit-button">
-            <a href={{h.url_for('issues_edit', package_id=c.pkg.name, id=c.issue.id)}} class=btn>
+            <a href={{h.url_for('issues_edit', package_id=dataset.name, id=issue.id)}} class=btn>
               <i class="icon-pencil"></i>
             </a>
           </div>
@@ -42,20 +42,20 @@
     <div class="module-content">
       <div class="issue-header">
         <h1 class="page-heading">
-          {{c.issue.title}}
-          <span class="header-number">#{{c.issue.id}}</small>
+          {{issue.title}}
+          <span class="header-number">#{{issue.id}}</small>
         </h1>
         <div class="issue-header-meta">
-          <span class="issue-header-status {{c.issue.status}}">
-            <i class="icon-exclamation-sign"></i> {{c.issue.status.title()}}
+          <span class="issue-header-status {{issue.status}}">
+            <i class="icon-exclamation-sign"></i> {{issue.status.title()}}
           </span>
-          <a href="{{c.issue.user.ckan_url}}">{{c.issue.user.name}}</a> opened this issue {{c.issue.time_ago}} ago &middot; {{c.comment_count}} comments
+          <a href="{{issue.user.ckan_url}}">{{issue.user.name}}</a> opened this issue {{issue.time_ago}} ago &middot; {{comment_count}} comments
         </div>
       </div>
 
-      {{ issue_comment(c.issue) }}
+      {{ issue_comment(issue) }}
 
-      {% for comment in c.issue.comments %}
+      {% for comment in issue.comments %}
         {{ issue_comment(comment) }}
       {% endfor %}
 
@@ -66,9 +66,9 @@
             class="issue-comment-avatar">
             {{c.current_user.gravatar}}
           </a>
-          <form class="dataset-form" method="post"
+          <form id="issue-comment-form" class="dataset-form" method="post"
             data-module="basic-form"
-            action="{{h.url_for('issues_comments', id=c.issue.id, package_id=c.pkg.id)}}">
+            action="{{h.url_for('issues_comments', id=issue.id, package_id=dataset.id)}}">
             <div class="control-group control-full">
               <div class="controls editor">
                 <textarea id="comment" name="comment" cols="20" rows="5"
@@ -78,9 +78,14 @@
                   You can use <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown formatting</a> here</span>
               </div>
             </div>
+            {% block form_actions %}
             <div class="form-actions" style="border-top: none;">
-              {% if c.issue_admin %}
-                {% if c.issue.status == 'open' %}
+              {% if h.check_access('issue_delete', {'id': issue.id, 'dataset_id': dataset.id}) %}
+                {% set locale = h.dump_json({'content': _('Are you sure you want to delete this issue?')}) %}
+                <a class="btn btn-danger pull-left" href="{% url_for 'issues_delete', dataset_id=dataset.id, issue_id=issue.id %}" data-module="confirm-action" data-module-i18n="{{ locale }}">{% block delete_button_text %}{{ _('Delete') }}{% endblock %}</a>
+              {% endif %}
+              {% if h.check_access('issue_update', {'id': issue.id, 'dataset_id':dataset.id}) %}
+                {% if issue.status == 'open' %}
                 <button class="btn" type="submit" name="close" tabindex="3">
                   {{ _('Close') }}
                 </button>
@@ -95,6 +100,7 @@
                 {{ _('Comment') }}
               </button>
             </div>
+            {% endblock %}
           </form>
           {% else %}
           <div class="not-logged-in">
