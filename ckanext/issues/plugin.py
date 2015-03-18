@@ -53,6 +53,9 @@ class IssuesPlugin(p.SingletonPlugin):
                     action='edit')
             m.connect('issues_delete', '/dataset/:dataset_id/issues/:issue_id/delete',
                     action='delete')
+            m.connect('issues_assign',
+                      '/dataset/:dataset_id/issues/:issue_id/assign',
+                      action='assign')
             m.connect('issues_comments', '/dataset/:package_id/issues/:id/comments',
                     action='comments')
             m.connect('add_issue_with_resource', '/dataset/:package_id/issues/new/:resource_id', action='add')

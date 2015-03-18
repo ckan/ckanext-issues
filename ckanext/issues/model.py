@@ -271,7 +271,7 @@ def define_issue_tables():
         Column('user_id', types.UnicodeText,
                ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
                nullable=False),
-        Column('asignee_id', types.UnicodeText,
+        Column('assignee_id', types.UnicodeText,
                ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')),
         Column('status', types.String(15), default=ISSUE_STATUS.open,
                nullable=False),
@@ -306,7 +306,7 @@ def define_issue_tables():
                 model.User,
                 backref=backref('resolved_issues',
                                 cascade='all'),
-                primaryjoin=issue_table.c.asignee_id.__eq__(User.id)
+                primaryjoin=issue_table.c.assignee_id.__eq__(User.id)
             ),
             'dataset': relation(
                 model.Package,

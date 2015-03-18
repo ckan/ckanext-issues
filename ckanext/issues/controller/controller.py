@@ -86,7 +86,7 @@ class IssueController(BaseController):
         self.context = {'for_view': True}
         try:
             pkg = logic.get_action('package_show')(self.context, {'id':
-                                                     package_id})
+                                                   package_id})
             # need this as some templates in core explicitly reference
             # c.pkg_dict
             c.pkg = pkg
@@ -164,7 +164,7 @@ class IssueController(BaseController):
 
     def edit(self, id, package_id):
         self._before(package_id)
-        issue = p.toolkit.get_action('issue_show')(data_dict={'id': id,})
+        issue = p.toolkit.get_action('issue_show')(data_dict={'id': id})
         if request.method == 'GET':
             return p.toolkit.render(
                 'issues/edit.html',
@@ -210,7 +210,6 @@ class IssueController(BaseController):
         except logic.NotAuthorized:
             abort(401, _('Not authorized'))
 
-
         next_url = h.url_for(
             'issues_show',
             package_id=c.pkg['name'],
@@ -227,7 +226,7 @@ class IssueController(BaseController):
         # comment created in that case
         if 'close' in request.POST or 'reopen' in request.POST:
             status = (issuemodel.ISSUE_STATUS.closed if 'close' in request.POST
-                    else issuemodel.ISSUE_STATUS.open)
+                      else issuemodel.ISSUE_STATUS.open)
             issue_dict = {
                 'id': id,
                 'dataset_id': package_id,
@@ -250,7 +249,8 @@ class IssueController(BaseController):
 
     def home(self, package_id):
         """
-        Display a page containing a list of all issues items, sorted by category.
+        Display a page containing a list of all issues items, sorted by
+        category.
         """
         self._before(package_id)
         try:
@@ -281,6 +281,32 @@ class IssueController(BaseController):
                               'pkg': dataset,
                           })
 
+    def assign(self, dataset_id, issue_id):
+        # dataset = self._before(dataset_id)
+        if request.method == 'POST':
+            try:
+                assignee_id = request.POST.get('assignee')
+                assignee = toolkit.get_action('user_show')(
+                    data_dict={'id': assignee_id})
+            except toolkit.ObjectNotFound:
+                h.flash_error(_('User {0} does not exist'.format(assignee_id)))
+                return p.toolkit.redirect_to('issues_show',
+                                             id=issue_id,
+                                             package_id=dataset_id)
+
+            try:
+                toolkit.get_action('issue_update')(
+                    data_dict={'id': issue_id, 'assignee_id': assignee['id'],
+                               'dataset_id': dataset_id})
+            except toolkit.NotAuthorized:
+                msg = _('Unauthorized to assign users to issue'.format(
+                    issue_id))
+                toolkit.abort(401, msg)
+
+        return p.toolkit.redirect_to('issues_show',
+                                     id=issue_id,
+                                     package_id=dataset_id)
+
     def publisher_issue_page(self, publisher_id):
         """
         Display a page containing a list of all issues items for a given
@@ -310,11 +336,13 @@ class IssueController(BaseController):
 
     def all_issues_page(self):
         """
-        Display a page containing a list of all issues items, sorted by category.
+        Display a page containing a list of all issues items, sorted by
+        category.
         """
         # categories
-        categories = model.Session.query(func.count(model.Issue.id).label('issue_count'),
-                                         model.Issue.issue_category_id)\
+        categories = model.Session.query(
+            func.count(model.Issue.id).label('issue_count'),
+            model.Issue.issue_category_id)\
             .filter(model.Issue.resolved == None)\
             .group_by(model.Issue.issue_category_id)
 

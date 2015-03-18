@@ -23,7 +23,7 @@ def issue_update_schema():
         'description': [ignore_missing, unicode],
         'dataset_id': [ignore_missing, unicode, package_exists, as_package_id],
         'resource_id': [ignore_missing, unicode, resource_id_exists],
-        'asignee_id': [ignore_missing, unicode, user_exists],
+        'assignee_id': [ignore_missing, unicode, user_exists],
         'status':  [ignore_missing, unicode],
     }
 

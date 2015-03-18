@@ -1,5 +1,4 @@
 import logging
-
 from datetime import datetime
 
 import ckan.logic as logic
@@ -130,10 +129,9 @@ def issue_update(context, data_dict):
             user = context['user']
             user_dict = p.toolkit.get_action('user_show')(
                 data_dict={'id': user})
-            issue.asignee_id = user_dict['id']
+            issue.assignee_id = user_dict['id']
         elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
             issue.resolved = None
-            issue.asignee = None
 
     session.add(issue)
     session.commit()

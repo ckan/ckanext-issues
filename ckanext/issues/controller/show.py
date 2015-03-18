@@ -18,6 +18,9 @@ def show(issue_id, dataset_id, session):
         commentobj = issueobj.comments[idx]
         comment['time_ago'] = helpers.time_ago_from_timestamp(
             commentobj.created)
+
+    issue['assignee'] = _get_assigned_user(issue['assignee_id'])
+
     return {
         'issue': issue,
         'comment_count': comment_count,
@@ -32,3 +35,10 @@ def _validate_show(issue_id, dataset_id, session,
     if errors:
         raise toolkit.ValidationError(errors)
     return issue_id
+
+
+def _get_assigned_user(assignee_id):
+    try:
+        return toolkit.get_action('user_show')(data_dict={'id': assignee_id})
+    except toolkit.ObjectNotFound:
+        return None

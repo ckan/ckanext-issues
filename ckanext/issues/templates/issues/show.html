@@ -112,3 +112,35 @@
   </section>
 {% endblock %}
 
+{% block secondary_content %}
+<div class="module module-narrow module-shallow">
+  <h2 class="module-heading">
+    <i class="icon-medium icon-filter"></i>
+    Asignee
+  </h2>
+  <div id='ckanext-issues-assignee'>
+    {% if issue.assignee %}
+      {{ h.gravatar((issue.assignee.email_hash), size=22) }}
+      {{ issue.assignee.name }}
+    {% else %}
+      {{ _('No one') }}
+    {% endif %}
+  </div>
+  {% block assignee_form %}
+    {% if h.check_access('issue_update', {'dataset_id': dataset.id, 'id': issue.id }) %}
+    <form id='ckanext-issues-assign' class="dataset-form form-horizontal add-member-form" method='post' action="{{ h.url_for('issues_assign', issue_id=issue.id, dataset_id=dataset.id) }}">
+        Change Assignee
+        <div class="controls">
+          <input id="assignee" type="text" name="assignee" placeholder="Username"
+          value="" class="control-medium" data-module="autocomplete"
+          data-module-source="/api/2/util/user/autocomplete?q=?">
+        </div>
+        <div>
+          <button class="btn btn-success" type="submit" name="assign">
+            {{ _('Assign') }}
+          </button>
+        </div>
+      </form>
+     {% endif %}
+  {% endblock %}
+{% endblock %}
