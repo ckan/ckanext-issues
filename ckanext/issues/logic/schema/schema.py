@@ -18,7 +18,7 @@ boolean_validator = toolkit.get_validator('boolean_validator')
 
 def issue_update_schema():
     return {
-        'id': [not_missing, unicode],
+        'id': [not_missing, unicode, issue_exists],
         'title': [ignore_missing, unicode],
         'description': [ignore_missing, unicode],
         'dataset_id': [ignore_missing, unicode, package_exists, as_package_id],
@@ -68,4 +68,12 @@ def issue_show_controller_schema():
     return {
         'id': [not_missing, unicode, issue_exists],
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+    }
+
+
+def organization_users_autocomplete_schema():
+    return {
+        'q': [not_missing, unicode],
+        'organization_id': [not_missing, unicode],
+        'limit': [ignore_missing, is_positive_integer],
     }

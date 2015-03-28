@@ -206,3 +206,31 @@ def issue_delete(context, data_dict):
         raise NotFound('{0} was not found.'.format(issue_id))
     session.delete(issue)
     session.commit()
+
+
+@p.toolkit.side_effect_free
+@validate(schema.organization_users_autocomplete_schema)
+def organization_users_autocomplete(context, data_dict):
+    model = context['model']
+    user = context['user']
+    q = data_dict['q']
+    organization_id = data_dict['organization_id']
+    limit = data_dict.get('limit', 20)
+    log.debug('TEST {} {}'.format(organization_id, q))
+
+    query = model.Session.query(model.User.id, model.User.name,
+                                model.User.fullname)\
+        .filter(model.Member.group_id == organization_id)\
+        .filter(model.Member.table_name == 'user')\
+        .filter(model.Member.capacity.in_(['editor', 'admin']))\
+        .filter(model.User.state != model.State.DELETED)\
+        .filter(model.User.id == model.Member.table_id)\
+        .filter(model.User.name.ilike('{0}%'.format(q)))\
+        .limit(limit)
+
+    users = []
+    for user in query.all():
+        user_dict = dict(user.__dict__)
+        user_dict.pop('_labels', None)
+        users.append(user_dict)
+    return users

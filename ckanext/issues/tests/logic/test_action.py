@@ -237,8 +237,8 @@ class TestIssueUpdate(object):
         assert_equals('closed', closed['status'])
 
         after_closed = helpers.call_action('issue_show',
-                                       context={'user': user['name']},
-                                       id=issue['id'])
+                                           context={'user': user['name']},
+                                           id=issue['id'])
         assert_equals('closed', after_closed['status'])
 
         helpers.call_action('issue_update',
@@ -262,10 +262,10 @@ class TestIssueDelete(object):
         issue = issue_factories.Issue(user=user, user_id=user['id'],
                                       dataset_id=dataset['id'])
 
-        deleted = helpers.call_action('issue_delete',
-                                      context={'user': user['name']},
-                                      dataset_id=dataset['id'],
-                                      id=issue['id'])
+        helpers.call_action('issue_delete',
+                            context={'user': user['name']},
+                            dataset_id=dataset['id'],
+                            id=issue['id'])
 
         assert_raises(toolkit.ObjectNotFound,
                       helpers.call_action,
@@ -293,3 +293,28 @@ class TestIssueDelete(object):
                       context={'user': user['name']},
                       dataset_id=dataset['id'],
                       id='huh')
+
+
+class TestOrganizationUsersAutocomplete(object):
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_fetch_org_editors(self):
+        owner = factories.User(name='test_owner')
+        editor = factories.User(name='test_editor')
+        admin = factories.User(name='test_admin')
+        member = factories.User(name='test_member')
+        factories.User(name='test_user')
+        organization = factories.Organization(user=owner, users=[
+            {'name': editor['id'], 'capacity': 'editor'},
+            {'name': admin['id'], 'capacity': 'admin'},
+            {'name': member['id']}, ])
+
+        result = helpers.call_action('organization_users_autocomplete',
+                                     q='test',
+                                     organization_id=organization['id'])
+        assert_equals(
+            set(['test_owner', 'test_editor', 'test_admin']),
+            set([i['name'] for i in result])
+        )

@@ -72,6 +72,18 @@ class TestAssign(helpers.FunctionalTestBase):
 
         assert_equals(401, response.status_int)
 
+    def test_cannot_assign_an_issue_that_does_not_exist(self):
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.post(
+            toolkit.url_for('issues_assign', dataset_id=self.dataset['id'],
+                            issue_id='not an issue'),
+            {'assignee': self.owner['name']},
+            extra_environ=env,
+            expect_errors=True
+        )
+
+        assert_equals(404, response.status_int)
+
 
     def test_assign_form_does_not_appear_for_unauthorized_user(self):
         user = factories.User()

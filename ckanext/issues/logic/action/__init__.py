@@ -6,4 +6,5 @@ from action import (
     issue_search,
     issue_show,
     issue_update,
+    organization_users_autocomplete,
 )

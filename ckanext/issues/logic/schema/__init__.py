@@ -5,4 +5,5 @@ from schema import (
     issue_show_controller_schema,
     issue_search_schema,
     issue_update_schema,
+    organization_users_autocomplete_schema,
 )

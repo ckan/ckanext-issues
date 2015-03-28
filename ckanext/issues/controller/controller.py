@@ -302,6 +302,9 @@ class IssueController(BaseController):
                 msg = _('Unauthorized to assign users to issue'.format(
                     issue_id))
                 toolkit.abort(401, msg)
+            except toolkit.ValidationError, e:
+                toolkit.abort(404)
+
 
         return p.toolkit.redirect_to('issues_show',
                                      id=issue_id,

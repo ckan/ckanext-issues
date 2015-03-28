@@ -1,5 +1,10 @@
 {% extends "issues/base.html" %}
 
+{% block styles %}
+  {{ super() }}
+  {% resource 'ckanext_issues/autocomplete-action-api.js' %}
+{% endblock %}
+
 {% block subtitle %}{{ '%s #%s - %s' % (issue.title, issue.id, _('Issues')) }} {% endblock %}
 
 {% block breadcrumb_item %}{{ h.nav_link(issue.id, named_route='issues_show', package_id=dataset.name, id=issue.id) }}
@@ -116,7 +121,7 @@
 <div class="module module-narrow module-shallow">
   <h2 class="module-heading">
     <i class="icon-medium icon-filter"></i>
-    Asignee
+    Assignee
   </h2>
   <div id='ckanext-issues-assignee'>
     {% if issue.assignee %}
@@ -132,8 +137,12 @@
         Change Assignee
         <div class="controls">
           <input id="assignee" type="text" name="assignee" placeholder="Username"
-          value="" class="control-medium" data-module="autocomplete"
-          data-module-source="/api/2/util/user/autocomplete?q=?">
+          value="" class="control-medium" data-module="autocomplete-action-api"
+          {% if dataset['owner_org'] %}
+          data-module-source="/api/3/action/organization_users_autocomplete?organization_id={{ dataset['owner_org']}}&q=?">
+          {% else %}
+          data-module-source="/api/3/action/user_autocomplete?q=?">
+          {% endif %}
         </div>
         <div>
           <button class="btn btn-success" type="submit" name="assign">
