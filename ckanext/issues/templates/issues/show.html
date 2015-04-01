@@ -22,7 +22,7 @@
     <div class="issue-comment-header">
       <div class="issue-comment-actions">
         {% if h.check_access('issue_update', {'dataset_id': dataset.id, 'id': issue.id }) %}
-          <div class="issue-comment-action" id="issues-edit-button">
+          <div class="issue-comment-action" id="issue-edit-button">
             <a href={{h.url_for('issues_edit', package_id=dataset.name, id=issue.id)}} class="btn btn-small">
               <i class="icon-pencil" title="Edit"></i>
             </a>
