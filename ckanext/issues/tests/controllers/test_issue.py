@@ -80,7 +80,7 @@ class TestEditButton(helpers.FunctionalTestBase):
         )
 
         soup = bs4.BeautifulSoup(response.body)
-        edit_button = soup.find('div', {'class': 'issue-edit-button'})
+        edit_button = soup.find('div', {'id': 'issue-edit-button'})
         assert_is_not_none(edit_button)
 
     def test_edit_button_does_not_appear_for_unauthorized_user(self):
@@ -95,7 +95,7 @@ class TestEditButton(helpers.FunctionalTestBase):
         )
 
         soup = bs4.BeautifulSoup(response.body)
-        edit_button = soup.find('div', {'class': 'issue-edit-button'})
+        edit_button = soup.find('div', {'id': 'issue-edit-button'})
         assert_is_none(edit_button)
 
 
