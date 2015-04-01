@@ -26,12 +26,17 @@
     {% for issue in issues %}
       <li class="list-group-item">
         <span class="list-group-item-number">#{{issue.id}}</span>
+        <div class="issue-comment-label">
+          {% if issue.spam_state == 'hidden' %}Marked as spam{%endif%}
+        </div>
         <h4 class="list-group-item-name">
           <span class="{{issue.status}} icon" title="{{issue.status}} issue"><i class="icon-exclamation-sign"></i></span>
-          <a href="{{ h.url_for('issues_show', package_id=pkg.id, id=issue.id) }}">{{issue.title}}</a>
+          <a href="{{ h.url_for('issues_show', package_id=pkg.id, id=issue.id) }}" {% if issue.spam_state == 'hidden'%} class="issue-spam"{% endif%}>
+            {{issue.title}}
+          </a>
         </h4>
         <ul class="list-group-item-meta">
-          <li>Opened by <a href="{{issue.user.ckan_url}}">{{issue.user.name}}</a></li>
+          <li>Opened by <a href="{{ h.url_for('user_datasets', id=issue.user) }}">{{issue.user}}</a></li>
           <li>
             <i class="icon-clock"></i>
             <span class="timeago" title="{{issue.created}}"> updated {{issue.created_time_ago}} ago</span>

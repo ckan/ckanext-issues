@@ -36,3 +36,10 @@ def issue_exists(issue_id, context):
     if not result:
         raise toolkit.Invalid(toolkit._('Issue not found') + ': %s' % issue_id)
     return issue_id
+
+def issue_comment_exists(issue_comment_id, context):
+    issue_comment_id = is_positive_integer(issue_comment_id, context)
+    result = issuemodel.IssueComment.get(issue_comment_id, session=context['session'])
+    if not result:
+        raise toolkit.Invalid(toolkit._('Issue Comment not found') + ': %s' % issue_comment_id)
+    return issue_comment_id

@@ -77,7 +77,6 @@ class TestEditButton(helpers.FunctionalTestBase):
                                 package_id=self.dataset['id'],
                                 id=self.issue['id']),
             extra_environ=env,
-            expect_errors=True
         )
 
         soup = bs4.BeautifulSoup(response.body)
@@ -93,7 +92,6 @@ class TestEditButton(helpers.FunctionalTestBase):
                                 package_id=self.dataset['id'],
                                 id=self.issue['id']),
             extra_environ=env,
-            expect_errors=True
         )
 
         soup = bs4.BeautifulSoup(response.body)
@@ -148,7 +146,7 @@ class TestSearchBox(helpers.FunctionalTestBase):
         res = search_form.submit()
         soup = bs4.BeautifulSoup(res.body)
         issue_links = soup.find(id='issue-list').find_all('h4')
-        titles = set([i.a.text for i in issue_links])
+        titles = set([i.a.text.strip() for i in issue_links])
         assert_equals(set([i['title'] for i in in_search]), titles)
 
 

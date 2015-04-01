@@ -148,7 +148,7 @@ class Issue(domain_object.DomainObject):
     @classmethod
     def get_issues_for_dataset(cls, dataset_id, offset=None, limit=None,
                                status=None, sort=None, q=None,
-                               session=Session):
+                               spam_status=None, session=Session):
         comment_count = func.count(IssueComment.id).label('comment_count')
         last_updated = func.max(IssueComment.created).label('updated')
         query = session.query(
@@ -166,6 +166,8 @@ class Issue(domain_object.DomainObject):
 
         if status:
             query = query.filter(cls.status == status)
+        if spam_status:
+            query = query.filter(cls.spam_state == spam_status)
         if sort:
             try:
                 query = IssueFilter.get_filter(sort)(query)
@@ -181,7 +183,7 @@ class Issue(domain_object.DomainObject):
 
     @classmethod
     def get_count_for_dataset(cls, dataset_id, status=None, sort=None, q=None,
-                              session=Session):
+                              spam_status=None, session=Session):
         query = session.query(func.count(cls.id)).\
             filter(cls.dataset_id == dataset_id)
         if q:
@@ -189,7 +191,25 @@ class Issue(domain_object.DomainObject):
 
         if status:
             query = query.filter(cls.status == status)
+        if spam_status:
+            query = query.filter(cls.spam_state == spam_status)
         return query.one()[0]
+
+    def increase_spam_count(self, session):
+        self.spam_count += 1
+        model.Session.add(self)
+        model.Session.commit()
+
+    def mark_as_spam(self, session):
+        self.spam_state = u'hidden'
+        model.Session.add(self)
+        model.Session.commit()
+
+    def mark_as_not_spam(self, session):
+        self.spam_count = 0
+        self.spam_state = u'visible'
+        model.Session.add(self)
+        model.Session.commit()
 
     def as_dict(self):
         out = super(Issue, self).as_dict()
@@ -223,6 +243,11 @@ class Issue(domain_object.DomainObject):
 class IssueComment(domain_object.DomainObject):
     """A Issue Comment Object"""
     @classmethod
+    def get(cls, reference, session=Session):
+        """Returns a Issue comment object referenced by its id."""
+        return session.query(cls).filter(cls.id == reference).first()
+
+    @classmethod
     def get_comments(cls, issue):
         """ Gets all comments for a given issue """
         return model.Session.query(cls).\
@@ -238,6 +263,22 @@ class IssueComment(domain_object.DomainObject):
         out = super(IssueComment, self).as_dict()
         out['user'] = _user_dict(self.user)
         return out
+
+    def increase_spam_count(self, session):
+        self.spam_count += 1
+        model.Session.add(self)
+        model.Session.commit()
+
+    def mark_as_spam(self, session):
+        self.spam_state = u'hidden'
+        model.Session.add(self)
+        model.Session.commit()
+
+    def mark_as_not_spam(self, session):
+        self.spam_count = 0
+        self.spam_state = u'visible'
+        model.Session.add(self)
+        model.Session.commit()
 
 
 def define_issue_tables():
@@ -276,8 +317,11 @@ def define_issue_tables():
         Column('status', types.String(15), default=ISSUE_STATUS.open,
                nullable=False),
         Column('resolved', types.DateTime),
-        Column('created', types.DateTime, default=datetime.now, nullable=False)
-        )
+        Column('created', types.DateTime, default=datetime.now,
+               nullable=False),
+        Column('spam_count', types.Integer, default=0),
+        Column('spam_state', types.Unicode, default=u'visible'),
+    )
 
     issue_comment_table = Table(
         'issue_comment',
@@ -291,7 +335,10 @@ def define_issue_tables():
                ForeignKey('issue.id', onupdate='CASCADE', ondelete='CASCADE'),
                nullable=False, index=True),
         Column('created', types.DateTime, default=datetime.now,
-               nullable=False))
+               nullable=False),
+        Column('spam_count', types.Integer, default=0),
+        Column('spam_state', types.Unicode, default=u'visible'),
+    )
 
     meta.mapper(
         Issue,

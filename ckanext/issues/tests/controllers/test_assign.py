@@ -122,3 +122,19 @@ class TestAssign(helpers.FunctionalTestBase):
         form['assignee'] = 'not a user'
         response = helpers.submit_and_follow(self.app, form, env)
         assert_in('User not a user does not exist', response)
+
+    def test_issue_creator_cannot_assign_if_they_cannot_package_update(self):
+        user = factories.User()
+        issue = issue_factories.Issue(user=user,
+                                     user_id=user['id'],
+                                     dataset_id=self.dataset['id'])
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = self.app.post(
+            toolkit.url_for('issues_assign', dataset_id=self.dataset['id'],
+                            issue_id=self.issue['id']),
+            {'assignee': user['name']},
+            extra_environ=env,
+            expect_errors=True
+        )
+
+        assert_equals(401, response.status_int)

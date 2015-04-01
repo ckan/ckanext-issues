@@ -80,3 +80,22 @@ def get_issues_per_page():
         issues_per_page = ISSUES_PER_PAGE
     return issues_per_page
 
+
+def issues_enabled(dataset):
+    datasets_with_issues_enabled = set(toolkit.aslist(
+        config.get('ckanext.issues.enabled_for_datasets')
+    ))
+    # if the config option 'ckanext.issues.enabled_for_dataset' is
+    # set with a list of datasets, only enabled for the listed datasets
+    if datasets_with_issues_enabled:
+        if dataset['name'] in datasets_with_issues_enabled:
+            return True
+    else:
+        extras = dataset.get('extras')
+        for extra in extras:
+            if extra.get('key') == 'issues_enabled':
+                return toolkit.asbool(extra.get('value'))
+        else:
+            return toolkit.asbool(
+                config.get('ckanext.issues.enabled_per_dataset_default', True)
+        )

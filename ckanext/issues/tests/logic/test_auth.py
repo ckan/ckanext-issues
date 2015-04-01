@@ -108,9 +108,10 @@ class TestIssueDelete(object):
     def test_user_cannot_delete_issue_they_do_not_own(self):
         user = factories.User()
         # they aren't part of the org
-        org = factories.Organization()
+        owner = factories.User()
+        org = factories.Organization(user=owner)
         dataset = factories.Dataset(owner_org=org['name'])
-        issue = issue_factories.Issue(user_id=user['id'],
+        issue = issue_factories.Issue(user_id=owner['id'],
                                       dataset_id=dataset['id'])
 
         context = {
@@ -121,3 +122,21 @@ class TestIssueDelete(object):
         }
         assert_raises(toolkit.NotAuthorized, helpers.call_auth, 'issue_delete',
                       context, id=issue['id'], dataset_id=dataset['id'])
+
+
+class TestReportSpam(object):
+    def test_any_user_can_report_spam(object):
+        user = factories.User()
+        context = {
+            'user': user['name'],
+            'model': model,
+        }
+        assert_true(helpers.call_auth('issue_report_spam', context=context))
+
+    def test_anon_users_cannot_report_spam(object):
+        context = {
+            'user': None,
+            'model': model,
+        }
+        assert_raises(toolkit.NotAuthorized, helpers.call_auth,
+            'issue_report_spam', context=context)

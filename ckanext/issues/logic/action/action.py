@@ -8,6 +8,8 @@ from ckan.logic import validate
 import ckanext.issues.model as issuemodel
 from ckanext.issues.logic import schema
 
+from pylons import config
+
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 
@@ -179,6 +181,14 @@ def issue_comment_create(context, data_dict):
 def issue_search(context, data_dict):
     '''Search issues for a given dataset'''
     p.toolkit.check_access('issue_show', context, data_dict)
+    try:
+        dataset_id = data_dict['dataset_id']
+        p.toolkit.check_access('package_update', context,
+                               data_dict={'id': dataset_id})
+        spam_status = None
+    except p.toolkit.NotAuthorized:
+        spam_status = 'visible'
+    data_dict['spam_status'] = spam_status
 
     return list(issuemodel.Issue.get_issues_for_dataset(
         session=context['session'],
@@ -190,6 +200,15 @@ def issue_search(context, data_dict):
 def issue_count(context, data_dict):
     '''Get the total number of issues for a given dataset'''
     p.toolkit.check_access('issue_show', context, data_dict)
+
+    try:
+        dataset_id = data_dict['dataset_id']
+        p.toolkit.check_access('package_update', context,
+                               data_dict={'id': dataset_id})
+        spam_status = None
+    except p.toolkit.NotAuthorized:
+        spam_status = 'visible'
+    data_dict['spam_status'] = spam_status
 
     return issuemodel.Issue.get_count_for_dataset(
         session=context['session'],
@@ -211,15 +230,13 @@ def issue_delete(context, data_dict):
 @p.toolkit.side_effect_free
 @validate(schema.organization_users_autocomplete_schema)
 def organization_users_autocomplete(context, data_dict):
-    model = context['model']
+    session = context['session']
     user = context['user']
     q = data_dict['q']
     organization_id = data_dict['organization_id']
     limit = data_dict.get('limit', 20)
-    log.debug('TEST {} {}'.format(organization_id, q))
-
-    query = model.Session.query(model.User.id, model.User.name,
-                                model.User.fullname)\
+    query = session.query(model.User.id, model.User.name,
+                          model.User.fullname)\
         .filter(model.Member.group_id == organization_id)\
         .filter(model.Member.table_name == 'user')\
         .filter(model.Member.capacity.in_(['editor', 'admin']))\
@@ -234,3 +251,77 @@ def organization_users_autocomplete(context, data_dict):
         user_dict.pop('_labels', None)
         users.append(user_dict)
     return users
+
+
+@validate(schema.issue_report_spam_schema)
+def issue_report_spam(context, data_dict):
+    p.toolkit.check_access('issue_report_spam', context, data_dict)
+    session = context['session']
+
+    issue_id = data_dict['issue_id']
+    issue = issuemodel.Issue.get(issue_id, session=session)
+    try:
+        # if you're a publisher (can edit the dataset, it gets marked as spam
+        # immediately
+        dataset_id = data_dict['dataset_id']
+        context = {
+            'user': context['user'],
+            'session': session,
+            'model': model,
+        }
+        p.toolkit.check_access('package_update', context,
+                               data_dict={'id': dataset_id})
+        issue.mark_as_spam(session)
+    except p.toolkit.NotAuthorized:
+        issue.increase_spam_count(session)
+        max_strikes = config.get('ckanext.issues.spam_max_strikes')
+        if max_strikes and issue.spam_count > p.toolkit.asint(max_strikes):
+            issue.mark_as_spam(session)
+
+
+@validate(schema.issue_report_spam_schema)
+def issue_reset_spam_state(context, data_dict):
+    p.toolkit.check_access('issue_reset_spam_state', context, data_dict)
+    session = context['session']
+
+    issue_id = data_dict['issue_id']
+    issue = issuemodel.Issue.get(issue_id, session=session)
+    issue.mark_as_not_spam(session)
+
+
+@validate(schema.issue_comment_report_spam_schema)
+def issue_comment_reset_spam_state(context, data_dict):
+    p.toolkit.check_access('issue_reset_spam_state', context, data_dict)
+    session = context['session']
+
+    issue_comment_id = data_dict['issue_comment_id']
+    issue_comment = issuemodel.IssueComment.get(issue_comment_id,
+                                                session=session)
+    issue_comment.mark_as_not_spam(session)
+
+
+@validate(schema.issue_comment_report_spam_schema)
+def issue_comment_report_spam(context, data_dict):
+    p.toolkit.check_access('issue_report_spam', context, data_dict)
+    session = context['session']
+
+    issue_id = data_dict['issue_comment_id']
+    issue_comment = issuemodel.IssueComment.get(issue_id, session=session)
+    try:
+        # if you're a publisher (can edit the dataset, it gets marked as spam
+        # immediately
+        dataset_id = data_dict['dataset_id']
+        package_context = {
+            'user': context['user'],
+            'session': session,
+            'model': model,
+        }
+        p.toolkit.check_access('package_update', package_context,
+                               data_dict={'id': dataset_id})
+        issue_comment.mark_as_spam(session)
+    except p.toolkit.NotAuthorized:
+        issue_comment.increase_spam_count(session)
+        max_strikes = config.get('ckanext.issues.spam_max_strikes')
+        if max_strikes:
+            if issue_comment.spam_count > p.toolkit.asint(max_strikes):
+                issue_comment.mark_as_spam(session)

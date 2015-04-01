@@ -39,6 +39,7 @@ class IssuesPlugin(p.SingletonPlugin):
             'replace_url_param': helpers.replace_url_param,
             'get_issue_filter_types': helpers.get_issue_filter_types,
             'get_issues_per_page': helpers.get_issues_per_page,
+            'issues_enabled': helpers.issues_enabled,
         }
 
     def configure(self, config):
@@ -60,6 +61,18 @@ class IssuesPlugin(p.SingletonPlugin):
                       action='assign')
             m.connect('issues_comments', '/dataset/:package_id/issues/:id/comments',
                     action='comments')
+            m.connect('issues_report_abuse',
+                      '/dataset/:dataset_id/issues/:issue_id/report_abuse',
+                      action='report_abuse'),
+            m.connect('issues_reset_spam_state',
+                      '/dataset/:dataset_id/issues/:issue_id/reset_spam_state',
+                      action='reset_spam_state'),
+            m.connect('issues_comment_report_abuse',
+                      '/dataset/:dataset_id/issues/:issue_id/comment/:comment_id/report_abuse',
+                      action='report_comment_abuse'),
+            m.connect('issues_comment_reset_spam_state',
+                      '/dataset/:dataset_id/issues/:issue_id/comment/:comment_id/reset_spam_state',
+                      action='reset_comment_spam_state'),
             m.connect('add_issue_with_resource', '/dataset/:package_id/issues/new/:resource_id', action='add')
             m.connect('issues_show', '/dataset/:package_id/issues/:id',
                     action='show')
@@ -81,4 +94,6 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_comment_create': auth.issue_comment_create,
             'issue_update': auth.issue_update,
             'issue_delete': auth.issue_delete,
+            'issue_report_spam': auth.issue_report_spam,
+            'issue_reset_spam_state': auth.issue_reset_spam_state,
         }

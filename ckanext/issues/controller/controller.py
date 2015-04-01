@@ -15,6 +15,8 @@ from ckan.plugins import toolkit
 
 import ckanext.issues.model as issuemodel
 from ckanext.issues.controller import home, show
+from ckanext.issues.lib import helpers as issues_helpers
+
 
 
 log = getLogger(__name__)
@@ -95,6 +97,8 @@ class IssueController(BaseController):
             # keep the above lines to keep current code working till it's all
             # refactored out, otherwise, we should pass pkg as an extra_var
             # directly that's returned from this function
+            if not issues_helpers.issues_enabled(pkg):
+                abort(404, _('Issues have not been enabled for this dataset'))
             return pkg
         except logic.NotFound:
             abort(404, _('Dataset not found'))
@@ -282,7 +286,7 @@ class IssueController(BaseController):
                           })
 
     def assign(self, dataset_id, issue_id):
-        # dataset = self._before(dataset_id)
+        dataset = self._before(dataset_id)
         if request.method == 'POST':
             try:
                 assignee_id = request.POST.get('assignee')
@@ -309,6 +313,76 @@ class IssueController(BaseController):
         return p.toolkit.redirect_to('issues_show',
                                      id=issue_id,
                                      package_id=dataset_id)
+
+    def report_abuse(self, dataset_id, issue_id):
+        dataset = self._before(dataset_id)
+        if request.method == 'POST':
+            if not c.user:
+                msg = _('You must be logged in to flag issues as spam'.format(
+                    issue_id))
+                toolkit.abort(401, msg)
+            try:
+                toolkit.get_action('issue_report_spam')(
+                    data_dict={'issue_id': issue_id, 'dataset_id': dataset_id}
+                )
+                h.flash_success(_('Issue reported as spam'))
+                h.redirect_to('issues_show', package_id=dataset_id,
+                              id=issue_id)
+            except toolkit.ValidationError, e:
+                toolkit.abort(404)
+
+    def report_comment_abuse(self, dataset_id, issue_id, comment_id):
+        dataset = self._before(dataset_id)
+        if request.method == 'POST':
+            if not c.user:
+                msg = _('You must be logged in to flag comments as spam'.format(
+                    issue_id))
+                toolkit.abort(401, msg)
+            try:
+                toolkit.get_action('issue_comment_report_spam')(
+                    data_dict={'issue_comment_id': comment_id,
+                               'dataset_id': dataset_id}
+                )
+                h.flash_success(_('Comment reported as spam'))
+                h.redirect_to('issues_show', package_id=dataset_id,
+                              id=issue_id)
+            except toolkit.ValidationError, e:
+                toolkit.abort(404)
+
+    def reset_spam_state(self, dataset_id, issue_id):
+        dataset = self._before(dataset_id)
+        if request.method == 'POST':
+            try:
+                toolkit.get_action('issue_reset_spam_state')(
+                    data_dict={'issue_id': issue_id, 'dataset_id': dataset_id}
+                )
+                h.flash_success(_('Issue unflagged as spam'))
+                h.redirect_to('issues_show', package_id=dataset_id,
+                              id=issue_id)
+            except toolkit.NotAuthorized:
+                msg = _('You must be logged in to reset spam counters'.format(
+                    issue_id))
+                toolkit.abort(401, msg)
+            except toolkit.ValidationError:
+                toolkit.abort(404)
+
+    def reset_comment_spam_state(self, dataset_id, issue_id, comment_id):
+        dataset = self._before(dataset_id)
+        if request.method == 'POST':
+            try:
+                toolkit.get_action('issue_comment_reset_spam_state')(
+                    data_dict={'issue_comment_id': comment_id,
+                               'dataset_id': dataset_id}
+                )
+                h.flash_success(_('Comment unflagged as spam'))
+                h.redirect_to('issues_show', package_id=dataset_id,
+                              id=issue_id)
+            except toolkit.NotAuthorized:
+                msg = _('You must be logged in to reset spam counters'.format(
+                    issue_id))
+                toolkit.abort(401, msg)
+            except toolkit.ValidationError, e:
+                toolkit.abort(404)
 
     def publisher_issue_page(self, publisher_id):
         """

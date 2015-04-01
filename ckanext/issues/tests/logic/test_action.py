@@ -1,3 +1,4 @@
+from ckan import model
 from ckan.lib import search
 from ckan.new_tests import factories, helpers
 from ckan.plugins import toolkit
@@ -5,6 +6,7 @@ from ckan.plugins import toolkit
 from ckanext.issues.tests import factories as issue_factories
 
 from nose.tools import assert_equals, assert_raises
+import mock
 
 
 class TestIssueComment(object):
@@ -318,3 +320,179 @@ class TestOrganizationUsersAutocomplete(object):
             set(['test_owner', 'test_editor', 'test_admin']),
             set([i['name'] for i in result])
         )
+
+
+class TestReportSpam(object):
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_increase_spam(self):
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user_id=owner['id'],
+                                      dataset_id=dataset['id'])
+
+        user = factories.User(name='unauthed')
+        context = {
+            'user': user['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_report_spam', context=context,
+                            dataset_id=dataset['id'], issue_id=issue['id'])
+
+        result = helpers.call_action('issue_show', id=issue['id'])
+        assert_equals(1, result['spam_count'])
+
+    def test_publisher_mark_spam(self):
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user=owner, user_id=owner['id'],
+                                      dataset_id=dataset['id'])
+
+        context = {
+            'user': owner['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_report_spam', context=context,
+                            dataset_id=dataset['id'], issue_id=issue['id'])
+
+        result = helpers.call_action('issue_show', id=issue['id'])
+        assert_equals('hidden', result['spam_state'])
+
+    @mock.patch('ckanext.issues.logic.action.action.config')
+    def test_max_strikes_marks_as_spam(self, mock):
+        #mock out the config value of max_strikes
+        mock.get.return_value = '0'
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user_id=owner['id'],
+                                      dataset_id=dataset['id'])
+
+        user = factories.User(name='unauthed')
+        context = {
+            'user': user['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_report_spam', context=context,
+                            dataset_id=dataset['id'], issue_id=issue['id'])
+
+        result = helpers.call_action('issue_show', id=issue['id'])
+        assert_equals(1, result['spam_count'])
+        assert_equals('hidden', result['spam_state'])
+
+    def test_reset_spam_state(self):
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user_id=owner['id'],
+                                      dataset_id=dataset['id'],
+                                      spam_state='hidden',
+                                      spam_count='20')
+        context = {
+            'user': owner['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_reset_spam_state', context=context,
+                            dataset_id=dataset['id'], issue_id=issue['id'])
+        result = helpers.call_action('issue_show', id=issue['id'])
+        assert_equals(0, result['spam_count'])
+        assert_equals('visible', result['spam_state'])
+
+class TestReportCommentSpam(object):
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_increase_spam(self):
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user_id=owner['id'],
+                                      dataset_id=dataset['id'])
+        comment = issue_factories.IssueComment(user_id=owner['id'],
+                                               issue_id=issue['id'])
+
+
+        user = factories.User(name='unauthed')
+        context = {
+            'user': user['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_comment_report_spam', context=context,
+                            dataset_id=dataset['id'],
+                            issue_comment_id=comment['id'])
+        result = helpers.call_action('issue_show', id=issue['id'])
+
+        assert_equals(1, result['comments'][0]['spam_count'])
+
+    def test_publisher_mark_spam(self):
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user=owner, user_id=owner['id'],
+                                      dataset_id=dataset['id'])
+
+        comment = issue_factories.IssueComment(user_id=owner['id'],
+                                               issue_id=issue['id'])
+
+        context = {
+            'user': owner['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_comment_report_spam', context=context,
+                            dataset_id=dataset['id'],
+                            issue_comment_id=comment['id'])
+
+        result = helpers.call_action('issue_show', id=issue['id'])
+        assert_equals('hidden', result['comments'][0]['spam_state'])
+
+    @mock.patch('ckanext.issues.logic.action.action.config')
+    def test_max_strikes_marks_as_spam(self, mock):
+        #mock out the config value of max_strikes
+        mock.get.return_value = '0'
+
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user_id=owner['id'],
+                                      dataset_id=dataset['id'])
+        comment = issue_factories.IssueComment(user_id=owner['id'],
+                                               issue_id=issue['id'])
+
+
+        user = factories.User(name='unauthed')
+        context = {
+            'user': user['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_comment_report_spam', context=context,
+                            dataset_id=dataset['id'],
+                            issue_comment_id=comment['id'])
+        result = helpers.call_action('issue_show', id=issue['id'])
+        assert_equals(1, result['comments'][0]['spam_count'])
+        assert_equals('hidden', result['comments'][0]['spam_state'])
+
+    def test_reset_spam_state(self):
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user_id=owner['id'],
+                                      dataset_id=dataset['id'])
+        comment = issue_factories.IssueComment(user_id=owner['id'],
+                                               issue_id=issue['id'],
+                                               spam_state='hidden',
+                                               spam_count='20')
+        context = {
+            'user': owner['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_comment_reset_spam_state', context=context,
+                            dataset_id=dataset['id'],
+                            issue_comment_id=comment['id'])
+        result = helpers.call_action('issue_show', id=issue['id'])
+        assert_equals(0, result['comments'][0]['spam_count'])
+        assert_equals('visible', result['comments'][0]['spam_state'])

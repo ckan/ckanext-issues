@@ -4,6 +4,7 @@ from ckanext.issues.logic.validators import (
     is_valid_sort,
     is_valid_status,
     issue_exists,
+    issue_comment_exists,
 )
 
 not_missing = toolkit.get_validator('not_missing')
@@ -25,6 +26,7 @@ def issue_update_schema():
         'resource_id': [ignore_missing, unicode, resource_id_exists],
         'assignee_id': [ignore_missing, unicode, user_exists],
         'status':  [ignore_missing, unicode],
+        'spam_count': [ignore_missing, is_positive_integer],
     }
 
 
@@ -51,6 +53,20 @@ def issue_delete_schema():
     return {
         'id': [not_missing, unicode],
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+    }
+
+
+def issue_report_spam_schema():
+    return {
+        'dataset_id': [not_missing, unicode, package_exists],
+        'issue_id': [not_missing, unicode, issue_exists],
+    }
+
+
+def issue_comment_report_spam_schema():
+    return {
+        'dataset_id': [not_missing, unicode, package_exists],
+        'issue_comment_id': [not_missing, unicode, issue_comment_exists],
     }
 
 

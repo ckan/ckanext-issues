@@ -3,4 +3,5 @@ from validators import (
     is_valid_status,
     is_valid_sort,
     issue_exists,
+    issue_comment_exists,
 )

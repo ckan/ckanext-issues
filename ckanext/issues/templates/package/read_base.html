@@ -2,5 +2,7 @@
 
 {% block content_primary_nav %}
   {{ super() }}
-  {{ h.build_nav_icon('issues_home', _('Issues'), package_id=pkg.name) }}
+  {% if h.issues_enabled(pkg) %}
+    {{ h.build_nav_icon('issues_home', _('Issues'), package_id=pkg.name) }}
+  {% endif %}
 {% endblock %}
