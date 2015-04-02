@@ -84,7 +84,7 @@ class TestIssueDelete(object):
             'model': model,
             'session': model.Session,
         }
-        helpers.call_auth('issue_delete', context, id=issue['id'],
+        helpers.call_auth('issue_delete', context, issue_id=issue['id'],
                           dataset_id=dataset['id'])
 
     def test_issue_owner_cannot_delete_on_a_dataset_they_do_not_own(self):
@@ -103,7 +103,7 @@ class TestIssueDelete(object):
             'session': model.Session,
         }
         assert_raises(toolkit.NotAuthorized, helpers.call_auth, 'issue_delete',
-                      context, id=issue['id'], dataset_id=dataset['id'])
+                      context, issue_id=issue['id'], dataset_id=dataset['id'])
 
     def test_user_cannot_delete_issue_they_do_not_own(self):
         user = factories.User()
@@ -121,7 +121,7 @@ class TestIssueDelete(object):
             'session': model.Session,
         }
         assert_raises(toolkit.NotAuthorized, helpers.call_auth, 'issue_delete',
-                      context, id=issue['id'], dataset_id=dataset['id'])
+                      context, issue_id=issue['id'], dataset_id=dataset['id'])
 
 
 class TestReportSpam(object):

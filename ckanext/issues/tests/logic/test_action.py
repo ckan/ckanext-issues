@@ -331,7 +331,7 @@ class TestIssueDelete(object):
         helpers.call_action('issue_delete',
                             context={'user': user['name']},
                             dataset_id=dataset['id'],
-                            id=issue['id'])
+                            issue_id=issue['id'])
 
         assert_raises(toolkit.ObjectNotFound,
                       helpers.call_action,
@@ -347,7 +347,7 @@ class TestIssueDelete(object):
                       'issue_delete',
                       context={'user': user['name']},
                       dataset_id=dataset['id'],
-                      id='2')
+                      issue_id='2')
 
     def test_delete_non_integer_parameter_issue_raises_not_found(self):
         '''issue ids are a postgres seqeunce currently'''
@@ -358,7 +358,7 @@ class TestIssueDelete(object):
                       'issue_delete',
                       context={'user': user['name']},
                       dataset_id=dataset['id'],
-                      id='huh')
+                      issue_id='huh')
 
 
 class TestOrganizationUsersAutocomplete(object):

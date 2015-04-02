@@ -58,7 +58,7 @@ def issue_count_schema():
 
 def issue_delete_schema():
     return {
-        'id': [not_missing, unicode, issue_exists],
+        'issue_id': [not_missing, unicode, issue_exists],
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
     }
 

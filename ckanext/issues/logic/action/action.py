@@ -161,7 +161,26 @@ def issue_comment_create(context, data_dict):
 @p.toolkit.side_effect_free
 @validate(schema.issue_search_schema)
 def issue_search(context, data_dict):
-    '''Search issues for a given dataset'''
+    '''Search issues for a given dataset
+    
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to
+    :type dataset_id: string
+    :param q: a query string, currently on searches for titles that match
+        this query
+    :type q: string
+    :param sort: sorting method for the results returned
+    :type sort: string, must be 'newest', 'oldest', 'most_commented',
+        'least_commented', 'recently_update', 'least_recently_updated'
+    :param limit: number of results to return
+    :type limit: int
+    :param offset: offset of the search results to return
+    :type offset: int
+
+    :returns: list of issues
+    :rtype: list of dictionaries
+    
+    '''
     p.toolkit.check_access('issue_show', context, data_dict)
     try:
         dataset_id = data_dict['dataset_id']
@@ -180,7 +199,25 @@ def issue_search(context, data_dict):
 @p.toolkit.side_effect_free
 @validate(schema.issue_count_schema)
 def issue_count(context, data_dict):
-    '''Get the total number of issues for a given dataset'''
+    '''Get the total number of issues for a given dataset
+    
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to 
+    :type dataset_id: string
+    :param q: a query string, currently on searches for titles that match
+        this query
+    :type q: string
+    :param sort: sorting method for the results returned
+    :type sort: string, must be 'newest', 'oldest', 'most_commented',
+        'least_commented', 'recently_update', 'least_recently_updated'
+    :param limit: number of results to return
+    :type limit: int
+    :param offset: offset of the search results to return
+    :type offset: int
+
+    :returns: number of issues in the search
+    :rtype: int 
+    '''
     p.toolkit.check_access('issue_show', context, data_dict)
 
     try:
@@ -199,9 +236,17 @@ def issue_count(context, data_dict):
 
 @validate(schema.issue_delete_schema)
 def issue_delete(context, data_dict):
+    '''Delete and issues
+
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to 
+    :type dataset_id: string
+    :param issue_id: the id of the issue the comment belongs to
+    :type issue_id: integer
+    '''
     p.toolkit.check_access('issue_delete', context, data_dict)
     session = context['session']
-    issue_id = data_dict['id']
+    issue_id = data_dict['issue_id']
     issue = issuemodel.Issue.get(issue_id, session=session)
     if not issue:
         raise NotFound('{0} was not found.'.format(issue_id))
@@ -237,6 +282,18 @@ def organization_users_autocomplete(context, data_dict):
 
 @validate(schema.issue_report_spam_schema)
 def issue_report_spam(context, data_dict):
+    '''Mark an issue as spam
+    
+    if you are a publisher, this marks the issue as spam, if you are any other
+    user, this will up the spam count until it exceeds the config option
+    ckanext.issues.max_strikes
+
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to 
+    :type dataset_id: string
+    :param issue_id: the id of the issue the comment belongs to
+    :type issue_id: integer
+    '''
     p.toolkit.check_access('issue_report_spam', context, data_dict)
     session = context['session']
 
@@ -263,6 +320,14 @@ def issue_report_spam(context, data_dict):
 
 @validate(schema.issue_report_spam_schema)
 def issue_reset_spam_state(context, data_dict):
+    '''Reset the spam status of a issue
+    
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to 
+    :type dataset_id: string
+    :param issue_id: the id of the issue the comment belongs to
+    :type issue_id: integer
+    '''
     p.toolkit.check_access('issue_reset_spam_state', context, data_dict)
     session = context['session']
 
@@ -273,6 +338,14 @@ def issue_reset_spam_state(context, data_dict):
 
 @validate(schema.issue_comment_report_spam_schema)
 def issue_comment_reset_spam_state(context, data_dict):
+    '''Reset the spam status of a issue_comment
+    
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to 
+    :type dataset_id: string
+    :param issue_comment_id: the id of the issue the comment belongs to
+    :type issue_comment_id: integer
+    '''
     p.toolkit.check_access('issue_reset_spam_state', context, data_dict)
     session = context['session']
 
@@ -284,6 +357,18 @@ def issue_comment_reset_spam_state(context, data_dict):
 
 @validate(schema.issue_comment_report_spam_schema)
 def issue_comment_report_spam(context, data_dict):
+    '''Mark an issue comment as spam
+    
+    if you are a publisher, this marks the comment as spam, if you are any other
+    user, this will up the spam count until it exceeds the config option
+    ckanext.issues.max_strikes
+
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to 
+    :type dataset_id: string
+    :param issue_comment_id: the id of the issue the comment belongs to
+    :type issue_comment_id: integer
+    '''
     p.toolkit.check_access('issue_report_spam', context, data_dict)
     session = context['session']
 
