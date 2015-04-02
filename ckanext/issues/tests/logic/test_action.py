@@ -316,6 +316,22 @@ class TestIssueUpdate(object):
                                        id=issue['id'])
         assert_equals('open', reopened['status'])
 
+    def test_cannot_update_spam_using_update(self):
+        '''we don't want users to be able to set their own spam status/count'''
+        user = factories.User()
+        dataset = factories.Dataset()
+        issue = issue_factories.Issue(user=user, user_id=user['id'],
+                                      dataset_id=dataset['id'])
+        spam = helpers.call_action('issue_update',
+                                   context={'user': user['name']},
+                                   id=issue['id'], spam_state='hidden')
+
+        after_update = helpers.call_action('issue_show',
+                                           context={'user': user['name']},
+                                           id=issue['id'])
+        assert_equals('visible', after_update['spam_state'])
+
+
 
 class TestIssueDelete(object):
     def teardown(self):

@@ -33,7 +33,6 @@ def issue_update_schema():
         'resource_id': [ignore_missing, unicode, resource_id_exists],
         'assignee_id': [ignore_missing, unicode, user_exists],
         'status':  [ignore_missing, unicode],
-        'spam_count': [ignore_missing, is_positive_integer],
     }
 
 
