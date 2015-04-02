@@ -34,6 +34,7 @@ def issue_show(context, data_dict=None):
     return issue_dict
 
 
+@validate(schema.issue_create_schema)
 def issue_create(context, data_dict):
     '''Add a new issue.
 
@@ -51,31 +52,12 @@ def issue_create(context, data_dict):
     :rtype: dictionary
     '''
     p.toolkit.check_access('issue_create', context, data_dict)
-    # validated_data_dict, errors = p.toolkit.navl_validate(
-    #     data_dict,
-    #     schema.issue_create_schema(),
-    #     context
-    # )
-    # if errors:
-    #    raise p.toolkit.ValidationError(errors)
 
     user = context['user']
     user_obj = model.User.get(user)
     data_dict['user_id'] = user_obj.id
 
-    # data, errors = _validate(
-    #     data_dict, ckan.logic.schema.default_related_schema(), context)
-    # if errors:
-    #     model.Session.rollback()
-    #     raise ValidationError(errors)
     dataset = model.Package.get(data_dict['dataset_id'])
-    # TODO propoer validation?
-    if dataset is None:
-        raise p.toolkit.ValidationError({
-            'dataset_id': [
-                'No dataset exists with id %s' % data_dict['dataset_id']
-            ]
-        })
     del data_dict['dataset_id']
 
     issue = issuemodel.Issue(**data_dict)

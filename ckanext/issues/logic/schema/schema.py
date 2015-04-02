@@ -17,6 +17,13 @@ is_positive_integer = toolkit.get_validator('is_positive_integer')
 boolean_validator = toolkit.get_validator('boolean_validator')
 
 
+def issue_create_schema():
+    return {
+        'title': [not_missing, unicode],
+        'description': [ignore_missing, unicode],
+        'dataset_id':[ not_missing, unicode, package_exists, as_package_id],
+    }
+
 def issue_update_schema():
     return {
         'id': [not_missing, unicode, issue_exists],
@@ -51,7 +58,7 @@ def issue_count_schema():
 
 def issue_delete_schema():
     return {
-        'id': [not_missing, unicode],
+        'id': [not_missing, unicode, issue_exists],
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
     }
 

@@ -3,10 +3,74 @@ from ckan.lib import search
 from ckan.new_tests import factories, helpers
 from ckan.plugins import toolkit
 
+from ckanext.issues.model import Issue
 from ckanext.issues.tests import factories as issue_factories
 
 from nose.tools import assert_equals, assert_raises
 import mock
+
+
+class TestIssue(object):
+    def setup(self):
+        self.user = factories.User()
+        self.dataset = factories.Dataset()
+
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_issue_create(self):
+        issue_create_result = toolkit.get_action('issue_create')(
+            context={'user': self.user['name']},
+            data_dict={
+                'title': 'Title',
+                'description': 'Description',
+                'dataset_id': self.dataset['id'],
+            }
+        )
+
+        issue_object = Issue.get(issue_create_result['id'])
+        assert_equals('Title', issue_object.title)
+        assert_equals('Description', issue_object.description)
+
+    def test_issue_create_dataset_does_not_exist(self):
+        issue_create = toolkit.get_action('issue_create')
+        assert_raises(
+            toolkit.ValidationError,
+            issue_create,
+            context={'user': self.user['name']},
+            data_dict={
+                'title': 'Title',
+                'description': 'Description',
+                'dataset_id': 'nonsense',
+            }
+        )
+
+    def test_issue_create_test_validation(self):
+        issue_create = toolkit.get_action('issue_create')
+        assert_raises(
+            toolkit.ValidationError,
+            issue_create,
+            context={'user': self.user['name']},
+            data_dict={
+                'title': 'Title',
+                'description': 'Description',
+                'dataset_id': 'not a datasest',
+            }
+        )
+
+    def test_issue_create_cannot_set_spam(self):
+        issue_create_result = toolkit.get_action('issue_create')(
+            context={'user': self.user['name']},
+            data_dict={
+                'title': 'Title',
+                'description': 'Description',
+                'dataset_id': self.dataset['id'],
+                'spam_state': 'hidden'
+            }
+        )
+        issue_object = Issue.get(issue_create_result['id'])
+        assert_equals('visible', issue_object.spam_state)
 
 
 class TestIssueComment(object):
@@ -139,14 +203,14 @@ class TestIssueList(object):
         user = factories.User()
         dataset = factories.Dataset()
 
-        [issue_factories.Issue(user=user, user_id=user['id'],
+        issues = [issue_factories.Issue(user=user, user_id=user['id'],
                                dataset_id=dataset['id'], description=i)
             for i in range(0, 10)]
         issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='newest')
-        assert_equals(list(reversed(range(1, 11))),
+        assert_equals(list(reversed([i['id'] for i in issues])),
                       [i['id'] for i in issues_list])
 
     def test_filter_least_commented(self):
@@ -271,14 +335,14 @@ class TestIssueDelete(object):
 
         assert_raises(toolkit.ObjectNotFound,
                       helpers.call_action,
-                      'issue_delete',
+                      'issue_show',
                       dataset_id=dataset['id'],
                       id=issue['id'])
 
     def test_delete_nonexistent_issue_raises_not_found(self):
         user = factories.User()
         dataset = factories.Dataset()
-        assert_raises(toolkit.ObjectNotFound,
+        assert_raises(toolkit.ValidationError,
                       helpers.call_action,
                       'issue_delete',
                       context={'user': user['name']},
@@ -289,7 +353,7 @@ class TestIssueDelete(object):
         '''issue ids are a postgres seqeunce currently'''
         user = factories.User()
         dataset = factories.Dataset()
-        assert_raises(toolkit.ObjectNotFound,
+        assert_raises(toolkit.ValidationError,
                       helpers.call_action,
                       'issue_delete',
                       context={'user': user['name']},

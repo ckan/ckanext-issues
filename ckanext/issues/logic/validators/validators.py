@@ -27,7 +27,12 @@ def is_valid_sort(filter_string, context):
 def as_package_id(package_id_or_name, context):
     '''given a package_id_or_name, return just the package id'''
     model = context['model']
-    return model.Package.get(package_id_or_name).id
+    package = model.Package.get(package_id_or_name)
+    if not package:
+        raise toolkit.Invalid('%s: %s' % (toolkit._('Not found'),
+                                          toolkit._('Dataset')))
+    else:
+        return package.id
 
 
 def issue_exists(issue_id, context):

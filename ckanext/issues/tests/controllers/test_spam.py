@@ -3,6 +3,7 @@ from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
 
+from ckanext.issues.model import Issue
 from ckanext.issues.tests import factories as issue_factories
 
 from nose.tools import assert_equals, assert_in
@@ -17,8 +18,10 @@ class TestMarkedAsSpamAppears(helpers.FunctionalTestBase):
                                          owner_org=self.org['name'])
         self.issue = issue_factories.Issue(user=self.owner,
                                            user_id=self.owner['id'],
-                                           dataset_id=self.dataset['id'],
-                                           spam_state='hidden')
+                                           dataset_id=self.dataset['id'])
+        issue = Issue.get(self.issue['id'])
+        issue.spam_state = 'hidden'
+        issue.save()
         self.user = factories.User()
         self.app = self._get_test_app()
 
