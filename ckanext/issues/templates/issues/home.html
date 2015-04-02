@@ -30,7 +30,8 @@
           {% if issue.spam_state == 'hidden' %}Marked as spam{%endif%}
         </div>
         <h4 class="list-group-item-name">
-          <span class="{{issue.status}} icon" title="{{issue.status}} issue"><i class="icon-exclamation-sign"></i></span>
+          {% set issue_icon = 'spam' if issue.spam_state == 'hidden' else issue.status %}
+          <span class="{{ issue_icon }} icon" title="{{issue.status}} issue"><i class="icon-exclamation-sign"></i></span>
           <a href="{{ h.url_for('issues_show', package_id=pkg.id, id=issue.id) }}" {% if issue.spam_state == 'hidden'%} class="issue-spam"{% endif%}>
             {{issue.title}}
           </a>

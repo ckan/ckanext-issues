@@ -220,6 +220,10 @@
   color: #6cc644;
 }
 
+.list-group-item-name .icon.spam {
+  color: #ffa500;
+}
+
 .list-group-item-name .icon.closed {
   color: #fe4c30;
 }
