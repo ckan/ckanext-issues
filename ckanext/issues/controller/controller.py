@@ -271,7 +271,7 @@ class IssueController(BaseController):
         if request.method == 'POST':
             try:
                 toolkit.get_action('issue_delete')(
-                    data_dict={'id': issue_id, 'dataset_id': dataset_id})
+                    data_dict={'issue_id': issue_id, 'dataset_id': dataset_id})
             except toolkit.NotAuthorized:
                 msg = _('Unauthorized to delete issue {0}'.format(issue_id))
                 toolkit.abort(401, msg)
