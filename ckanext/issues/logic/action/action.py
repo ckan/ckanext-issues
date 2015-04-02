@@ -177,6 +177,8 @@ def issue_search(context, data_dict):
     :type limit: int
     :param offset: offset of the search results to return
     :type offset: int
+    :param spam_state: filter on spam_state
+    :type spam_state: string in visible,
 
     :returns: list of issues
     :rtype: list of dictionaries
@@ -187,10 +189,11 @@ def issue_search(context, data_dict):
         dataset_id = data_dict['dataset_id']
         p.toolkit.check_access('package_update', context,
                                data_dict={'id': dataset_id})
-        spam_status = None
+        spam_state = data_dict.get('spam_state', None)
     except p.toolkit.NotAuthorized:
-        spam_status = 'visible'
-    data_dict['spam_status'] = spam_status
+        spam_state = 'visible'
+    data_dict['spam_state'] = spam_state
+    data_dict.pop('__extras', None)
 
     return list(issuemodel.Issue.get_issues_for_dataset(
         session=context['session'],
@@ -225,11 +228,12 @@ def issue_count(context, data_dict):
         dataset_id = data_dict['dataset_id']
         p.toolkit.check_access('package_update', context,
                                data_dict={'id': dataset_id})
-        spam_status = None
+        spam_state = None
     except p.toolkit.NotAuthorized:
-        spam_status = 'visible'
-    data_dict['spam_status'] = spam_status
+        spam_state = 'visible'
+    data_dict['spam_state'] = spam_state
 
+    data_dict.pop('__extras', None)
     return issuemodel.Issue.get_count_for_dataset(
         session=context['session'],
         **data_dict)

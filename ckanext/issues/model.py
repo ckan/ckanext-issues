@@ -148,7 +148,7 @@ class Issue(domain_object.DomainObject):
     @classmethod
     def get_issues_for_dataset(cls, dataset_id, offset=None, limit=None,
                                status=None, sort=None, q=None,
-                               spam_status=None, session=Session):
+                               spam_state=None, session=Session):
         comment_count = func.count(IssueComment.id).label('comment_count')
         last_updated = func.max(IssueComment.created).label('updated')
         query = session.query(
@@ -166,8 +166,8 @@ class Issue(domain_object.DomainObject):
 
         if status:
             query = query.filter(cls.status == status)
-        if spam_status:
-            query = query.filter(cls.spam_state == spam_status)
+        if spam_state:
+            query = query.filter(cls.spam_state == spam_state)
         if sort:
             try:
                 query = IssueFilter.get_filter(sort)(query)
@@ -183,7 +183,7 @@ class Issue(domain_object.DomainObject):
 
     @classmethod
     def get_count_for_dataset(cls, dataset_id, status=None, sort=None, q=None,
-                              spam_status=None, session=Session):
+                              spam_state=None, session=Session):
         query = session.query(func.count(cls.id)).\
             filter(cls.dataset_id == dataset_id)
         if q:
@@ -191,8 +191,8 @@ class Issue(domain_object.DomainObject):
 
         if status:
             query = query.filter(cls.status == status)
-        if spam_status:
-            query = query.filter(cls.spam_state == spam_status)
+        if spam_state:
+            query = query.filter(cls.spam_state == spam_state)
         return query.one()[0]
 
     def increase_spam_count(self, session):

@@ -40,9 +40,9 @@
         {% elif h.check_access('issue_update', {'dataset_id': dataset.id, 'id': issue.id }) %}
           <div id="issue-not-spam-button" class="issue-comment-action">
             <form id="issue-not-spam-button" method="post" action="{{h.url_for('issues_reset_spam_state', dataset_id=dataset.name, issue_id=issue.id)}}">
-              <button class="btn btn-small" type="submit" "title"="Not Spam">
+              <button class="btn btn-small" type="submit" "title"="Not abuse">
                 <i class="icon-flag" title="Edit"></i>
-                {{ _('Not Spam') }}
+                {{ _('Not abuse') }}
               </button>
             </form>
           </div>
@@ -50,7 +50,7 @@
       </div>
       {% if comment.spam_state == 'hidden' %}
         <div class="issue-comment-label">
-           Marked as spam
+           Marked as abuse
         </div>
       {% endif %}
       <div class="issue-header-text">
@@ -88,9 +88,9 @@
         {% elif h.check_access('issue_update', {'dataset_id': dataset.id, 'id': issue.id }) %}
           <div id="issue-not-spam-button" class="issue-comment-action">
             <form id="issue-not-spam-button" method="post" action="{{h.url_for('issues_comment_reset_spam_state', dataset_id=dataset.name, issue_id=issue.id, comment_id=comment.id)}}">
-              <button class="btn btn-small" type="submit" "title"="Not Spam">
+              <button class="btn btn-small" type="submit" "title"="Not abuse">
                 <i class="icon-flag"></i>
-                {{ _('Not Spam') }}
+                {{ _('Not abuse') }}
               </button>
             </form>
           </div>
@@ -98,7 +98,7 @@
       </div>
       {% if comment.spam_state == 'hidden' %}
         <div class="issue-comment-label">
-           Marked as spam
+           Marked as abuse
         </div>
       {% endif %}
       <div class="issue-header-text">

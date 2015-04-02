@@ -44,6 +44,7 @@ def issue_search_schema():
         'limit': [ignore_missing, is_natural_number],
         'offset': [ignore_missing, is_natural_number],
         'q': [ignore_missing, unicode],
+        'spam_state': [ignore_missing, unicode],
     }
 
 
@@ -52,6 +53,7 @@ def issue_count_schema():
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
         'status': [ignore_missing, unicode, is_valid_status],
         'q': [ignore_missing, unicode],
+        'spam_state': [ignore_missing, unicode],
     }
 
 
@@ -83,6 +85,7 @@ def issue_home_controller_schema():
         'page': [ignore_missing, is_positive_integer],
         'per_page': [ignore_missing, is_positive_integer],
         'q': [ignore_missing, unicode],
+        'spam_state': [ignore_missing, unicode],
     }
 
 
