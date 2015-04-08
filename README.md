@@ -64,7 +64,7 @@ emails will be sent about the newly created issue.
 
 ### Activation
 
-By default, issues are enabled for all datasets. If you waish to restrict
+By default, issues are enabled for all datasets. If you wish to restrict
 issues to specific datasets you can use the config option
     
     ckanext.issues.enabled_for_dataset = mydataset1 mydataset2 ...
