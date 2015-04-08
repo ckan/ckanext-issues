@@ -401,9 +401,9 @@ class IssueController(BaseController):
         results = model.Session.execute(q)
 
         package_ids = [x['table_id'] for x in results]
-        issues = model.Session.query(model.Issue)\
-            .filter(model.Issue.package_id.in_(package_ids))\
-            .order_by(model.Issue.created.desc())
+        issues = model.Session.query(issuemodel.Issue)\
+            .filter(issuemodel.Issue.package_id.in_(package_ids))\
+            .order_by(issuemodel.Issue.created.desc())
 
         c.results = collections.defaultdict(list)
         for issue in issues:
@@ -418,21 +418,21 @@ class IssueController(BaseController):
         """
         # categories
         categories = model.Session.query(
-            func.count(model.Issue.id).label('issue_count'),
-            model.Issue.issue_category_id)\
-            .filter(model.Issue.resolved == None)\
-            .group_by(model.Issue.issue_category_id)
+            func.count(issuemodel.Issue.id).label('issue_count'),
+            issuemodel.Issue.issue_category_id)\
+            .filter(issuemodel.Issue.resolved == None)\
+            .group_by(issuemodel.Issue.issue_category_id)
 
         c.categories = []
         c.pkg_names = {}
         for t in categories:
-            tc = model.IssueCategory.get(t.issue_category_id)
+            tc = issuemodel.IssueCategory.get(t.issue_category_id)
             tc.issue_count = t.issue_count
 
             # get issues items for each category
-            tc.issues = model.Session.query(model.Issue).filter(model.Issue.resolved == None)\
-                .filter(model.Issue.issue_category_id == t.issue_category_id) \
-                .order_by(model.Issue.created.desc())
+            tc.issues = model.Session.query(issuemodel.Issue).filter(issuemodel.Issue.resolved == None)\
+                .filter(issuemodel.Issue.issue_category_id == t.issue_category_id) \
+                .order_by(issuemodel.Issue.created.desc())
 
             for issues in tc.issues:
                 if issues.package_id:
