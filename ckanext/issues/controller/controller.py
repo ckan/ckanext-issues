@@ -424,7 +424,7 @@ class IssueController(BaseController):
             func.count(issuemodel.Issue.id).label('issue_count'),
             issuemodel.Issue.issue_category_id)\
             .filter(issuemodel.Issue.resolved == None)\
-            .group_by(model.Issue.issue_category_id)
+            .group_by(issuemodel.Issue.issue_category_id)
 
         c.categories = []
         c.pkg_names = {}
@@ -433,9 +433,9 @@ class IssueController(BaseController):
             tc.issue_count = t.issue_count
 
             # get issues items for each category
-            tc.issues = model.Session.query(model.Issue).filter(model.Issue.resolved == None)\
-                .filter(model.Issue.issue_category_id == t.issue_category_id) \
-                .order_by(model.Issue.created.desc())
+            tc.issues = model.Session.query(issuemodel.Issue).filter(issuemodel.Issue.resolved == None)\
+                .filter(issuemodel.Issue.issue_category_id == t.issue_category_id) \
+                .order_by(issuemodel.Issue.created.desc())
 
             for issues in tc.issues:
                 if issues.package_id:
