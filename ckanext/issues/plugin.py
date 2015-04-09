@@ -40,6 +40,7 @@ class IssuesPlugin(p.SingletonPlugin):
             'get_issue_filter_types': helpers.get_issue_filter_types,
             'get_issues_per_page': helpers.get_issues_per_page,
             'issues_enabled': helpers.issues_enabled,
+            'issues_list': helpers.issues_list,
         }
 
     def configure(self, config):
