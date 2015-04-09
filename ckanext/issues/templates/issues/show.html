@@ -63,7 +63,7 @@
       <div class="issue-header-text">
         <a href="{{comment.user.ckan_url}}" class="author">{{ comment.user.name}}</a>
         commented
-        <span title="{{comment.created}}">{{ comment.time_ago }}</span>
+        <span title="{{comment.created}}">{{ h.time_ago_from_timestamp(comment.created) }}</span>
       </div>
     </div>
     <div class="issue-comment-content{% if comment.spam_state == 'hidden' %} issue-spam{% endif %}">
@@ -116,7 +116,7 @@
       <div class="issue-header-text">
         <a href="{{comment.user.ckan_url}}" class="author">{{ comment.user.name}}</a>
         commented
-        <span title="{{comment.created}}">{{ comment.time_ago }}</span>
+        <span title="{{comment.created}}">{{ h.time_ago_from_timestamp(comment.created) }}</span>
       </div>
     </div>
     <div class="issue-comment-content{% if comment.spam_state == 'hidden' %} issue-spam{% endif %}">

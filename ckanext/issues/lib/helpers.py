@@ -98,4 +98,21 @@ def issues_enabled(dataset):
         else:
             return toolkit.asbool(
                 config.get('ckanext.issues.enabled_per_dataset_default', True)
-        )
+            )
+
+
+def issues_list(dataset_ref):
+    '''
+    Returns list of issue dicts.
+
+    This is just basic - no options for sorting, closed issues, spam. No
+    pagination. For those, use the issues home page.
+    '''
+    params = dict(dataset_id=dataset_ref,
+                  status=issuemodel.ISSUE_STATUS.open,
+                  sort='newest',
+                  spam_state=None,
+                  q='')
+
+    issues = toolkit.get_action('issue_search')(data_dict=params)
+    return issues
