@@ -121,5 +121,4 @@ def issues_list(dataset_ref):
         return issue
     issues = toolkit.get_action('issue_search')(data_dict=params)
     issues = map(_add_time_since, issues)
-    #issue_count = toolkit.get_action('issue_count')(data_dict=params)
     return issues
