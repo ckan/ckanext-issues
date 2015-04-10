@@ -402,7 +402,7 @@ class IssueController(BaseController):
 
         package_ids = [x['table_id'] for x in results]
         issues = model.Session.query(issuemodel.Issue)\
-            .filter(issuemodel.Issue.package_id.in_(package_ids))\
+            .filter(issuemodel.Issue.dataset_id.in_(package_ids))\
             .order_by(issuemodel.Issue.created.desc())
 
         c.results = collections.defaultdict(list)
@@ -415,6 +415,9 @@ class IssueController(BaseController):
         """
         Display a page containing a list of all issues items, sorted by
         category.
+
+        NB This doesn't seem to work - no connection between issues and
+        categories in the model
         """
         # categories
         categories = model.Session.query(

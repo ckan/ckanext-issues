@@ -142,7 +142,7 @@ class Issue(domain_object.DomainObject):
 
     @classmethod
     def get(cls, reference, session=Session):
-        """Returns a Issue object referenced by its id."""
+        """Returns an Issue object referenced by its id."""
         return session.query(cls).filter(cls.id == reference).first()
 
     @classmethod
