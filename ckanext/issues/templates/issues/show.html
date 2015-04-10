@@ -54,11 +54,6 @@
            Owner 
         </div>
       {% endif %}
-      {% if comment.spam_state == 'hidden' %}
-        <div class="issue-comment-label">
-           Marked as abuse
-        </div>
-      {% endif %}
       <div class="issue-header-text">
         <a href="{{comment.user.ckan_url}}" class="author">{{ comment.user.name}}</a>
         commented
