@@ -105,14 +105,14 @@ def issues_enabled(dataset):
             )
 
 
-def issues_list(dataset_ref, status='open'):
+def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
     '''
     Returns list of issue dicts.
 
     This is just basic - no options for sorting, closed issues, spam. No
     pagination. For those, use the issues home page.
     '''
-    if status not in ('open', 'closed'):
+    if status not in issuemodel.ISSUE_STATUS:
         log.error('issues_list status must be open or closed - got %s', status)
         status = 'open'
     params = dict(dataset_id=dataset_ref,
