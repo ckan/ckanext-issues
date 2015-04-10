@@ -138,7 +138,8 @@
           <span class="issue-header-status {{issue.status}}">
             <i class="icon-exclamation-sign"></i> {{issue.status.title()}}
           </span>
-          <a href="{{issue.user.ckan_url}}">{{issue.user.name}}</a> opened this issue {{issue.time_ago}} &middot; {{comment_count}} comments
+          <a href="{{issue.user.ckan_url}}">{{issue.user.name}}</a> opened this issue {{issue.time_ago}} &middot;
+          {{ ungettext('{number} comment', '{number} comments', comment_count).format(number=comment_count) }}
         </div>
       </div>
 
