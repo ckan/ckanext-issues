@@ -44,7 +44,7 @@ class TestMarkedAsSpamAppears(helpers.FunctionalTestBase):
             extra_environ=env,
         )
         assert_in('Test issue', response.body)
-        assert_in('1 issues found', response.body)
+        assert_in('1 issue found', response.body)
 
     def test_marked_as_spam_does_not_appear_for_user(self):
         env = {'REMOTE_USER': self.user['name'].encode('ascii')}
