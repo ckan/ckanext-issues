@@ -13,7 +13,7 @@ def show(issue_id, dataset_id, session):
         'No description provided')
     comment_count = len(issueobj.comments)
 
-    issue['assignee'] = _get_assigned_user(issue['assignee_id'])
+    issue['assignee'] = _get_assigned_user(issue['assignee_id'], session)
 
     return {
         'issue': issue,
@@ -31,8 +31,17 @@ def _validate_show(issue_id, dataset_id, session,
     return issue_id
 
 
-def _get_assigned_user(assignee_id):
+def _get_assigned_user(assignee_id, session):
+    context = {'session': session, 'model': cmodel}
+    data_dict = {'id': assignee_id}
+    # we only need the basic properties of the user, not its datasets etc
+    if toolkit.check_ckan_version(min_version='2.3'):
+        # these are the defaults, but just in case...
+        data_dict = {'include_datasets': False,
+                     'include_num_followers': False}
+    else:
+        context = {'return_minimal': True}
     try:
-        return toolkit.get_action('user_show')(data_dict={'id': assignee_id})
+        return toolkit.get_action('user_show')(context, data_dict)
     except toolkit.ObjectNotFound:
         return None
