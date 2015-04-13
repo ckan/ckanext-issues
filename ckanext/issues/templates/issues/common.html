@@ -15,7 +15,7 @@
           <li>Opened by <a href="{{ h.url_for('user_datasets', id=issue.user) }}">{{issue.user}}</a></li>
           <li>
             <i class="icon-clock"></i>
-            <span class="timeago" title="{{issue.created}}"> updated {{issue.created_time_ago}} ago</span>
+            <span class="timeago" title="{{issue.created}}"> updated {{ h.time_ago_from_timestamp(issue.created) }}</span>
           </li>
           <li>
             <i class="icon-comments"></i>

@@ -1,5 +1,4 @@
 from ckan.plugins import toolkit
-from ckan.lib import helpers
 from ckan import model as cmodel
 from ckanext.issues import model
 from ckanext.issues.logic import schema
@@ -12,12 +11,7 @@ def show(issue_id, dataset_id, session):
 
     issue['comment'] = issue['description'] or toolkit._(
         'No description provided')
-    issue['time_ago'] = helpers.time_ago_from_timestamp(issueobj.created)
     comment_count = len(issueobj.comments)
-    for idx, comment in enumerate(issue['comments']):
-        commentobj = issueobj.comments[idx]
-        comment['time_ago'] = helpers.time_ago_from_timestamp(
-            commentobj.created)
 
     issue['assignee'] = _get_assigned_user(issue['assignee_id'])
 

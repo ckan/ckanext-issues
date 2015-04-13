@@ -25,10 +25,6 @@ def _search_issues(dataset_id, status=issuemodel.ISSUE_STATUS.open,
     # data_dict if needed
     params = locals().copy()
 
-    def _add_time_since(issue):
-        issue['created_time_ago'] = util.time_ago(issue['created'])
-        return issue
-    
     # convert per_page, page parameters to api limit/offset
     limit = per_page
     offset = (page - 1) * limit
@@ -37,7 +33,6 @@ def _search_issues(dataset_id, status=issuemodel.ISSUE_STATUS.open,
     params['offset'] = offset
 
     issues = toolkit.get_action('issue_search')(data_dict=params)
-    issues = map(_add_time_since, issues)
     issue_count = toolkit.get_action('issue_count')(data_dict=params)
 
     pagination = Pagination(page, limit, issue_count)

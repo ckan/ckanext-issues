@@ -6,11 +6,8 @@ from ckan.plugins import toolkit
 from ckan.lib import helpers
 from ckanext.issues.model import IssueFilter
 from ckanext.issues import model as issuemodel
-from ckanext.issues.lib import util
 
 ISSUES_PER_PAGE = (15, 30, 50)
-
-log = __import__('logging').getLogger(__name__)
 
 
 def replace_url_param(new_params, alternative_url=None, controller=None,
@@ -105,25 +102,18 @@ def issues_enabled(dataset):
             )
 
 
-def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
+def issues_list(dataset_ref):
     '''
     Returns list of issue dicts.
 
     This is just basic - no options for sorting, closed issues, spam. No
     pagination. For those, use the issues home page.
     '''
-    if status not in issuemodel.ISSUE_STATUS:
-        log.error('issues_list status must be open or closed - got %s', status)
-        status = 'open'
     params = dict(dataset_id=dataset_ref,
-                  status=getattr(issuemodel.ISSUE_STATUS, status),
+                  status=issuemodel.ISSUE_STATUS.open,
                   sort='newest',
                   spam_state=None,
                   q='')
 
-    def _add_time_since(issue):
-        issue['created_time_ago'] = util.time_ago(issue['created'])
-        return issue
     issues = toolkit.get_action('issue_search')(data_dict=params)
-    issues = map(_add_time_since, issues)
     return issues
