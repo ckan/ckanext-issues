@@ -21,7 +21,9 @@
     </div>
     <div>
       {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status), ('spam_state', spam_state)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=true, no_title=true %}
-      <h2>{{ pagination.total_count }} issues found</h2>
+      <h2>
+        {{ ungettext('{number} issue found', '{number} issues found', pagination.total_count) .format(number=pagination.total_count) }}
+      </h2>
     </div>
   {% if issues %}
     <ul id="issue-list" class="issue-list-group list-group">
