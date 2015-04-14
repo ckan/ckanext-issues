@@ -97,6 +97,7 @@ def _user_dict(user):
     out = user.as_dict()
     out['ckan_url'] = h.url_for('user_datasets', id=user.name)
     out['gravatar'] = h.gravatar(user.email_hash, size=48)
+    out['gravatar_url'] = '''//gravatar.com/avatar/%s?s=%d''' % (user.email_hash, 48)
     return out
 
 

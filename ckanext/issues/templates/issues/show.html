@@ -7,6 +7,15 @@
 
 {% block subtitle %}{{ '%s #%s - %s' % (issue.title, issue.id, _('Issues')) }} {% endblock %}
 
+{% block head_extras -%}
+  {% set description = h.markdown_extract(issue.comment , extract_length=200)|forceescape %}
+  <meta property="og:title" content="Issue {{issue.id}}: {{ issue.title }} - {{ g.site_title }}">
+  {% set statusUpper = issue.status|upper %}
+  <meta property="og:description" content="{{statusUpper}}: {{ description }}">
+  <meta property="og:url" content="{{ h.full_current_url() }}">
+  <meta property="og:image" content="{{ issue.user.gravatar_url }}">
+{% endblock -%}
+
 {% block breadcrumb_item %}{{ h.nav_link(issue.id, named_route='issues_show', package_id=dataset.name, id=issue.id) }}
 {% endblock %}
  
