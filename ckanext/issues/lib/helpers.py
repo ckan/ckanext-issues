@@ -9,6 +9,8 @@ from ckanext.issues import model as issuemodel
 
 ISSUES_PER_PAGE = (15, 30, 50)
 
+log = __import__('logging').getLogger(__name__)
+
 
 def replace_url_param(new_params, alternative_url=None, controller=None,
                       action=None, extras=None):
@@ -102,15 +104,18 @@ def issues_enabled(dataset):
             )
 
 
-def issues_list(dataset_ref):
+def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
     '''
     Returns list of issue dicts.
 
     This is just basic - no options for sorting, closed issues, spam. No
     pagination. For those, use the issues home page.
     '''
+    if status not in issuemodel.ISSUE_STATUS:
+        log.error('issues_list status must be open or closed - got %s', status)
+        status = 'open'
     params = dict(dataset_id=dataset_ref,
-                  status=issuemodel.ISSUE_STATUS.open,
+                  status=getattr(issuemodel.ISSUE_STATUS, status),
                   sort='newest',
                   spam_state=None,
                   q='')
