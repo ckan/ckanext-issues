@@ -25,26 +25,25 @@
       <div class="issue-comment-actions">
         {% if can_edit_issue %}
           <div class="issue-comment-action" id="issue-edit-button">
-            <a href={{h.url_for('issues_edit', package_id=dataset.name, id=issue.id)}} class="btn btn-small">
-              <i class="icon-pencil" title="Edit"></i>
+            <a href={{h.url_for('issues_edit', package_id=dataset.name, id=issue.id)}} class="subtle-btn" title="Edit">
+              <i class="icon-pencil"></i>
             </a>
           </div>
         {% endif %}
         {% if c.user and comment.spam_state =='visible' %}
           <div id="issue-report-abuse-button" class="issue-comment-action">
             <form id="issue-report-abuse-form" method="post" action="{{h.url_for('issues_report_abuse', dataset_id=dataset.name, issue_id=issue.id)}}">
-              <button class="btn btn-small" type="submit" "title"="Report Abuse">
-                <i class="icon-flag" title="Edit"></i>
-                {{ _('Report Abuse') }}
+              <button class="subtle-btn subtle-btn-abuse" type="submit" title="Report Abuse">
+                <i class="icon-flag"></i>
               </button>
             </form>
           </div>
         {% elif can_edit_issue %}
           <div id="issue-not-spam-button" class="issue-comment-action">
             <form id="issue-not-spam-button" method="post" action="{{h.url_for('issues_reset_spam_state', dataset_id=dataset.name, issue_id=issue.id)}}">
-              <button class="btn btn-small" type="submit" "title"="Not abuse">
-                <i class="icon-flag" title="Edit"></i>
-                {{ _('Not abuse') }}
+              <button class="subtle-btn-active subtle-btn-abuse-active" type="submit" data-toggle="tooltip" title="Cancel abuse notification">
+                <i class="icon-flag"></i>
+                {{ _('Abuse - admin notified') }}
               </button>
             </form>
           </div>
@@ -53,11 +52,6 @@
       {% if can_edit_issue %}
         <div class="issue-comment-label">
            Owner 
-        </div>
-      {% endif %}
-      {% if comment.spam_state == 'hidden' %}
-        <div class="issue-comment-label">
-           Marked as abuse
         </div>
       {% endif %}
       <div class="issue-header-text">
