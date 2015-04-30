@@ -87,7 +87,7 @@ class IssuesPlugin(p.SingletonPlugin):
             m.connect('issues_show', '/dataset/:package_id/issues/:id',
                     action='show')
             # Broken: m.connect('all_issues_page', '/issues', action='all_issues_page')
-            m.connect('publisher_issue_page', '/publisher/issues/:publisher_id', action='publisher_issue_page')
+            m.connect('issues_for_organization', '/organization/:org_id/issues', action='issues_for_organization')
 
         return map
 

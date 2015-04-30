@@ -3,17 +3,17 @@ import ckan.model as model
 
 
 def issue_count(package):
-  return model.Session.query(issue_model.Issue)\
-    .filter(issue_model.Issue.package_id==package.id).count()
+    return model.Session.query(issue_model.Issue)\
+        .filter(issue_model.Issue.package_id==package.id).count()
 
 def issue_comment_count(issue):
-  return issue_model.IssueComment.get_comment_count(issue)
+    return issue_model.IssueComment.get_comment_count(issue)
 
 def issue_comments(issue):
-  return issue_model.IssueComment.get_comments(issue)
+    return issue_model.IssueComment.get_comments(issue)
 
 
-def _issue_query(publisher, resolved_required=False, days=None):
+def _issue_query(org, resolved_required=False, days=None):
     r = "NOT" if resolved_required else ""
     e = ""
     if days:
@@ -32,18 +32,18 @@ def _issue_query(publisher, resolved_required=False, days=None):
               AND table_name='package'
               AND state='active'
           );
-    """.format(gid=publisher.id, r=r,extra=e)
+    """.format(gid=org.id, r=r, extra=e)
 
     return q
 
-def old_unresolved(publisher, days=30):
-    q = _issue_query(publisher, False, days=days)
+def old_unresolved(org, days=30):
+    q = _issue_query(org, False, days=days)
     return model.Session.execute(q).scalar()
 
-def resolved_count_for_publisher(publisher):
-    q = _issue_query(publisher, False)
+def resolved_count_for_organization(org):
+    q = _issue_query(org, False)
     return model.Session.execute(q).scalar()
 
-def unresolved_count_for_publisher(publisher):
-    q = _issue_query(publisher, True)
+def unresolved_count_for_organization(org):
+    q = _issue_query(org, True)
     return model.Session.execute(q).scalar()

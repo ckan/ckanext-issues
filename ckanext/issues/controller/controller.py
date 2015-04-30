@@ -17,8 +17,6 @@ import ckanext.issues.model as issuemodel
 from ckanext.issues.controller import home, show
 from ckanext.issues.lib import helpers as issues_helpers
 
-
-
 log = getLogger(__name__)
 
 AUTOCOMPLETE_LIMIT = 10
@@ -28,7 +26,7 @@ ISSUES_PER_PAGE = (15, 30, 50)
 
 def _notify(issue):
     # Depending on configuration, and availability of data we
-    # should email the admin and the publisher/
+    # should email the admin and the organization
     notify_admin = config.get("ckanext.issues.notify_admin", False)
     notify_owner = config.get("ckanext.issues.notify_owner", False)
     if not notify_admin and not notify_owner:
@@ -41,13 +39,13 @@ def _notify(issue):
     # from_address = config.get('ckanext.issues.from_address',
     #  'admin@localhost.local')
 
-    publisher = issue.package.get_groups('publisher')[0]
+    org = issue.package.owner_org
     if 'contact-address' in issue.package.extras:
         contact_name = issue.package.extras.get('contact-name')
         contact_address = issue.package.extras.get('contact-email')
     else:
-        contact_name = publisher.extras.get('contact-name', 'Publisher')
-        contact_address = publisher.extras.get('contact-email')
+        contact_name = org.extras.get('contact-name', 'Publisher')
+        contact_address = org.extras.get('contact-email')
 
     # Send to admin if no contact address, and only cc admin if
     # they are not also in the TO field.
@@ -74,7 +72,7 @@ def _notify(issue):
 
     try:
         if not contact_name:
-            contact_name = publisher.title
+            contact_name = org.title
 
         mail_recipient(contact_name, to_address,
                        "Dataset issue",
@@ -384,12 +382,11 @@ class IssueController(BaseController):
             except toolkit.ValidationError, e:
                 toolkit.abort(404)
 
-    def publisher_issue_page(self, publisher_id):
+    def issues_for_organization(self, org_id):
         """
-        Display a page containing a list of all issues items for a given
-        publisher
+        Display a page containing a list of all issues for a given organization
         """
-        c.publisher = model.Group.get(publisher_id)
+        c.org = model.Group.get(org_id)
 
         q = """
             SELECT table_id
@@ -397,7 +394,7 @@ class IssueController(BaseController):
             WHERE group_id='{gid}'
               AND table_name='package'
               AND state='active'
-        """.format(gid=c.publisher.id)
+        """.format(gid=c.org.id)
         results = model.Session.execute(q)
 
         package_ids = [x['table_id'] for x in results]
@@ -409,7 +406,7 @@ class IssueController(BaseController):
         for issue in issues:
             c.results[issue.package].append(issue)
         c.package_set = sorted(set(c.results.keys()), key=lambda x: x.title)
-        return render("issues/publisher_issues.html")
+        return render("issues/organization_issues.html")
 
     def all_issues_page(self):
         """

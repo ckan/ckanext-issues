@@ -163,7 +163,7 @@ def issue_comment_create(context, data_dict):
 @validate(schema.issue_search_schema)
 def issue_search(context, data_dict):
     '''Search issues for a given dataset
-    
+
     :param dataset_id: the name or id of the dataset that the issue item
         belongs to
     :type dataset_id: string
@@ -182,7 +182,7 @@ def issue_search(context, data_dict):
 
     :returns: list of issues
     :rtype: list of dictionaries
-    
+
     '''
     p.toolkit.check_access('issue_show', context, data_dict)
     try:
@@ -204,9 +204,9 @@ def issue_search(context, data_dict):
 @validate(schema.issue_count_schema)
 def issue_count(context, data_dict):
     '''Get the total number of issues for a given dataset
-    
+
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param q: a query string, currently on searches for titles that match
         this query
@@ -220,7 +220,7 @@ def issue_count(context, data_dict):
     :type offset: int
 
     :returns: number of issues in the search
-    :rtype: int 
+    :rtype: int
     '''
     p.toolkit.check_access('issue_show', context, data_dict)
 
@@ -244,7 +244,7 @@ def issue_delete(context, data_dict):
     '''Delete and issues
 
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
@@ -288,13 +288,13 @@ def organization_users_autocomplete(context, data_dict):
 @validate(schema.issue_report_spam_schema)
 def issue_report_spam(context, data_dict):
     '''Mark an issue as spam
-    
-    if you are a publisher, this marks the issue as spam, if you are any other
-    user, this will up the spam count until it exceeds the config option
-    ckanext.issues.max_strikes
+
+    If you are a org admin/editor, this marks the comment as spam; if you are
+    any other user, this will up the spam count until it exceeds the config
+    option ckanext.issues.max_strikes
 
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
@@ -305,8 +305,8 @@ def issue_report_spam(context, data_dict):
     issue_id = data_dict['issue_id']
     issue = issuemodel.Issue.get(issue_id, session=session)
     try:
-        # if you're a publisher (can edit the dataset, it gets marked as spam
-        # immediately
+        # if you're an org admin/editor (can edit the dataset, it gets marked
+        # as spam immediately
         dataset_id = data_dict['dataset_id']
         context = {
             'user': context['user'],
@@ -326,9 +326,9 @@ def issue_report_spam(context, data_dict):
 @validate(schema.issue_report_spam_schema)
 def issue_reset_spam_state(context, data_dict):
     '''Reset the spam status of a issue
-    
+
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
@@ -344,9 +344,9 @@ def issue_reset_spam_state(context, data_dict):
 @validate(schema.issue_comment_report_spam_schema)
 def issue_comment_reset_spam_state(context, data_dict):
     '''Reset the spam status of a issue_comment
-    
+
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_comment_id: the id of the issue the comment belongs to
     :type issue_comment_id: integer
@@ -363,13 +363,13 @@ def issue_comment_reset_spam_state(context, data_dict):
 @validate(schema.issue_comment_report_spam_schema)
 def issue_comment_report_spam(context, data_dict):
     '''Mark an issue comment as spam
-    
-    if you are a publisher, this marks the comment as spam, if you are any other
-    user, this will up the spam count until it exceeds the config option
-    ckanext.issues.max_strikes
+
+    If you are a org admin/editor, this marks the comment as spam; if you are
+    any other user, this will up the spam count until it exceeds the config
+    option ckanext.issues.max_strikes
 
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_comment_id: the id of the issue the comment belongs to
     :type issue_comment_id: integer
@@ -380,8 +380,8 @@ def issue_comment_report_spam(context, data_dict):
     issue_id = data_dict['issue_comment_id']
     issue_comment = issuemodel.IssueComment.get(issue_id, session=session)
     try:
-        # if you're a publisher (can edit the dataset, it gets marked as spam
-        # immediately
+        # if you're an org admin/editor (can edit the dataset, it gets marked
+        # as spam immediately
         dataset_id = data_dict['dataset_id']
         package_context = {
             'user': context['user'],
