@@ -95,9 +95,10 @@ def issues_enabled(dataset):
             return True
     else:
         extras = dataset.get('extras')
-        for extra in extras:
-            if extra.get('key') == 'issues_enabled':
-                return toolkit.asbool(extra.get('value'))
+        if extras is not None:
+            for extra in extras:
+                if extra.get('key') == 'issues_enabled':
+                    return toolkit.asbool(extra.get('value'))
         else:
             return toolkit.asbool(
                 config.get('ckanext.issues.enabled_per_dataset_default', True)
