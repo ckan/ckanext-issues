@@ -59,7 +59,7 @@ class IssuesPlugin(p.SingletonPlugin):
         from ckan.config.routing import SubMapper
 
         with SubMapper(map, controller='ckanext.issues.controller:IssueController') as m:
-            m.connect('issues_home', '/dataset/:package_id/issues', action='home')
+            m.connect('issues_home', '/dataset/:package_id/issues', action='home', ckan_icon='warning-sign')
             m.connect('issues_new', '/dataset/:package_id/issues/new',
                     action='new')
             m.connect('issues_edit', '/dataset/:package_id/issues/:id/edit',
