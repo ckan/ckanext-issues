@@ -64,7 +64,8 @@ class IssuesPlugin(p.SingletonPlugin):
         with SubMapper(map, controller=controller_name) as m:
             m.connect('issues_dataset',
                       '/dataset/:dataset_id/issues',
-                      action='dataset')
+                      action='dataset',
+                      ckan_icon='warning-sign')
             m.connect('issues_new',
                       '/dataset/:dataset_id/issues/new',
                       action='new')
