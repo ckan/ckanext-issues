@@ -15,7 +15,7 @@
       <div class="alert alert-error error-explanation">
         <p>{{ _('The form contains invalid entries:') }}</p>
         <ul>
-set           {% for key, error in c.error_summary.items() %}
+          {% for key, error in c.error_summary.items() %}
             <li>{{ key }}: {{ error[0] }}</li>
           {% endfor %}
         </ul>
@@ -37,4 +37,3 @@ set           {% for key, error in c.error_summary.items() %}
 </form>
 
 {% endblock %}
-

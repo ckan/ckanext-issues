@@ -17,14 +17,11 @@ import ckanext.issues.model as issuemodel
 from ckanext.issues.controller import home, show
 from ckanext.issues.lib import helpers as issues_helpers
 
-
-
 log = getLogger(__name__)
 
 AUTOCOMPLETE_LIMIT = 10
 VALID_CATEGORY = re.compile(r"[0-9a-z\-\._]+")
 ISSUES_PER_PAGE = (15, 30, 50)
-
 
 def _notify(issue):
     # Depending on configuration, and availability of data we
@@ -145,8 +142,20 @@ class IssueController(BaseController):
                 issue_dict = logic.get_action('issue_create')(
                     data_dict=data_dict
                 )
+
                 h.flash_success(_('Your issue has been registered, '
                                   'thank you for the feedback'))
+
+                issue_count = toolkit.get_action('issue_count')(data_dict={'dataset_id':c.pkg['id']})
+
+                if issue_count > 0:
+                    try:
+                        logic.get_action('package_patch')(data_dict={'id':c.pkg['id'],'private':True})
+                    except logic.NotAuthorized:
+                        abort(401, _('Not authorized to modify the dataset'))
+
+                    h.flash_notice(_('The dataset has now been made private.'))
+
                 redirect(h.url_for(
                     'issues_show',
                     package_id=c.pkg['name'],
@@ -277,6 +286,17 @@ class IssueController(BaseController):
                 toolkit.abort(401, msg)
 
             h.flash_notice(_('Issue {0} has been deleted.'.format(issue_id)))
+
+            issue_count = toolkit.get_action('issue_count')(data_dict={'dataset_id':dataset_id})
+
+            if issue_count == 0:
+                try:
+                    logic.get_action('package_patch')(data_dict={'id':c.pkg['id'],'private':False})
+                except logic.NotAuthorized:
+                    abort(401, _('Not authorized to modify the dataset'))
+
+                h.flash_success(_('The dataset has now been made public.'))
+
             h.redirect_to('issues_home', package_id=dataset_id)
         else:
             return render('issues/confirm_delete.html',
