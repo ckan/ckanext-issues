@@ -2,16 +2,14 @@
 CKAN Issue Extension
 """
 from logging import getLogger
-log = getLogger(__name__)
-
 import ckan.plugins as p
 from ckan.plugins import implements, toolkit
-
 from ckanext.issues.lib import util, helpers
 from ckanext.issues.model import setup as model_setup
 import ckanext.issues.logic.action as action
 import ckanext.issues.auth as auth
 
+log = getLogger(__name__)
 
 class IssuesPlugin(p.SingletonPlugin):
     """
