@@ -54,6 +54,8 @@ able to add the following to your CKAN .ini file::
 After you clear your cache and reload the site, the Issues plugin
 and should be available.
 
+### Notifications
+
 To configure notifications, you should set the following options in your
 configuration.  Should notify_admin and notify_owner be set to False then no
 emails will be sent about the newly created issue.
@@ -62,11 +64,30 @@ emails will be sent about the newly created issue.
     ckanext.issues.notify_owner = True
     ckanext.issues.from_address = test@localhost.local
 
+### Access
+
+The access to the issues for both web interface and API can be restricted for particular user roles by setting following variable in the configuration file:
+
+    ckanext.issues.minimun_role_required = Admin
+
+Possible values are:
+
+* **Anonymous** = Everyone, even not logged users can access the issues in datasets across the site.
+* **Member** =  Only the dataset's creator and members of an organization can access the issues information for a particular dataset.
+* **Editor** = Only the dataset's creator and editors of an organization can access the issues information for a particular dataset.
+* **Admin** = Only the dataset's creator and administrators of an organization can access the issues information for a particular dataset.
+
+### Dataset review system
+
+ckanext-issues can be used as part of a dataset review process. By setting the following configuration variable to True, datasets will stay unpublished ( state **private** ) anytime a dataset contains one or more Issues. Once all Issues within a dataset have been closed, then the dataset will be maede **public** again.
+
+    ckanext.issues.review_system = False
+
 ### Activation
 
 By default, issues are enabled for all datasets. If you wish to restrict
 issues to specific datasets you can use the config option
-    
+
     ckanext.issues.enabled_for_dataset = mydataset1 mydataset2 ...
 
 If `enabled_per_dataset` is not set you can use the config option
