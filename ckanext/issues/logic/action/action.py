@@ -106,7 +106,7 @@ def issue_update(context, data_dict):
     issue = issuemodel.Issue.get(data_dict['id'], session=session)
     status_change = data_dict.get('status') and (data_dict.get('status') !=
                                                  issue.status)
-
+                                                 
     ignored_keys = ['id', 'created', 'user', 'dataset_id', 'spam_count',
                     'spam_state']
     for k, v in data_dict.items():
@@ -120,11 +120,19 @@ def issue_update(context, data_dict):
             user_dict = p.toolkit.get_action('user_show')(
                 data_dict={'id': user})
             issue.assignee_id = user_dict['id']
+
         elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
             issue.resolved = None
 
-    session.add(issue)
-    session.commit()
+        session.add(issue)
+        session.commit()
+
+        if data_dict['status'] == issuemodel.ISSUE_STATUS.closed:
+            review_system.issue_deleted_from_dataset(data_dict={'dataset_id':issue.dataset_id})
+
+        elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
+            review_system.issue_created_in_dataset(data_dict={'dataset_id':issue.dataset_id})
+
     return issue.as_dict()
 
 
@@ -223,7 +231,8 @@ def issue_count(context, data_dict):
     :type limit: int
     :param offset: offset of the search results to return
     :type offset: int
-
+    :param status: status of the issues to return
+    :type status: string
     :returns: number of issues in the search
     :rtype: int
     '''
