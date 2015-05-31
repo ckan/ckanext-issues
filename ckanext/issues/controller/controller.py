@@ -10,6 +10,7 @@ from ckan.lib.base import BaseController, render, abort, redirect
 import ckan.lib.helpers as h
 import ckan.model as model
 import ckan.logic as logic
+from ckan.logic import action
 import ckan.plugins as p
 from ckan.plugins import toolkit
 
@@ -23,7 +24,7 @@ AUTOCOMPLETE_LIMIT = 10
 VALID_CATEGORY = re.compile(r"[0-9a-z\-\._]+")
 ISSUES_PER_PAGE = (15, 30, 50)
 
-def _notify(issue):
+def _notify(context,issue):
     # Depending on configuration, and availability of data we
     # should email the admin and the publisher/
     notify_admin = config.get("ckanext.issues.notify_admin", False)
@@ -34,30 +35,44 @@ def _notify(issue):
     from ckan.lib.mailer import mail_recipient
     from genshi.template.text import NewTextTemplate
 
-    admin_address = config.get('email_to')
+    admin_email = config.get('email_to')
     # from_address = config.get('ckanext.issues.from_address',
     #  'admin@localhost.local')
 
-    publisher = issue.package.get_groups('publisher')[0]
-    if 'contact-address' in issue.package.extras:
-        contact_name = issue.package.extras.get('contact-name')
-        contact_address = issue.package.extras.get('contact-email')
-    else:
-        contact_name = publisher.extras.get('contact-name', 'Publisher')
-        contact_address = publisher.extras.get('contact-email')
+    log.debug("NOTIFY %s",issue)
 
-    # Send to admin if no contact address, and only cc admin if
-    # they are not also in the TO field.
-    to_address = contact_address or admin_address
-    cc_address = admin_address if contact_address else None
+    user_obj = model.User.get(issue.user_id)
+    dataset = model.Package.get(issue.dataset_id)
+
+    contact_name = dataset.author or dataset.maintainer
+    contact_email =  dataset.author_email or dataset.maintainer_email
+
+    # retrieve organization's admins to notify
+    roles_to_notify = []
+    user_roles = action.get.roles_show(context,data_dict={'domain_object':dataset.owner_org})
+
+    # TODO reader an admin are not the expected values for role !?!?!
+    for user in user_roles['roles']:
+        if user['role'] == 'admin':
+
+            admin_user = model.User.get(user.user_id)
+            admin_name = admin_user.name
+            admin_email = admin_user.email
+            roles_to_notify.append(admin_email)
+
+    # TODO consider if notify_admin: / if if notify_owner:
+    to_email = contact_email
+    cc_email = roles_to_notify
 
     extra_vars = {
         'issue': issue,
-        'username': issue.reporter.fullname or issue.reporter.name,
+        'title': dataset.title,
+        'username': user_obj.name,
+        'email': user_obj.email,
         'site_url': h.url_for(
             controller='ckanext.issues.controller:IssueController',
             action='issue_page',
-            package_id=issue.package.name,
+            package_id=dataset.name,
             qualified=True
         )
     }
@@ -66,16 +81,19 @@ def _notify(issue):
                        loader_class=NewTextTemplate)
 
     headers = {}
-    if cc_address:
-        headers['CC'] = cc_address
+    if cc_email:
+        headers['CC'] = cc_email
 
     try:
         if not contact_name:
             contact_name = publisher.title
 
-        mail_recipient(contact_name, to_address,
+        mail_recipient(contact_name, to_email,
                        "Dataset issue",
                        email_msg, headers=headers)
+
+        log.debug('Email message for issue notification sent')
+
     except Exception:
         log.error('Failed to send an email message for issue notification')
 

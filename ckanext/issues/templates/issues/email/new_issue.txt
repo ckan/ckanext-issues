@@ -1,12 +1,12 @@
 
-A user ($username) has raised an issue with one of your datasets on data.gov.uk.
+$username ($email) has raised an issue with one of your datasets on data.opendevelopmentmekong.net:
 
-The dataset is '$issue.package.title' and it was categoried as '$issue.category.description'.  The user left a comment explaining the issue:
+Dataset title: '$title'
 
-"$issue.description"
+Issue description: "$issue.description"
 
 In order to resolve this issue, please visit $site_url and click the 'resolve' button once the issue has been corrected.
 
 Thank you
 
-The data.gov.uk team
+The data.opendevelopmentmekong.net team

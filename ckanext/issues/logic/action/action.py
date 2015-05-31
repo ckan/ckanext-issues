@@ -10,7 +10,7 @@ from ckanext.issues.logic import schema
 
 from pylons import config
 
-from ckanext.issues.controller import review_system
+from ckanext.issues.controller import controller, review_system
 
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
@@ -69,6 +69,8 @@ def issue_create(context, data_dict):
     model.Session.commit()
 
     review_system.issue_created_in_dataset(data_dict={'dataset_id':dataset_id})
+
+    controller._notify(context,issue)
 
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()
@@ -265,6 +267,7 @@ def issue_delete(context, data_dict):
 
     review_system.issue_deleted_from_dataset(data_dict)
 
+    controller._notify(issue)
 
 @p.toolkit.side_effect_free
 @validate(schema.organization_users_autocomplete_schema)
