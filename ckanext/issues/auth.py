@@ -28,6 +28,11 @@ def _issue_auth_config(context,data_dict):
         return {'success': False,
                 'msg': p.toolkit._("You must be logged in to report access issues information")}
 
+    user = context['user']
+    user_obj = model.User.get(user)
+    if data_dict['user_id'] == user_obj.id:
+        return {'success': True}
+
     if minimun_role_required == "Anonymous":
         return {'success': True}
     elif minimun_role_required == "Member":
