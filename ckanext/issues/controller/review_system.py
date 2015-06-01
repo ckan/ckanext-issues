@@ -6,6 +6,7 @@ import ckan.logic as logic
 import ckan.plugins as p
 from ckan.plugins import toolkit
 from pylons.i18n import _
+import ckanext.issues.model as issuemodel
 
 log = getLogger(__name__)
 
@@ -16,7 +17,8 @@ def issue_created_in_dataset(data_dict):
     log.debug("review_system issue_created: %s %s",data_dict,review_system)
 
     if review_system:
-        issue_count = toolkit.get_action('issue_count')(data_dict={'dataset_id':data_dict['dataset_id']})
+        issue_count = toolkit.get_action('issue_count')(data_dict={'dataset_id':data_dict['dataset_id'],'status':issuemodel.ISSUE_STATUS.open})
+
         if issue_count > 0:
             try:
                 logic.get_action('package_patch')(data_dict={'id':data_dict['dataset_id'],'private':True})
@@ -35,7 +37,8 @@ def issue_deleted_from_dataset(data_dict):
     log.debug("review_system issue_deleted: %s %s",data_dict,review_system)
 
     if review_system:
-        issue_count = toolkit.get_action('issue_count')(data_dict={'dataset_id':data_dict['dataset_id']})
+        issue_count = toolkit.get_action('issue_count')(data_dict={'dataset_id':data_dict['dataset_id'],'status':issuemodel.ISSUE_STATUS.open})
+
         if issue_count == 0:
             try:
                 logic.get_action('package_patch')(data_dict={'id':data_dict['dataset_id'],'private':False})

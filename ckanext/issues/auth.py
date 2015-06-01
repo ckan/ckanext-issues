@@ -28,6 +28,14 @@ def _issue_auth_config(context,data_dict):
         return {'success': False,
                 'msg': p.toolkit._("You must be logged in to report access issues information")}
 
+    # Check if user is owner of dataset
+    user = context['user']
+    user_obj = model.User.get(user)
+    dataset_obj = model.Package.get(data_dict['dataset_id'])
+
+    if dataset_obj.creator_user_id == user_obj.id:
+        return {'success': True}
+
     if minimun_role_required == "Anonymous":
         return {'success': True}
     elif minimun_role_required == "Member":
