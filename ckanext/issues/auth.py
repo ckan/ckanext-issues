@@ -12,6 +12,8 @@ supported_roles = ["Anonymous","Member","Editor","Admin"]
 
 def _issue_auth_config(context,data_dict):
 
+    log.debug("_issue_auth_config %s",data_dict)
+
     # Check ckanext.issues.minimun_role_required, default to Anonymous
     minimun_role_required = config.get("ckanext.issues.minimun_role_required", "Anonymous")
 
@@ -28,9 +30,13 @@ def _issue_auth_config(context,data_dict):
         return {'success': False,
                 'msg': p.toolkit._("You must be logged in to report access issues information")}
 
+    # Check if user is owner of dataset
     user = context['user']
     user_obj = model.User.get(user)
-    if data_dict['user_id'] == user_obj.id:
+    dataset_obj = model.Package.get(data_dict['dataset_id'])
+
+    log.debug("_issue_auth_config %s %s",user_obj,dataset_obj)
+    if dataset_obj.creator_user_id == user_obj.id:
         return {'success': True}
 
     if minimun_role_required == "Anonymous":
