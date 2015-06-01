@@ -35,7 +35,6 @@ def _issue_auth_config(context,data_dict):
     user_obj = model.User.get(user)
     dataset_obj = model.Package.get(data_dict['dataset_id'])
 
-    log.debug("_issue_auth_config %s %s",user_obj,dataset_obj)
     if dataset_obj.creator_user_id == user_obj.id:
         return {'success': True}
 
