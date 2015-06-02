@@ -1,4 +1,14 @@
+import traceback
 from pylons import config
+from logging import getLogger
+import ckan.model as model
+import ckan.lib.helpers as h
+from ckan.lib.base import render
+from ckan.logic import action
+from ckan.lib.mailer import mail_recipient
+from genshi.template.text import NewTextTemplate
+
+log = getLogger(__name__)
 
 role_mapper ={'Admin':'admin','Editor':'reader'}
 
@@ -16,11 +26,6 @@ def notify(context,issue,email_template):
     notify_owner = config.get("ckanext.issues.notify_owner", False)
     if not notify_admin and not notify_owner:
         return
-
-    from ckan.lib.mailer import mail_recipient
-    from genshi.template.text import NewTextTemplate
-
-    log.debug("NOTIFY %s",issue)
 
     user_obj = model.User.get(issue.user_id)
     dataset = model.Package.get(issue.dataset_id)
@@ -52,13 +57,15 @@ def notify(context,issue,email_template):
         for user in user_roles['roles']:
             if user['role'] == role_mapper[minimun_role_required]:
 
-                admin_user = model.User.get(user.user_id)
+                admin_user = model.User.get(user['user_id'])
                 admin_name = admin_user.name
                 admin_email = admin_user.email
+
                 send_email(admin_name,admin_email,extra_vars,email_template)
 
+def send_email(contact_name,contact_email,extra_vars,template):
 
-def send_email(contact_name,recipient,extra_vars,template):
+    log.debug("send_email to %s %s",contact_name,contact_email)
 
     email_msg = render(template,extra_vars=extra_vars,loader_class=NewTextTemplate)
 
@@ -67,14 +74,13 @@ def send_email(contact_name,recipient,extra_vars,template):
     #     headers['CC'] = cc_email
 
     try:
-        if not contact_name:
-            contact_name = publisher.title
 
-        mail_recipient(contact_name, to_email,
+        mail_recipient(contact_name, contact_email,
                        "Dataset issue",
                        email_msg, headers=headers)
 
         log.debug('Email message for issue notification sent')
 
     except Exception:
+        traceback.print_exc()
         log.error('Failed to send an email message for issue notification')
