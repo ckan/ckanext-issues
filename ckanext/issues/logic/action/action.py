@@ -137,7 +137,6 @@ def issue_update(context, data_dict):
             review_system.issue_created_in_dataset(data_dict={'dataset_id':issue.dataset_id})
             notification.notify_create_reopen(context,issue)
 
-
     return issue.as_dict()
 
 

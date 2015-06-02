@@ -12,6 +12,8 @@ supported_roles = ["Anonymous","Member","Editor","Admin"]
 
 def _issue_auth_config(context,data_dict):
 
+    log.debug("_issue_auth_config %s",data_dict)
+
     # Check ckanext.issues.minimun_role_required, default to Anonymous
     minimun_role_required = config.get("ckanext.issues.minimun_role_required", "Anonymous")
 
