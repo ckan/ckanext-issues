@@ -10,7 +10,7 @@ from ckanext.issues.logic import schema
 
 from pylons import config
 
-from ckanext.issues.controller import review_system
+from ckanext.issues.controller import review_system, notification
 
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
@@ -70,6 +70,8 @@ def issue_create(context, data_dict):
 
     review_system.issue_created_in_dataset(data_dict={'dataset_id':dataset_id})
 
+    notification.notify_create_reopen(context,issue)
+
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()
 
@@ -106,7 +108,7 @@ def issue_update(context, data_dict):
     issue = issuemodel.Issue.get(data_dict['id'], session=session)
     status_change = data_dict.get('status') and (data_dict.get('status') !=
                                                  issue.status)
-                                                 
+
     ignored_keys = ['id', 'created', 'user', 'dataset_id', 'spam_count',
                     'spam_state']
     for k, v in data_dict.items():
@@ -129,9 +131,11 @@ def issue_update(context, data_dict):
 
         if data_dict['status'] == issuemodel.ISSUE_STATUS.closed:
             review_system.issue_deleted_from_dataset(data_dict={'dataset_id':issue.dataset_id})
+            notification.notify_delete_close(context,issue)
 
         elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
             review_system.issue_created_in_dataset(data_dict={'dataset_id':issue.dataset_id})
+            notification.notify_create_reopen(context,issue)
 
     return issue.as_dict()
 
@@ -273,6 +277,8 @@ def issue_delete(context, data_dict):
     session.commit()
 
     review_system.issue_deleted_from_dataset(data_dict)
+
+    notification.notify_delete_close(context,issue)
 
 
 @p.toolkit.side_effect_free
