@@ -1,0 +1,6 @@
+recursive-include ckanext/issues/controller *
+recursive-include ckanext/issues/lib *
+recursive-include ckanext/issues/logic *
+recursive-include ckanext/issues/public *
+recursive-include ckanext/issues/templates *
+recursive-include ckanext/issues/tests *
