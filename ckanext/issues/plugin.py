@@ -105,6 +105,7 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_create': auth.issue_create,
             'issue_comment_create': auth.issue_comment_create,
             'issue_update': auth.issue_update,
+            'issue_status_change': auth._issue_auth_status_change,
             'issue_delete': auth.issue_delete,
             'issue_report_spam': auth.issue_report_spam,
             'issue_reset_spam_state': auth.issue_reset_spam_state,
