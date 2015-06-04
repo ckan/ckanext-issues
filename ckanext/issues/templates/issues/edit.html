@@ -25,7 +25,7 @@ set           {% for key, error in errors.items() %}
     {{ form.input('title', label=_('Title'), id='field-title', placeholder=_('Title'), value=issue.title, error=errors.title, classes=['control-full']) }}
     {{ form.markdown('description', label=_('Description'), id='field-description', placeholder=_('Add a comment'), value=issue.description, error=errors.description) }}
     {#
-    {{ form.input('resource', label=_('Resource'), id='resource', attrs={'disabled':'1'}) }}
+      {{ form.select('resource', label=_('Resource'), id='field-resource', options=h.issues_dataset_resources(issue.dataset_id), selected=issue.resource, error=errors.resource, classes=['control-full']) }}
     #}
   {% endblock %}
 
@@ -39,4 +39,3 @@ set           {% for key, error in errors.items() %}
 </form>
 
 {% endblock %}
-
