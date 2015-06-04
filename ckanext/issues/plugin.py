@@ -33,6 +33,7 @@ class IssuesPlugin(p.SingletonPlugin):
 
     def get_helpers(self):
         return {
+            'issues_dataset_resources': util.dataset_resources,
             'issues_installed': lambda: True,
             'issue_count': util.issue_count,
             'issue_comment_count': util.issue_comment_count,

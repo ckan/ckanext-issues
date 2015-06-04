@@ -109,7 +109,7 @@ class IssueController(BaseController):
         extra_vars['dataset'] = dataset
         return p.toolkit.render('issues/show.html', extra_vars=extra_vars)
 
-    def edit(self, id, package_id):
+    def edit(self, id, package_id,resource_id=None):
         self._before(package_id)
         issue = p.toolkit.get_action('issue_show')(data_dict={'id': id})
         if request.method == 'GET':
@@ -124,6 +124,11 @@ class IssueController(BaseController):
             data_dict = dict(request.params)
             data_dict['id'] = id
             data_dict['dataset_id'] = package_id
+            
+            resource = model.Resource.get(resource_id) if resource_id else None
+            if resource:
+                data_dict['resource_id'] = resource.id
+
             try:
                 p.toolkit.get_action('issue_update')(data_dict=data_dict)
                 return p.toolkit.redirect_to('issues_show', id=id,
