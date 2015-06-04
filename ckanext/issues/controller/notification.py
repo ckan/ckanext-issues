@@ -18,9 +18,14 @@ def notify_create_reopen(context,issue):
 
     notify(context,issue,"issues/email/issue_create_reopen.txt")
 
-def notify_delete_close(context,issue):
+def notify_close(context,issue):
 
-    notify(context,issue,"issues/email/issue_delete_close.txt")
+    notify(context,issue,"issues/email/issue_close.txt")
+
+def notify_delete(context,issue):
+
+    notify(context,issue,"issues/email/issue_delete.txt")
+
 
 def notify(context,issue,email_template):
 
@@ -39,8 +44,9 @@ def notify(context,issue,email_template):
         'email': user_obj.email,
         'site_url': h.url_for(
             controller='ckanext.issues.controller:IssueController',
-            action='issue_page',
-            package_id=dataset.name,
+            action='show',
+            id=issue.id,
+            package_id=issue.dataset_id,
             qualified=True
         )
     }
