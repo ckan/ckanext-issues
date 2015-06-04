@@ -10,13 +10,21 @@ log = logging.getLogger(__name__)
 
 supported_roles = ["Anonymous","Member","Editor","Admin"]
 
-def is_changing_status(data_dict):
+def _guess_issue_id(data_dict):
+
+    issue_id = None
 
     # Dataset owner shall not change status
     if 'id' in data_dict:
         issue_id = data_dict['id']
     elif 'issue_id' in data_dict and not 'id' in data_dict:
         issue_id = data_dict['issue_id']
+
+    return issue_id
+
+def is_changing_status(data_dict):
+
+    issue_id = _guess_issue_id(data_dict)
 
     issue = issuemodel.Issue.get(issue_id)
 
@@ -36,15 +44,17 @@ def is_dataset_creator(context,data_dict):
 
 def _issue_auth_status_change(context,data_dict):
 
-    if is_dataset_creator(context,data_dict) and is_changing_status(data_dict):
+    issue_id = _guess_issue_id(data_dict)
+
+    if is_dataset_creator(context,data_dict):
         return {'success': False,
                 'msg': p.toolkit._('Dataset owner is not allowed to change status of issue {0}'
-                        .format(data_dict['id']))
+                        .format(issue_id))
                 }
 
-    return _issue_auth_config(context,data_dict)
+    return _issue_auth_read_and_create(context,data_dict)
 
-def _issue_auth_config(context,data_dict):
+def _issue_auth_read_and_create(context,data_dict):
 
     # Check ckanext.issues.minimun_role_required, default to Anonymous
     minimun_role_required = config.get("ckanext.issues.minimun_role_required", "Anonymous")
@@ -130,26 +140,29 @@ def issue_auth_organization(context, data_dict, privilege='organization_update')
 @p.toolkit.auth_allow_anonymous_access
 def issue_list(context, data_dict):
 
-    return _issue_auth_config(context,data_dict)
+    return _issue_auth_read_and_create(context,data_dict)
 
 @p.toolkit.auth_allow_anonymous_access
 def issue_show(context, data_dict):
 
-    return _issue_auth_config(context,data_dict)
+    return _issue_auth_read_and_create(context,data_dict)
 
 def issue_create(context, data_dict):
 
-    return _issue_auth_config(context,data_dict)
+    return _issue_auth_read_and_create(context,data_dict)
 
 @p.toolkit.auth_disallow_anonymous_access
 def issue_comment_create(context, data_dict):
 
-    return _issue_auth_config(context,data_dict)
+    return _issue_auth_read_and_create(context,data_dict)
 
 @p.toolkit.auth_disallow_anonymous_access
 def issue_update(context, data_dict):
 
-    return _issue_auth_status_change(context,data_dict)
+    if is_changing_status(data_dict):
+        return _issue_auth_status_change(context,data_dict)
+
+    return _issue_auth_read_and_create(context,data_dict)
 
 @p.toolkit.auth_disallow_anonymous_access
 def issue_delete(context, data_dict):
@@ -158,9 +171,9 @@ def issue_delete(context, data_dict):
 
 def issue_report_spam(context, data_dict):
 
-    return _issue_auth_config(context,data_dict)
+    return _issue_auth_read_and_create(context,data_dict)
 
 @p.toolkit.auth_disallow_anonymous_access
 def issue_reset_spam_state(context, data_dict):
 
-    return _issue_auth_config(context,data_dict)
+    return _issue_auth_read_and_create(context,data_dict)
