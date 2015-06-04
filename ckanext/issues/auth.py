@@ -12,7 +12,7 @@ supported_roles = ["Anonymous","Member","Editor","Admin"]
 
 def is_changing_status(data_dict):
 
-    # Dataset owber shall not change status
+    # Dataset owner shall not change status
     if 'id' in data_dict:
         issue_id = data_dict['id']
     elif 'issue_id' in data_dict and not 'id' in data_dict:
