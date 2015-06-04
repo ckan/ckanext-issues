@@ -131,7 +131,7 @@ def issue_update(context, data_dict):
 
         if data_dict['status'] == issuemodel.ISSUE_STATUS.closed:
             review_system.issue_deleted_from_dataset(data_dict={'dataset_id':issue.dataset_id})
-            notification.notify_delete_close(context,issue)
+            notification.notify_close(context,issue)
 
         elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
             review_system.issue_created_in_dataset(data_dict={'dataset_id':issue.dataset_id})
@@ -278,7 +278,7 @@ def issue_delete(context, data_dict):
 
     review_system.issue_deleted_from_dataset(data_dict)
 
-    notification.notify_delete_close(context,issue)
+    notification.notify_delete(context,issue)
 
 
 @p.toolkit.side_effect_free
