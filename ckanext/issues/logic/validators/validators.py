@@ -35,12 +35,24 @@ def as_package_id(package_id_or_name, context):
         return package.id
 
 
+def as_org_id(org_id_or_name, context):
+    '''given a org_id_or_name, return just the org id'''
+    model = context['model']
+    org = model.Group.get(org_id_or_name)
+    if not org:
+        raise toolkit.Invalid('%s: %s' % (toolkit._('Not found'),
+                                          toolkit._('Organization')))
+    else:
+        return org.id
+
+
 def issue_exists(issue_id, context):
     issue_id = is_positive_integer(issue_id, context)
     result = issuemodel.Issue.get(issue_id, session=context['session'])
     if not result:
         raise toolkit.Invalid(toolkit._('Issue not found') + ': %s' % issue_id)
     return issue_id
+
 
 def issue_comment_exists(issue_comment_id, context):
     issue_comment_id = is_positive_integer(issue_comment_id, context)

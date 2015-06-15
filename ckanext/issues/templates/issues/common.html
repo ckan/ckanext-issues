@@ -15,7 +15,7 @@
           <li>Opened by <a href="{{ h.url_for('user_datasets', id=issue.user) }}">{{issue.user}}</a></li>
           <li>
             <i class="icon-clock"></i>
-            <span class="timeago" title="{{issue.created}}"> updated {{ h.time_ago_from_timestamp(issue.created) }}</span>
+            <span class="timeago" title="{{h.render_datetime(issue.created)}}"> updated {{ h.time_ago_from_timestamp(issue.created) }}</span>
           </li>
           <li>
             <i class="icon-comments"></i>
@@ -25,4 +25,39 @@
           </li>
         </ul>
       </li>
+{%- endmacro %}
+
+{% macro search_options_sidebar(user_can_change_spam_state, url_params) -%}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+        <i class="icon-medium icon-filter"></i>
+        Status
+    </h2>
+    <ul class="unstyled nav nav-simple">
+        {% for valid_status in ['open', 'closed'] %}
+        <li class="nav-item {% if status==valid_status%}active{% endif %}">
+        {% set href = h.replace_url_param(new_params={'status': valid_status}, extras=url_params) %}
+        <a href={{ href }}>
+        <span>{{_(valid_status.title())}}</span>
+        </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if user_can_change_spam_state %}
+    <h2 class="module-heading">
+        <i class="icon-medium icon-filter"></i>
+        Spam State
+    </h2>
+    <ul class="unstyled nav nav-simple nav-facet">
+        {% for valid_spam_state in ['visible', 'hidden'] %}
+        <li class="nav-item {% if spam_state==valid_spam_state%}active{% endif %}">
+        {% set href = h.remove_url_param('spam_state', extras=url_params) if spam_state==valid_spam_state else h.replace_url_param(new_params={'spam_state': valid_spam_state}, extras=url_params) %}
+        <a href={{ href }}>
+        <span>{{_(valid_spam_state.title())}}</span>
+        </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
 {%- endmacro %}

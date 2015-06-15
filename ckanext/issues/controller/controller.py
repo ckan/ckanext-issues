@@ -14,8 +14,10 @@ import ckan.plugins as p
 from ckan.plugins import toolkit
 
 import ckanext.issues.model as issuemodel
-from ckanext.issues.controller import home, show
+from ckanext.issues.controller import show
 from ckanext.issues.lib import helpers as issues_helpers
+from ckanext.issues.logic import schema
+from ckanext.issues.lib.helpers import Pagination, get_issues_per_page
 
 log = getLogger(__name__)
 
@@ -249,17 +251,17 @@ class IssueController(BaseController):
 
         redirect(next_url)
 
-    def home(self, package_id):
+    def dataset(self, package_id):
         """
-        Display a page containing a list of all issues items, sorted by
-        category.
+        Display a page containing a list of all issues items for a dataset,
+        sorted by category.
         """
         self._before(package_id)
         try:
-            extra_vars = home.home(package_id, request.GET)
+            extra_vars = issues_for_dataset(package_id, request.GET)
         except toolkit.ValidationError, e:
-            _home_handle_error(e)
-        return render("issues/home.html", extra_vars=extra_vars)
+            _dataset_handle_error(package_id, e)
+        return render("issues/dataset.html", extra_vars=extra_vars)
 
     def delete(self, dataset_id, issue_id):
         dataset = self._before(dataset_id)
@@ -275,7 +277,7 @@ class IssueController(BaseController):
                 toolkit.abort(401, msg)
 
             h.flash_notice(_('Issue {0} has been deleted.'.format(issue_id)))
-            h.redirect_to('issues_home', package_id=dataset_id)
+            h.redirect_to('issues_dataset', package_id=dataset_id)
         else:
             return render('issues/confirm_delete.html',
                           extra_vars={
@@ -326,15 +328,15 @@ class IssueController(BaseController):
                 h.flash_success(_('Issue reported as spam'))
                 h.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
-            except toolkit.ValidationError, e:
+            except toolkit.ValidationError:
                 toolkit.abort(404)
 
     def report_comment_abuse(self, dataset_id, issue_id, comment_id):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             if not c.user:
-                msg = _('You must be logged in to flag comments as spam'.format(
-                    issue_id))
+                msg = _('You must be logged in to flag comments as spam')\
+                    .format(issue_id)
                 toolkit.abort(401, msg)
             try:
                 toolkit.get_action('issue_comment_report_spam')(
@@ -344,7 +346,7 @@ class IssueController(BaseController):
                 h.flash_success(_('Comment reported as spam'))
                 h.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
-            except toolkit.ValidationError, e:
+            except toolkit.ValidationError:
                 toolkit.abort(404)
 
     def reset_spam_state(self, dataset_id, issue_id):
@@ -358,8 +360,8 @@ class IssueController(BaseController):
                 h.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.NotAuthorized:
-                msg = _('You must be logged in to reset spam counters'.format(
-                    issue_id))
+                msg = _('You must be logged in to reset spam counters')\
+                    .format(issue_id)
                 toolkit.abort(401, msg)
             except toolkit.ValidationError:
                 toolkit.abort(404)
@@ -376,16 +378,27 @@ class IssueController(BaseController):
                 h.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.NotAuthorized:
-                msg = _('You must be logged in to reset spam counters'.format(
-                    issue_id))
+                msg = _('You must be logged in to reset spam counters')\
+                    .format(issue_id)
                 toolkit.abort(401, msg)
-            except toolkit.ValidationError, e:
+            except toolkit.ValidationError:
                 toolkit.abort(404)
 
     def issues_for_organization(self, org_id):
         """
         Display a page containing a list of all issues for a given organization
         """
+        try:
+            template_params = issues_for_org(org_id, request.GET)
+        except toolkit.ValidationError, e:
+            msg = toolkit._("Validation error: {0}".format(e.error_summary))
+            log.warning(msg + ' - Issues for org: %s', org_id)
+            h.flash(msg, category='alert-error')
+            return p.toolkit.redirect_to('issues_for_organization', org_id=org_id)
+        return render("issues/organization_issues.html",
+                      extra_vars=template_params)
+
+        # TO DELETE
         c.org = model.Group.get(org_id)
 
         q = """
@@ -443,7 +456,69 @@ class IssueController(BaseController):
         return render("issues/all_issues.html")
 
 
-def _home_handle_error(package_id, exc):
+def _dataset_handle_error(package_id, exc):
     msg = toolkit._("Validation error: {0}".format(exc.error_summary))
     h.flash(msg, category='alert-error')
-    return p.toolkit.redirect_to('issues_home', package_id=package_id)
+    return p.toolkit.redirect_to('issues_dataset', package_id=package_id)
+
+
+def issues_for_dataset(dataset_id, get_query_dict):
+    query, errors = toolkit.navl_validate(
+        dict(get_query_dict),
+        schema.issue_dataset_controller_schema()
+    )
+    if errors:
+        raise toolkit.ValidationError(errors).error_summary
+    query.pop('__extras', None)
+
+    return _search_issues(dataset_id=dataset_id, **query)
+
+
+def issues_for_org(org_id, get_query_dict):
+    query, errors = toolkit.navl_validate(
+        dict(get_query_dict),
+        schema.issue_dataset_controller_schema()
+    )
+    if errors:
+        raise toolkit.ValidationError(errors).error_summary
+    query.pop('__extras', None)
+
+    template_params = _search_issues(organization_id=org_id,
+                                     include_datasets=True,
+                                     **query)
+    template_params['org'] = \
+        logic.get_action('organization_show')({}, {'id': org_id})
+    return template_params
+
+
+def _search_issues(dataset_id=None, organization_id=None,
+                   status=issuemodel.ISSUE_STATUS.open,
+                   sort='newest', spam_state=None, q='', page=1,
+                   per_page=get_issues_per_page()[0],
+                   include_datasets=False):
+    # use the function params to set default for our arguments to our
+    # data_dict if needed
+    params = locals().copy()
+
+    # convert per_page, page parameters to api limit/offset
+    limit = per_page
+    offset = (page - 1) * limit
+    params.pop('page', None)
+    params.pop('per_page', None)
+    params['offset'] = offset
+
+    issues = toolkit.get_action('issue_search')(data_dict=params)
+    issue_count = toolkit.get_action('issue_count')(data_dict=params)
+
+    pagination = Pagination(page, limit, issue_count)
+
+    template_variables = {
+        'issues': issues,
+        'status': status,
+        'sort': sort,
+        'q': q,
+        'pagination': pagination,
+    }
+    if spam_state:
+        template_variables['spam_state'] = spam_state
+    return template_variables

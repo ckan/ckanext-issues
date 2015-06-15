@@ -15,7 +15,7 @@ class TestAssign(helpers.FunctionalTestBase):
         self.owner = factories.User()
         self.org = factories.Organization(user=self.owner)
         self.dataset = factories.Dataset(user=self.owner,
-                                         owner_org=self.org['name'])
+                                         owner_org=self.org['id'])
         self.issue = issue_factories.Issue(user=self.owner,
                                            user_id=self.owner['id'],
                                            dataset_id=self.dataset['id'])

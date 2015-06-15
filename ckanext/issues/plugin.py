@@ -59,7 +59,7 @@ class IssuesPlugin(p.SingletonPlugin):
         from ckan.config.routing import SubMapper
 
         with SubMapper(map, controller='ckanext.issues.controller:IssueController') as m:
-            m.connect('issues_home', '/dataset/:package_id/issues', action='home')
+            m.connect('issues_dataset', '/dataset/:package_id/issues', action='dataset')
             m.connect('issues_new', '/dataset/:package_id/issues/new',
                     action='new')
             m.connect('issues_edit', '/dataset/:package_id/issues/:id/edit',
@@ -102,6 +102,7 @@ class IssuesPlugin(p.SingletonPlugin):
 
     def get_auth_functions(self):
         return {
+            'issue_search': auth.issue_search,
             'issue_show': auth.issue_show,
             'issue_count': auth.issue_show,
             'issue_create': auth.issue_create,

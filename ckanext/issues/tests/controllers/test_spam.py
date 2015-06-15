@@ -1,3 +1,5 @@
+from cStringIO import StringIO
+
 from ckan.lib import search
 from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
@@ -6,6 +8,7 @@ import ckan.new_tests.factories as factories
 from ckanext.issues.model import Issue
 from ckanext.issues.tests import factories as issue_factories
 
+from lxml import etree
 from nose.tools import assert_equals, assert_in
 
 
@@ -33,29 +36,60 @@ class TestMarkedAsSpamAppears(helpers.FunctionalTestBase):
                                 id=self.issue['id']),
             extra_environ=env,
         )
-        assert_in('Test issue', response.body)
-        assert_in('Marked as abuse', response.body)
+        res_chunks = parse_issues_show(response)
+        assert_in('Test issue', res_chunks['issue_name'])
+        assert_in('Marked as abuse', res_chunks['issue_comment_label'])
 
     def test_marked_as_spam_appears_in_search_for_publisher(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_home',
+            url=toolkit.url_for('issues_dataset',
                                 package_id=self.dataset['id']),
             extra_environ=env,
         )
-        assert_in('Test issue', response.body)
-        assert_in('1 issue found', response.body)
+        res_chunks = parse_issues_dataset(response)
+        assert_in('1 issue found', res_chunks['issues_found'])
+        assert_in('Test issue', res_chunks['issue_name'])
 
     def test_marked_as_spam_does_not_appear_for_user(self):
         env = {'REMOTE_USER': self.user['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_home',
+            url=toolkit.url_for('issues_dataset',
                                 package_id=self.dataset['id']),
             extra_environ=env,
         )
-        assert_in('0 issues found', response.body)
+        res_chunks = parse_issues_dataset(response)
+        assert_in('0 issues found', res_chunks['issues_found'])
 
 
+def pprint_html(trees):
+    return '\n'.join([etree.tostring(tree, pretty_print=True).strip()
+                        for tree in trees])
+
+def parse_issues_dataset(response):
+    '''Given the response from a GET url_for issues_dataset,
+    returns named chunks of it that can be tested.
+    '''
+    tree = etree.parse(StringIO(response.body), parser=etree.HTMLParser())
+    primary_tree = tree.xpath('//div[@class="primary"]')[0]
+    return {
+        'primary_tree': pprint_html(primary_tree),
+        'issue_comment_label': pprint_html(primary_tree.xpath('//div[@class="issue-comment-label"]')),
+        'issue_name': pprint_html(primary_tree.xpath('//h4[@class="list-group-item-name"]')),
+        'issues_found' : pprint_html(primary_tree.xpath('//h2[@id="issues-found"]')),
+        }
+
+def parse_issues_show(response):
+    '''Given the response from a GET url_for issues_show,
+    returns named chunks of it that can be tested.
+    '''
+    tree = etree.parse(StringIO(response.body), parser=etree.HTMLParser())
+    primary_tree = tree.xpath('//div[@class="primary"]')[0]
+    return {
+        'primary_tree': pprint_html(primary_tree),
+        'issue_comment_label': pprint_html(primary_tree.xpath('//div[@class="issue-comment-label"]')),
+        'issue_name': pprint_html(primary_tree.xpath('//h1[@class="page-heading"]')),
+        }
 
 class TestSpam(helpers.FunctionalTestBase):
     def setup(self):

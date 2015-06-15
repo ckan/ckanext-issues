@@ -7,6 +7,10 @@ import ckan.model as model
 from ckan.logic import validate
 import ckanext.issues.model as issuemodel
 from ckanext.issues.logic import schema
+try:
+    import ckan.authz as authz
+except ImportError:
+    import ckan.new_authz as authz
 
 from pylons import config
 
@@ -162,11 +166,18 @@ def issue_comment_create(context, data_dict):
 @p.toolkit.side_effect_free
 @validate(schema.issue_search_schema)
 def issue_search(context, data_dict):
-    '''Search issues for a given dataset
+    '''Search issues
 
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to
+        belongs to (optional)
     :type dataset_id: string
+    :param organization_id: the name or id of the organization for the datasets
+        to filter the issues by (optional)
+    :type organization_id: string
+    :param include_sub_organizations: if filtering by organization_id, this
+        includes organizations below the specified one in the hierarchy.
+        (default=False)
+    :type include_sub_organizations: bool
     :param q: a query string, currently on searches for titles that match
         this query
     :type q: string
@@ -178,24 +189,43 @@ def issue_search(context, data_dict):
     :param offset: offset of the search results to return
     :type offset: int
     :param spam_state: filter on spam_state
-    :type spam_state: string in visible,
+    :type spam_state: string in 'visible', 'hidden', ''
+    :param include_datasets: include details of the dataset each issue is
+        attached to
+    :type include_datasets: bool
 
     :returns: list of issues
     :rtype: list of dictionaries
 
     '''
-    p.toolkit.check_access('issue_show', context, data_dict)
-    try:
-        dataset_id = data_dict['dataset_id']
-        p.toolkit.check_access('package_update', context,
-                               data_dict={'id': dataset_id})
+    p.toolkit.check_access('issue_search', context, data_dict)
+    user = context['user']
+    dataset_id = data_dict.get('dataset_id')
+    organization_id = data_dict.get('organization_id')
+    spam_state = 'visible'
+    if organization_id:
+        try:
+            p.toolkit.check_access('organization_update', context,
+                                   data_dict={'id': organization_id})
+            spam_state = data_dict.get('spam_state', None)
+        except p.toolkit.NotAuthorized:
+            pass
+    elif dataset_id:
+        try:
+            p.toolkit.check_access('package_update', context,
+                                data_dict={'id': dataset_id})
+            spam_state = data_dict.get('spam_state', None)
+        except p.toolkit.NotAuthorized:
+            pass
+    elif authz.is_sysadmin(user):
         spam_state = data_dict.get('spam_state', None)
-    except p.toolkit.NotAuthorized:
-        spam_state = 'visible'
+
     data_dict['spam_state'] = spam_state
     data_dict.pop('__extras', None)
+    data_dict['include_datasets'] = \
+        p.toolkit.asbool(data_dict.get('include_datasets'))
 
-    return list(issuemodel.Issue.get_issues_for_dataset(
+    return list(issuemodel.Issue.get_issues(
         session=context['session'],
         **data_dict))
 
@@ -203,11 +233,14 @@ def issue_search(context, data_dict):
 @p.toolkit.side_effect_free
 @validate(schema.issue_count_schema)
 def issue_count(context, data_dict):
-    '''Get the total number of issues for a given dataset
+    '''Get the total number of issues for a given dataset or organization
 
-    :param dataset_id: the name or id of the dataset that the issue item
-        belongs to
+    :param dataset_id: the name or id of the datasets to filter the issues by
+        (optional)
     :type dataset_id: string
+    :param organization_id: the name or id of the organization for the datasets
+        to filter the issues by (optional)
+    :type organization_id: string
     :param q: a query string, currently on searches for titles that match
         this query
     :type q: string
@@ -222,17 +255,29 @@ def issue_count(context, data_dict):
     :returns: number of issues in the search
     :rtype: int
     '''
-    p.toolkit.check_access('issue_show', context, data_dict)
+    p.toolkit.check_access('issue_search', context, data_dict)
+    user = context['user']
+    dataset_id = data_dict.get('dataset_id')
+    organization_id = data_dict.get('organization_id')
+    spam_state = 'visible'
+    if organization_id:
+        try:
+            p.toolkit.check_access('organization_update', context,
+                                   data_dict={'id': organization_id})
+            spam_state = data_dict.get('spam_state', None)
+        except p.toolkit.NotAuthorized:
+            pass
+    elif dataset_id:
+        try:
+            p.toolkit.check_access('package_update', context,
+                                   data_dict={'id': dataset_id})
+            spam_state = data_dict.get('spam_state', None)
+        except p.toolkit.NotAuthorized:
+            pass
+    elif authz.is_sysadmin(user):
+        spam_state = data_dict.get('spam_state', None)
 
-    try:
-        dataset_id = data_dict['dataset_id']
-        p.toolkit.check_access('package_update', context,
-                               data_dict={'id': dataset_id})
-        spam_state = None
-    except p.toolkit.NotAuthorized:
-        spam_state = 'visible'
     data_dict['spam_state'] = spam_state
-
     data_dict.pop('__extras', None)
     return issuemodel.Issue.get_count_for_dataset(
         session=context['session'],

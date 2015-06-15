@@ -1,6 +1,9 @@
 from ckan import model
 from ckan.lib import search
-from ckan.new_tests import factories, helpers
+try:
+    from ckan.tests import factories, helpers
+except ImportError:
+    from ckan.new_tests import factories, helpers
 from ckan.plugins import toolkit
 
 from ckanext.issues.model import Issue
@@ -141,14 +144,6 @@ class TestIssueList(object):
                                           sort='oldest')
         assert_equals([i['id'] for i in created_issues],
                       [i['id'] for i in issues_list])
-
-    def test_list_all_issues_for_dataset_without_dataset_id_fails(self):
-        user = factories.User()
-        assert_raises(
-            toolkit.ValidationError,
-            helpers.call_action,
-            'issue_search',
-            context={'user': user['name']})
 
     def test_limit(self):
         user = factories.User()
