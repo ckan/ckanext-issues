@@ -38,7 +38,7 @@ class TestMarkedAsSpamAppears(helpers.FunctionalTestBase):
         )
         res_chunks = parse_issues_show(response)
         assert_in('Test issue', res_chunks['issue_name'])
-        assert_in('Marked as abuse', res_chunks['issue_comment_label'])
+        assert_in('Abuse - admin notified', res_chunks['issue_comment_action'])
 
     def test_marked_as_spam_appears_in_search_for_publisher(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
@@ -88,6 +88,7 @@ def parse_issues_show(response):
     return {
         'primary_tree': pprint_html(primary_tree),
         'issue_comment_label': pprint_html(primary_tree.xpath('//div[@class="issue-comment-label"]')),
+        'issue_comment_action': pprint_html(primary_tree.xpath('//div[@class="issue-comment-action"]')),
         'issue_name': pprint_html(primary_tree.xpath('//h1[@class="page-heading"]')),
         }
 
