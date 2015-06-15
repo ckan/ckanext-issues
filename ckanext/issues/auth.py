@@ -28,8 +28,8 @@ def issue_search(context, data_dict):
     except p.toolkit.NotAuthorized:
         return {
             'success': False,
-            'msg': p.toolkit._('User {0} not authorized for action on issue {1}'
-                    .format(str(context['user']), data_dict['id']))
+            'msg': p.toolkit._('User {0} not authorized for action'
+                    .format(str(context['user'])))
         }
 
 def issue_create(context, data_dict):

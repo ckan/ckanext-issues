@@ -125,7 +125,7 @@ class TestIssueComment(object):
         assert_equals(comments[0]['comment'], 'some comment')
 
 
-class TestIssueList(object):
+class TestIssueSearch(object):
     def teardown(self):
         helpers.reset_db()
         search.clear()
@@ -141,6 +141,36 @@ class TestIssueList(object):
         issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
+                                          sort='oldest')
+        assert_equals([i['id'] for i in created_issues],
+                      [i['id'] for i in issues_list])
+
+    def test_list_all_issues_for_organization(self):
+        user = factories.User()
+        org = factories.Organization(user=user)
+        dataset = factories.Dataset(owner_org=org['id'])
+
+        created_issues = [issue_factories.Issue(user=user, user_id=user['id'],
+                                                dataset_id=dataset['id'],
+                                                description=i)
+                          for i in range(0, 10)]
+        issues_list = helpers.call_action('issue_search',
+                                          context={'user': user['name']},
+                                          organization_id=org['id'],
+                                          sort='oldest')
+        assert_equals([i['id'] for i in created_issues],
+                      [i['id'] for i in issues_list])
+
+    def test_list_all_issues(self):
+        user = factories.User()
+        dataset = factories.Dataset()
+
+        created_issues = [issue_factories.Issue(user=user, user_id=user['id'],
+                                                dataset_id=dataset['id'],
+                                                description=i)
+                          for i in range(0, 10)]
+        issues_list = helpers.call_action('issue_search',
+                                          context={'user': user['name']},
                                           sort='oldest')
         assert_equals([i['id'] for i in created_issues],
                       [i['id'] for i in issues_list])
