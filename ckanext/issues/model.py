@@ -148,6 +148,39 @@ class Issue(domain_object.DomainObject):
         return session.query(cls).filter(cls.id == reference).first()
 
     @classmethod
+    def apply_filters_to_an_issue_query(
+            cls, query,
+            organization_id=None, dataset_id=None,
+            status=None, q=None,
+            spam_state=None,
+            include_sub_organizations=False):
+        if dataset_id:
+            query = query.filter(cls.dataset_id == dataset_id)
+        if organization_id:
+            org = model.Group.get(organization_id)
+            assert org
+            query = query.join(model.Package,
+                               cls.dataset_id == model.Package.id)
+            if include_sub_organizations:
+                orgs = (org_.id
+                        for org_
+                        in org.get_children_groups(type='organization'))
+                query = query.filter(model.Package.owner_org.in_(orgs))
+            else:
+                query = query.filter(model.Package.owner_org == org.id)
+
+        if q:
+            search_expr = '%{0}%'.format(q)
+            query = query.filter(or_(cls.title.ilike(search_expr),
+                                     cls.description.ilike(search_expr)))
+
+        if status:
+            query = query.filter(cls.status == status)
+        if spam_state:
+            query = query.filter(cls.spam_state == spam_state)
+        return query
+
+    @classmethod
     def get_issues(cls, organization_id=None, dataset_id=None,
                    offset=None, limit=None,
                    status=None, sort=None, q=None,
@@ -162,34 +195,12 @@ class Issue(domain_object.DomainObject):
             comment_count,
             last_updated
         )
-        if dataset_id:
-            query = query.filter(cls.dataset_id == dataset_id)
-        if organization_id:
-            org = model.Group.get(organization_id)
-            assert org
-            query = query.join(model.Package,
-                               cls.dataset_id == model.Package.id)
-            if include_sub_organizations:
-                orgs = (org_.id
-                        for org_
-                        in org.get_children_groups(type='organization'))
-                query = query.filter(model.Package.owner_org.in_(orgs))
-            else:
-                query = query.filter(model.Package.owner_org == org.id)
-
-        query = query.join(User, Issue.user_id == User.id)\
-            .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
-            .group_by(model.User.name, Issue.id)
-
-        if q:
-            search_expr = '%{0}%'.format(q)
-            query = query.filter(or_(cls.title.ilike(search_expr),
-                                     cls.description.ilike(search_expr)))
-
-        if status:
-            query = query.filter(cls.status == status)
-        if spam_state:
-            query = query.filter(cls.spam_state == spam_state)
+        query = cls.apply_filters_to_an_issue_query(
+            query,
+            organization_id=organization_id, dataset_id=dataset_id,
+            status=status, q=q,
+            spam_state=spam_state,
+            include_sub_organizations=include_sub_organizations)
         if sort:
             try:
                 query = IssueFilter.get_filter(sort)(query)
@@ -199,6 +210,10 @@ class Issue(domain_object.DomainObject):
             query = query.offset(offset)
         if limit:
             query = query.limit(limit)
+
+        query = query.join(User, Issue.user_id == User.id)\
+            .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
+            .group_by(model.User.name, Issue.id)
 
         return (issue.as_plain_dict(user, comment_count, updated,
                                     include_dataset=include_datasets)
@@ -210,27 +225,12 @@ class Issue(domain_object.DomainObject):
                               spam_state=None, session=Session,
                               include_sub_organizations=False):
         query = session.query(func.count(cls.id))
-        if dataset_id:
-            query = query.filter(cls.dataset_id == dataset_id)
-        if organization_id:
-            org = model.Group.get(organization_id)
-            assert org
-            query = query.join(model.Package,
-                               cls.dataset_id == model.Package.id)
-            if include_sub_organizations:
-                orgs = (org_.id
-                        for org_
-                        in org.get_children_groups(type='organization'))
-                query = query.filter(model.Package.owner_org.in_(orgs))
-            else:
-                query = query.filter(model.Package.owner_org == org.id)
-        if q:
-            query = query.filter(cls.title.ilike('%{0}%'.format(q)))
-
-        if status:
-            query = query.filter(cls.status == status)
-        if spam_state:
-            query = query.filter(cls.spam_state == spam_state)
+        query = cls.apply_filters_to_an_issue_query(
+            query,
+            organization_id=organization_id, dataset_id=dataset_id,
+            status=status, q=q,
+            spam_state=spam_state,
+            include_sub_organizations=include_sub_organizations)
         return query.one()[0]
 
     def increase_spam_count(self, session):
