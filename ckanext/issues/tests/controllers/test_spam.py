@@ -64,19 +64,24 @@ class TestMarkedAsSpamAppears(helpers.FunctionalTestBase):
 
 def pprint_html(trees):
     return '\n'.join([etree.tostring(tree, pretty_print=True).strip()
-                        for tree in trees])
+                      for tree in trees])
+
+def primary_div(tree):
+    # This xpath looks for 'primary' as a whole word
+    return tree.xpath(
+        "//div[contains(concat(' ', normalize-space(@class), ' '), ' primary ')]")[0]
 
 def parse_issues_dataset(response):
     '''Given the response from a GET url_for issues_dataset,
     returns named chunks of it that can be tested.
     '''
     tree = etree.parse(StringIO(response.body), parser=etree.HTMLParser())
-    primary_tree = tree.xpath('//div[@class="primary"]')[0]
+    primary_tree = primary_div(tree)
     return {
         'primary_tree': pprint_html(primary_tree),
         'issue_comment_label': pprint_html(primary_tree.xpath('//div[@class="issue-comment-label"]')),
         'issue_name': pprint_html(primary_tree.xpath('//h4[@class="list-group-item-name"]')),
-        'issues_found' : pprint_html(primary_tree.xpath('//h2[@id="issues-found"]')),
+        'issues_found': pprint_html(primary_tree.xpath('//h2[@id="issues-found"]')),
         }
 
 def parse_issues_show(response):
@@ -84,7 +89,7 @@ def parse_issues_show(response):
     returns named chunks of it that can be tested.
     '''
     tree = etree.parse(StringIO(response.body), parser=etree.HTMLParser())
-    primary_tree = tree.xpath('//div[@class="primary"]')[0]
+    primary_tree = primary_div(tree)
     return {
         'primary_tree': pprint_html(primary_tree),
         'issue_comment_label': pprint_html(primary_tree.xpath('//div[@class="issue-comment-label"]')),
