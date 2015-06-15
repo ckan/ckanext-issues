@@ -507,8 +507,9 @@ def _search_issues(dataset_id=None, organization_id=None,
     params.pop('per_page', None)
     params['offset'] = offset
 
-    issues = toolkit.get_action('issue_search')(data_dict=params)
-    issue_count = toolkit.get_action('issue_count')(data_dict=params)
+    search_result = toolkit.get_action('issue_search')(data_dict=params)
+    issues = search_result['results']
+    issue_count = search_result['count']
 
     pagination = Pagination(page, limit, issue_count)
 

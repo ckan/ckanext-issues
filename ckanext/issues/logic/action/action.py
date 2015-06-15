@@ -225,61 +225,7 @@ def issue_search(context, data_dict):
     data_dict['include_datasets'] = \
         p.toolkit.asbool(data_dict.get('include_datasets'))
 
-    return list(issuemodel.Issue.get_issues(
-        session=context['session'],
-        **data_dict))
-
-
-@p.toolkit.side_effect_free
-@validate(schema.issue_count_schema)
-def issue_count(context, data_dict):
-    '''Get the total number of issues for a given dataset or organization
-
-    :param dataset_id: the name or id of the datasets to filter the issues by
-        (optional)
-    :type dataset_id: string
-    :param organization_id: the name or id of the organization for the datasets
-        to filter the issues by (optional)
-    :type organization_id: string
-    :param q: a query string, currently on searches for titles that match
-        this query
-    :type q: string
-    :param sort: sorting method for the results returned
-    :type sort: string, must be 'newest', 'oldest', 'most_commented',
-        'least_commented', 'recently_update', 'least_recently_updated'
-    :param limit: number of results to return
-    :type limit: int
-    :param offset: offset of the search results to return
-    :type offset: int
-
-    :returns: number of issues in the search
-    :rtype: int
-    '''
-    p.toolkit.check_access('issue_search', context, data_dict)
-    user = context['user']
-    dataset_id = data_dict.get('dataset_id')
-    organization_id = data_dict.get('organization_id')
-    spam_state = 'visible'
-    if organization_id:
-        try:
-            p.toolkit.check_access('organization_update', context,
-                                   data_dict={'id': organization_id})
-            spam_state = data_dict.get('spam_state', None)
-        except p.toolkit.NotAuthorized:
-            pass
-    elif dataset_id:
-        try:
-            p.toolkit.check_access('package_update', context,
-                                   data_dict={'id': dataset_id})
-            spam_state = data_dict.get('spam_state', None)
-        except p.toolkit.NotAuthorized:
-            pass
-    elif authz.is_sysadmin(user):
-        spam_state = data_dict.get('spam_state', None)
-
-    data_dict['spam_state'] = spam_state
-    data_dict.pop('__extras', None)
-    return issuemodel.Issue.get_count_for_dataset(
+    return issuemodel.Issue.get_issues(
         session=context['session'],
         **data_dict)
 

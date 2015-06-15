@@ -23,8 +23,9 @@ def issue_create_schema():
     return {
         'title': [not_missing, unicode],
         'description': [ignore_missing, unicode],
-        'dataset_id':[ not_missing, unicode, package_exists, as_package_id],
+        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
     }
+
 
 def issue_update_schema():
     return {
@@ -49,16 +50,6 @@ def issue_search_schema():
         'q': [ignore_missing, unicode],
         'spam_state': [ignore_missing, unicode],
         'include_datasets': [ignore_missing, bool],
-    }
-
-
-def issue_count_schema():
-    return {
-        'dataset_id': [ignore_missing, unicode, as_package_id],
-        'organization_id': [ignore_missing, unicode, as_org_id],
-        'status': [ignore_missing, unicode, is_valid_status],
-        'q': [ignore_missing, unicode],
-        'spam_state': [ignore_missing, unicode],
     }
 
 

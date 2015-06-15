@@ -104,7 +104,6 @@ class IssuesPlugin(p.SingletonPlugin):
         return {
             'issue_search': auth.issue_search,
             'issue_show': auth.issue_show,
-            'issue_count': auth.issue_show,
             'issue_create': auth.issue_create,
             'issue_comment_create': auth.issue_comment_create,
             'issue_update': auth.issue_update,

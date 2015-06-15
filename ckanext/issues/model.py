@@ -206,18 +206,25 @@ class Issue(domain_object.DomainObject):
                 query = IssueFilter.get_filter(sort)(query)
             except InvalidIssueFilterException:
                 pass
-        if offset:
-            query = query.offset(offset)
-        if limit:
-            query = query.limit(limit)
 
         query = query.join(User, Issue.user_id == User.id)\
             .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
             .group_by(model.User.name, Issue.id)
 
-        return (issue.as_plain_dict(user, comment_count, updated,
+        count = query.count()
+
+        if offset:
+            query = query.offset(offset)
+        if limit:
+            query = query.limit(limit)
+
+        return {
+            'count': count,
+            'results': [
+                issue.as_plain_dict(user, comment_count_, updated,
                                     include_dataset=include_datasets)
-                for (issue, user, comment_count, updated) in query.all())
+                for (issue, user, comment_count_, updated) in query.all()]
+            }
 
     @classmethod
     def get_count_for_dataset(cls, dataset_id=None, organization_id=None,
