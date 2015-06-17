@@ -34,7 +34,7 @@ class TestMarkedAsSpamAppears(helpers.FunctionalTestBase):
             extra_environ=env,
         )
         assert_in('Test issue', response.body)
-        assert_in('Marked as abuse', response.body)
+        assert_in('Abuse - admin notified', response.body)
 
     def test_marked_as_spam_appears_in_search_for_publisher(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
