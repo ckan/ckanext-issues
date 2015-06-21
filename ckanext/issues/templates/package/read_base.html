@@ -1,8 +1,8 @@
-{% ckan_extends "package/read_base.html" %}
+{% ckan_extends %}
 
 {% block content_primary_nav %}
   {{ super() }}
-  {% if h.issues_enabled(pkg) %}
+  {% if h.issues_enabled(pkg) and h.check_access('issue_show', {'dataset_id': pkg.id}) %}
     {{ h.build_nav_icon('issues_home', _('Issues'), package_id=pkg.name) }}
   {% endif %}
 {% endblock %}

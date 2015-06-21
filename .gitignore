@@ -7,3 +7,4 @@
 test-custom.ini
 custom-test-sqlite.ini
 issue-test.db
+.remote-sync.json

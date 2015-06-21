@@ -10,6 +10,7 @@ from ckan.lib.base import BaseController, render, abort, redirect
 import ckan.lib.helpers as h
 import ckan.model as model
 import ckan.logic as logic
+from ckan.logic import action
 import ckan.plugins as p
 from ckan.plugins import toolkit
 
@@ -17,71 +18,11 @@ import ckanext.issues.model as issuemodel
 from ckanext.issues.controller import home, show
 from ckanext.issues.lib import helpers as issues_helpers
 
-
-
 log = getLogger(__name__)
 
 AUTOCOMPLETE_LIMIT = 10
 VALID_CATEGORY = re.compile(r"[0-9a-z\-\._]+")
 ISSUES_PER_PAGE = (15, 30, 50)
-
-
-def _notify(issue):
-    # Depending on configuration, and availability of data we
-    # should email the admin and the publisher/
-    notify_admin = config.get("ckanext.issues.notify_admin", False)
-    notify_owner = config.get("ckanext.issues.notify_owner", False)
-    if not notify_admin and not notify_owner:
-        return
-
-    from ckan.lib.mailer import mail_recipient
-    from genshi.template.text import NewTextTemplate
-
-    admin_address = config.get('email_to')
-    # from_address = config.get('ckanext.issues.from_address',
-    #  'admin@localhost.local')
-
-    publisher = issue.package.get_groups('publisher')[0]
-    if 'contact-address' in issue.package.extras:
-        contact_name = issue.package.extras.get('contact-name')
-        contact_address = issue.package.extras.get('contact-email')
-    else:
-        contact_name = publisher.extras.get('contact-name', 'Publisher')
-        contact_address = publisher.extras.get('contact-email')
-
-    # Send to admin if no contact address, and only cc admin if
-    # they are not also in the TO field.
-    to_address = contact_address or admin_address
-    cc_address = admin_address if contact_address else None
-
-    extra_vars = {
-        'issue': issue,
-        'username': issue.reporter.fullname or issue.reporter.name,
-        'site_url': h.url_for(
-            controller='ckanext.issues.controller:IssueController',
-            action='issue_page',
-            package_id=issue.package.name,
-            qualified=True
-        )
-    }
-
-    email_msg = render("issues/email/new_issue.txt", extra_vars=extra_vars,
-                       loader_class=NewTextTemplate)
-
-    headers = {}
-    if cc_address:
-        headers['CC'] = cc_address
-
-    try:
-        if not contact_name:
-            contact_name = publisher.title
-
-        mail_recipient(contact_name, to_address,
-                       "Dataset issue",
-                       email_msg, headers=headers)
-    except Exception:
-        log.error('Failed to send an email message for issue notification')
-
 
 class IssueController(BaseController):
     def _before(self, package_id):
@@ -145,8 +86,10 @@ class IssueController(BaseController):
                 issue_dict = logic.get_action('issue_create')(
                     data_dict=data_dict
                 )
+
                 h.flash_success(_('Your issue has been registered, '
                                   'thank you for the feedback'))
+
                 redirect(h.url_for(
                     'issues_show',
                     package_id=c.pkg['name'],
@@ -166,7 +109,7 @@ class IssueController(BaseController):
         extra_vars['dataset'] = dataset
         return p.toolkit.render('issues/show.html', extra_vars=extra_vars)
 
-    def edit(self, id, package_id):
+    def edit(self, id, package_id,resource_id=None):
         self._before(package_id)
         issue = p.toolkit.get_action('issue_show')(data_dict={'id': id})
         if request.method == 'GET':
@@ -181,6 +124,11 @@ class IssueController(BaseController):
             data_dict = dict(request.params)
             data_dict['id'] = id
             data_dict['dataset_id'] = package_id
+            
+            resource = model.Resource.get(resource_id) if resource_id else None
+            if resource:
+                data_dict['resource_id'] = resource.id
+
             try:
                 p.toolkit.get_action('issue_update')(data_dict=data_dict)
                 return p.toolkit.redirect_to('issues_show', id=id,
@@ -277,6 +225,7 @@ class IssueController(BaseController):
                 toolkit.abort(401, msg)
 
             h.flash_notice(_('Issue {0} has been deleted.'.format(issue_id)))
+
             h.redirect_to('issues_home', package_id=dataset_id)
         else:
             return render('issues/confirm_delete.html',

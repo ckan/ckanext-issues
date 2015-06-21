@@ -1,6 +1,14 @@
 import ckanext.issues.model as issue_model
 import ckan.model as model
 
+def dataset_resources(dataset_id):
+  dataset = model.Package.get(dataset_id)
+
+  resources = []
+  for resource in dataset.resources:
+      resources.append({'name':resource.id,'value':resource.name})
+
+  return resources
 
 def issue_count(package):
   return model.Session.query(issue_model.Issue)\

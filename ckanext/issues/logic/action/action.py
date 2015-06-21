@@ -10,6 +10,8 @@ from ckanext.issues.logic import schema
 
 from pylons import config
 
+from ckanext.issues.controller import review_system, notification
+
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 
@@ -56,14 +58,19 @@ def issue_create(context, data_dict):
     user = context['user']
     user_obj = model.User.get(user)
     data_dict['user_id'] = user_obj.id
+    dataset_id = data_dict['dataset_id']
 
-    dataset = model.Package.get(data_dict['dataset_id'])
+    dataset = model.Package.get(dataset_id)
     del data_dict['dataset_id']
 
     issue = issuemodel.Issue(**data_dict)
     issue.dataset = dataset
     model.Session.add(issue)
     model.Session.commit()
+
+    review_system.issue_created_in_dataset(data_dict={'dataset_id':dataset_id})
+
+    notification.notify_create_reopen(context,issue)
 
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()
@@ -115,11 +122,21 @@ def issue_update(context, data_dict):
             user_dict = p.toolkit.get_action('user_show')(
                 data_dict={'id': user})
             issue.assignee_id = user_dict['id']
+
         elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
             issue.resolved = None
 
-    session.add(issue)
-    session.commit()
+        session.add(issue)
+        session.commit()
+
+        if data_dict['status'] == issuemodel.ISSUE_STATUS.closed:
+            review_system.issue_deleted_from_dataset(data_dict={'dataset_id':issue.dataset_id})
+            notification.notify_close(context,issue)
+
+        elif data_dict['status'] == issuemodel.ISSUE_STATUS.open:
+            review_system.issue_created_in_dataset(data_dict={'dataset_id':issue.dataset_id})
+            notification.notify_create_reopen(context,issue)
+
     return issue.as_dict()
 
 
@@ -163,7 +180,7 @@ def issue_comment_create(context, data_dict):
 @validate(schema.issue_search_schema)
 def issue_search(context, data_dict):
     '''Search issues for a given dataset
-    
+
     :param dataset_id: the name or id of the dataset that the issue item
         belongs to
     :type dataset_id: string
@@ -182,7 +199,7 @@ def issue_search(context, data_dict):
 
     :returns: list of issues
     :rtype: list of dictionaries
-    
+
     '''
     p.toolkit.check_access('issue_show', context, data_dict)
     try:
@@ -204,9 +221,9 @@ def issue_search(context, data_dict):
 @validate(schema.issue_count_schema)
 def issue_count(context, data_dict):
     '''Get the total number of issues for a given dataset
-    
+
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param q: a query string, currently on searches for titles that match
         this query
@@ -218,9 +235,10 @@ def issue_count(context, data_dict):
     :type limit: int
     :param offset: offset of the search results to return
     :type offset: int
-
+    :param status: status of the issues to return
+    :type status: string
     :returns: number of issues in the search
-    :rtype: int 
+    :rtype: int
     '''
     p.toolkit.check_access('issue_show', context, data_dict)
 
@@ -244,7 +262,7 @@ def issue_delete(context, data_dict):
     '''Delete and issues
 
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
@@ -257,6 +275,10 @@ def issue_delete(context, data_dict):
         raise NotFound('{0} was not found.'.format(issue_id))
     session.delete(issue)
     session.commit()
+
+    review_system.issue_deleted_from_dataset(data_dict)
+
+    notification.notify_delete(context,issue)
 
 
 @p.toolkit.side_effect_free
@@ -288,13 +310,13 @@ def organization_users_autocomplete(context, data_dict):
 @validate(schema.issue_report_spam_schema)
 def issue_report_spam(context, data_dict):
     '''Mark an issue as spam
-    
+
     if you are a publisher, this marks the issue as spam, if you are any other
     user, this will up the spam count until it exceeds the config option
     ckanext.issues.max_strikes
 
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
@@ -326,9 +348,9 @@ def issue_report_spam(context, data_dict):
 @validate(schema.issue_report_spam_schema)
 def issue_reset_spam_state(context, data_dict):
     '''Reset the spam status of a issue
-    
+
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
@@ -344,9 +366,9 @@ def issue_reset_spam_state(context, data_dict):
 @validate(schema.issue_comment_report_spam_schema)
 def issue_comment_reset_spam_state(context, data_dict):
     '''Reset the spam status of a issue_comment
-    
+
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_comment_id: the id of the issue the comment belongs to
     :type issue_comment_id: integer
@@ -363,13 +385,13 @@ def issue_comment_reset_spam_state(context, data_dict):
 @validate(schema.issue_comment_report_spam_schema)
 def issue_comment_report_spam(context, data_dict):
     '''Mark an issue comment as spam
-    
+
     if you are a publisher, this marks the comment as spam, if you are any other
     user, this will up the spam count until it exceeds the config option
     ckanext.issues.max_strikes
 
     :param dataset_id: the name or id of the dataset that the issue item
-        belongs to 
+        belongs to
     :type dataset_id: string
     :param issue_comment_id: the id of the issue the comment belongs to
     :type issue_comment_id: integer

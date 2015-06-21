@@ -9,8 +9,9 @@
 
 {% block breadcrumb_item %}{{ h.nav_link(issue.id, named_route='issues_show', package_id=dataset.name, id=issue.id) }}
 {% endblock %}
- 
+
 {% set can_edit_issue = h.check_access('issue_update', {'dataset_id': dataset.id, 'id': issue.id }) %}
+{% set can_change_status = h.check_access('issue_status_change', {'dataset_id': dataset.id, 'id': issue.id }) %}
 {% set is_publisher = h.check_access('package_update', {'id': dataset.id }) %}
 {% import 'macros/form.html' as form %}
 
@@ -51,7 +52,7 @@
       </div>
       {% if can_edit_issue %}
         <div class="issue-comment-label">
-           Owner 
+           Owner
         </div>
       {% endif %}
       <div class="issue-header-text">
@@ -99,7 +100,7 @@
       </div>
       {% if can_edit_issue %}
         <div class="issue-comment-label">
-           Owner 
+           Owner
         </div>
       {% endif %}
       {% if comment.spam_state == 'hidden' %}
@@ -170,7 +171,7 @@
                 {% set locale = h.dump_json({'content': _('Are you sure you want to delete this issue?')}) %}
                 <a class="btn btn-danger pull-left" href="{% url_for 'issues_delete', dataset_id=dataset.id, issue_id=issue.id %}" data-module="confirm-action" data-module-i18n="{{ locale }}">{% block delete_button_text %}{{ _('Delete') }}{% endblock %}</a>
               {% endif %}
-              {% if can_edit_issue %}
+              {% if can_change_status %}
                 {% if issue.status == 'open' %}
                 <button class="btn" type="submit" name="close" tabindex="3">
                   {{ _('Close') }}
