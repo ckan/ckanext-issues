@@ -37,8 +37,8 @@ def _get_assigned_user(assignee_id, session):
     # we only need the basic properties of the user, not its datasets etc
     if toolkit.check_ckan_version(min_version='2.3'):
         # these are the defaults, but just in case...
-        data_dict = {'include_datasets': False,
-                     'include_num_followers': False}
+        data_dict.update({'include_datasets': False,
+                          'include_num_followers': False})
     else:
         context = {'return_minimal': True}
     try:
