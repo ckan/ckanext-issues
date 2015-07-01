@@ -431,7 +431,7 @@ class TestOrganizationUsersAutocomplete(object):
         )
 
 
-class TestReportSpam(object):
+class TestReportAnIssue(object):
     def teardown(self):
         helpers.reset_db()
         search.clear()
@@ -448,7 +448,7 @@ class TestReportSpam(object):
             'user': user['name'],
             'model': model,
         }
-        helpers.call_action('issue_report_spam', context=context,
+        helpers.call_action('issue_report', context=context,
                             dataset_id=dataset['id'], issue_id=issue['id'])
 
         result = helpers.call_action('issue_show', id=issue['id'])
@@ -465,7 +465,7 @@ class TestReportSpam(object):
             'user': owner['name'],
             'model': model,
         }
-        helpers.call_action('issue_report_spam', context=context,
+        helpers.call_action('issue_report', context=context,
                             dataset_id=dataset['id'], issue_id=issue['id'])
 
         result = helpers.call_action('issue_show', id=issue['id'])
@@ -486,7 +486,7 @@ class TestReportSpam(object):
             'user': user['name'],
             'model': model,
         }
-        helpers.call_action('issue_report_spam', context=context,
+        helpers.call_action('issue_report', context=context,
                             dataset_id=dataset['id'], issue_id=issue['id'])
 
         result = helpers.call_action('issue_show', id=issue['id'])
@@ -531,7 +531,7 @@ class TestReportCommentSpam(object):
             'user': user['name'],
             'model': model,
         }
-        helpers.call_action('issue_comment_report_spam', context=context,
+        helpers.call_action('issue_comment_report', context=context,
                             dataset_id=dataset['id'],
                             issue_comment_id=comment['id'])
         result = helpers.call_action('issue_show', id=issue['id'])
@@ -552,7 +552,7 @@ class TestReportCommentSpam(object):
             'user': owner['name'],
             'model': model,
         }
-        helpers.call_action('issue_comment_report_spam', context=context,
+        helpers.call_action('issue_comment_report', context=context,
                             dataset_id=dataset['id'],
                             issue_comment_id=comment['id'])
 
@@ -578,7 +578,7 @@ class TestReportCommentSpam(object):
             'user': user['name'],
             'model': model,
         }
-        helpers.call_action('issue_comment_report_spam', context=context,
+        helpers.call_action('issue_comment_report', context=context,
                             dataset_id=dataset['id'],
                             issue_comment_id=comment['id'])
         result = helpers.call_action('issue_show', id=issue['id'])

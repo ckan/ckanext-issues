@@ -124,19 +124,19 @@ class TestIssueDelete(object):
                       context, issue_id=issue['id'], dataset_id=dataset['id'])
 
 
-class TestReportSpam(object):
-    def test_any_user_can_report_spam(object):
+class TestReport(object):
+    def test_any_user_can_report_an_issue(object):
         user = factories.User()
         context = {
             'user': user['name'],
             'model': model,
         }
-        assert_true(helpers.call_auth('issue_report_spam', context=context))
+        assert_true(helpers.call_auth('issue_report', context=context))
 
-    def test_anon_users_cannot_report_spam(object):
+    def test_anon_users_cannot_report_issues(object):
         context = {
             'user': None,
             'model': model,
         }
         assert_raises(toolkit.NotAuthorized, helpers.call_auth,
-            'issue_report_spam', context=context)
+            'issue_report', context=context)

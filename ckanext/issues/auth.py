@@ -77,12 +77,12 @@ def issue_delete(context, data_dict):
     return issue_auth(context, data_dict)
 
 
-def issue_report_spam(context, data_dict):
+def issue_report(context, data_dict):
     if context.get('user'):
         return {'success': True}
     else:
         return {'success': False,
-                'msg': p.toolkit._("You must be logged in to report spam")}
+                'msg': p.toolkit._("You must be logged in to report an issue")}
 
 @p.toolkit.auth_disallow_anonymous_access
 def issue_reset_spam_state(context, data_dict):

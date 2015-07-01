@@ -35,9 +35,9 @@ Specifically:
     /api/3/action/issue_search
     /api/3/action/issue_count
     /api/3/action/issue_comment_create
-    /api/3/action/issue_report_spam
+    /api/3/action/issue_report
     /api/3/action/issue_reset_spam_state
-    /api/3/action/issue_comment_report_spam
+    /api/3/action/issue_comment_report
     /api/3/action/issue_comment_reset_spam_state
 
 ## Installation and Activation

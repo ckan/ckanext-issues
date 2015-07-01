@@ -97,9 +97,9 @@ def parse_issues_show(response):
         'issue_name': pprint_html(primary_tree.xpath('//h1[@class="page-heading"]')),
         }
 
-class TestSpam(helpers.FunctionalTestBase):
+class TestReport(helpers.FunctionalTestBase):
     def setup(self):
-        super(TestSpam, self).setup()
+        super(TestReport, self).setup()
         self.owner = factories.User()
         self.org = factories.Organization(user=self.owner)
         self.dataset = factories.Dataset(user=self.owner,
@@ -113,31 +113,31 @@ class TestSpam(helpers.FunctionalTestBase):
         helpers.reset_db()
         search.clear()
 
-    def test_report_abuse(self):
+    def test_report(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
-            url=toolkit.url_for('issues_report_abuse',
+            url=toolkit.url_for('issues_report',
                                 dataset_id=self.dataset['id'],
                                 issue_id=self.issue['id']),
             extra_environ=env,
         )
         response = response.follow()
-        assert_in('Issue reported as spam', response.body)
+        assert_in('Issue reported to an administrator', response.body)
 
-    def test_report_abuse_not_logged_in(self):
+    def test_report_as_anonymous_user(self):
         response = self.app.post(
-            url=toolkit.url_for('issues_report_abuse',
+            url=toolkit.url_for('issues_report',
                                 dataset_id=self.dataset['id'],
                                 issue_id=self.issue['id']),
         )
         response = response.follow()
-        assert_in('You must be logged in to flag issues as spam',
+        assert_in('You must be logged in to report issues',
                   response.body)
 
-    def test_report_abuse_on_issue_that_does_not_exist(self):
+    def test_report_an_issue_that_does_not_exist(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
-            url=toolkit.url_for('issues_report_abuse',
+            url=toolkit.url_for('issues_report',
                                 dataset_id=self.dataset['id'],
                                 issue_id='1235455'),
             extra_environ=env,
@@ -198,33 +198,34 @@ class TestCommentSpam(helpers.FunctionalTestBase):
         helpers.reset_db()
         search.clear()
 
-    def test_report_abuse(self):
+    def test_report(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
-            url=toolkit.url_for('issues_comment_report_abuse',
+            url=toolkit.url_for('issues_comment_report',
                                 dataset_id=self.dataset['id'],
                                 issue_id=self.issue['id'],
                                 comment_id=self.comment['id']),
             extra_environ=env,
         )
         response = response.follow()
-        assert_in('Comment reported as spam', response.body)
+        assert_in('Comment has been reported to an administrator',
+                  response.body)
 
-    def test_report_abuse_not_logged_in(self):
+    def test_report_not_logged_in(self):
         response = self.app.post(
-            url=toolkit.url_for('issues_comment_report_abuse',
+            url=toolkit.url_for('issues_comment_report',
                                 dataset_id=self.dataset['id'],
                                 issue_id=self.issue['id'],
                                 comment_id=self.comment['id']),
         )
         response = response.follow()
-        assert_in('You must be logged in to flag comments as spam',
+        assert_in('You must be logged in to report comments',
                   response.body)
 
-    def test_report_abuse_on_issue_that_does_not_exist(self):
+    def test_report_an_issue_that_does_not_exist(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
-            url=toolkit.url_for('issues_report_abuse',
+            url=toolkit.url_for('issues_report',
                                 dataset_id=self.dataset['id'],
                                 issue_id='1235455',
                                 comment_id=self.comment['id']),
@@ -261,7 +262,7 @@ class TestCommentSpam(helpers.FunctionalTestBase):
     def test_reset_on_issue_that_does_not_exist(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
-            url=toolkit.url_for('issues_comment_report_abuse',
+            url=toolkit.url_for('issues_comment_report',
                                 dataset_id=self.dataset['id'],
                                 issue_id='1235455',
                                 comment_id='12312323'),

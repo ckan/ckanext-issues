@@ -60,14 +60,14 @@ def issue_delete_schema():
     }
 
 
-def issue_report_spam_schema():
+def issue_report_schema():
     return {
         'dataset_id': [not_missing, unicode, package_exists],
         'issue_id': [not_missing, unicode, issue_exists],
     }
 
 
-def issue_comment_report_spam_schema():
+def issue_comment_report_schema():
     return {
         'dataset_id': [not_missing, unicode, package_exists],
         'issue_comment_id': [not_missing, unicode, issue_comment_exists],

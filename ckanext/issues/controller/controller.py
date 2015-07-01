@@ -314,36 +314,38 @@ class IssueController(BaseController):
                                      id=issue_id,
                                      package_id=dataset_id)
 
-    def report_abuse(self, dataset_id, issue_id):
+    def report(self, dataset_id, issue_id):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             if not c.user:
-                msg = _('You must be logged in to flag issues as spam'.format(
+                msg = _('You must be logged in to report issues'.format(
                     issue_id))
                 toolkit.abort(401, msg)
             try:
-                toolkit.get_action('issue_report_spam')(
+                toolkit.get_action('issue_report')(
                     data_dict={'issue_id': issue_id, 'dataset_id': dataset_id}
                 )
-                h.flash_success(_('Issue reported as spam'))
+                h.flash_success(_('Issue reported to an administrator'))
                 h.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.ValidationError:
                 toolkit.abort(404)
 
-    def report_comment_abuse(self, dataset_id, issue_id, comment_id):
+    def report_comment(self, dataset_id, issue_id, comment_id):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             if not c.user:
-                msg = _('You must be logged in to flag comments as spam')\
+                msg = _('You must be logged in to report comments')\
                     .format(issue_id)
                 toolkit.abort(401, msg)
             try:
-                toolkit.get_action('issue_comment_report_spam')(
+                toolkit.get_action('issue_comment_report')(
                     data_dict={'issue_comment_id': comment_id,
                                'dataset_id': dataset_id}
                 )
-                h.flash_success(_('Comment reported as spam'))
+                h.flash_success(
+                    _('Comment has been reported to an administrator')
+                )
                 h.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.ValidationError:

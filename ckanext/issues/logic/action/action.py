@@ -276,9 +276,9 @@ def organization_users_autocomplete(context, data_dict):
     return users
 
 
-@validate(schema.issue_report_spam_schema)
-def issue_report_spam(context, data_dict):
-    '''Mark an issue as spam
+@validate(schema.issue_report_schema)
+def issue_report(context, data_dict):
+    '''Report an issue
 
     If you are a org admin/editor, this marks the comment as spam; if you are
     any other user, this will up the spam count until it exceeds the config
@@ -290,7 +290,7 @@ def issue_report_spam(context, data_dict):
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
     '''
-    p.toolkit.check_access('issue_report_spam', context, data_dict)
+    p.toolkit.check_access('issue_report', context, data_dict)
     session = context['session']
 
     issue_id = data_dict['issue_id']
@@ -314,7 +314,7 @@ def issue_report_spam(context, data_dict):
             issue.mark_as_spam(session)
 
 
-@validate(schema.issue_report_spam_schema)
+@validate(schema.issue_report_schema)
 def issue_reset_spam_state(context, data_dict):
     '''Reset the spam status of a issue
 
@@ -332,7 +332,7 @@ def issue_reset_spam_state(context, data_dict):
     issue.mark_as_not_spam(session)
 
 
-@validate(schema.issue_comment_report_spam_schema)
+@validate(schema.issue_comment_report_schema)
 def issue_comment_reset_spam_state(context, data_dict):
     '''Reset the spam status of a issue_comment
 
@@ -351,9 +351,9 @@ def issue_comment_reset_spam_state(context, data_dict):
     issue_comment.mark_as_not_spam(session)
 
 
-@validate(schema.issue_comment_report_spam_schema)
-def issue_comment_report_spam(context, data_dict):
-    '''Mark an issue comment as spam
+@validate(schema.issue_comment_report_schema)
+def issue_comment_report(context, data_dict):
+    '''Report a comment made on an issue.
 
     If you are a org admin/editor, this marks the comment as spam; if you are
     any other user, this will up the spam count until it exceeds the config
@@ -365,7 +365,7 @@ def issue_comment_report_spam(context, data_dict):
     :param issue_comment_id: the id of the issue the comment belongs to
     :type issue_comment_id: integer
     '''
-    p.toolkit.check_access('issue_report_spam', context, data_dict)
+    p.toolkit.check_access('issue_report', context, data_dict)
     session = context['session']
 
     issue_id = data_dict['issue_comment_id']

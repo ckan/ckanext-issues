@@ -41,8 +41,8 @@
         {% endif %}
         {% if c.user and comment.spam_state =='visible' %}
           <div id="issue-report-abuse-button" class="issue-comment-action">
-            <form id="issue-report-abuse-form" method="post" action="{{h.url_for('issues_report_abuse', dataset_id=dataset.name, issue_id=issue.id)}}">
-              <button class="subtle-btn subtle-btn-abuse" type="submit" title="Report Abuse">
+            <form id="issue-report-form" method="post" action="{{h.url_for('issues_report', dataset_id=dataset.name, issue_id=issue.id)}}">
+              <button class="subtle-btn subtle-btn-abuse" type="submit" title="Report">
                 <i class="icon-flag"></i>
               </button>
             </form>
