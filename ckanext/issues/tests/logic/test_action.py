@@ -1,6 +1,9 @@
 from ckan import model
 from ckan.lib import search
-from ckan.new_tests import factories, helpers
+try:
+    from ckan.tests import factories, helpers
+except ImportError:
+    from ckan.new_tests import factories, helpers
 from ckan.plugins import toolkit
 
 from ckanext.issues.model import Issue
@@ -122,7 +125,7 @@ class TestIssueComment(object):
         assert_equals(comments[0]['comment'], 'some comment')
 
 
-class TestIssueList(object):
+class TestIssueSearch(object):
     def teardown(self):
         helpers.reset_db()
         search.clear()
@@ -135,22 +138,32 @@ class TestIssueList(object):
                                                 dataset_id=dataset['id'],
                                                 description=i)
                           for i in range(0, 10)]
+        search_res = helpers.call_action('issue_search',
+                                         context={'user': user['name']},
+                                         dataset_id=dataset['id'],
+                                         sort='oldest')
+        issues_list = search_res['results']
+        assert_equals([i['id'] for i in created_issues],
+                      [i['id'] for i in issues_list])
+        assert_equals(search_res['count'], 10)
+
+    def test_list_all_issues_for_organization(self):
+        user = factories.User()
+        org = factories.Organization(user=user)
+        dataset = factories.Dataset(owner_org=org['id'])
+
+        created_issues = [issue_factories.Issue(user=user, user_id=user['id'],
+                                                dataset_id=dataset['id'],
+                                                description=i)
+                          for i in range(0, 10)]
         issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
-                                          dataset_id=dataset['id'],
-                                          sort='oldest')
+                                          organization_id=org['id'],
+                                          sort='oldest')['results']
         assert_equals([i['id'] for i in created_issues],
                       [i['id'] for i in issues_list])
 
-    def test_list_all_issues_for_dataset_without_dataset_id_fails(self):
-        user = factories.User()
-        assert_raises(
-            toolkit.ValidationError,
-            helpers.call_action,
-            'issue_search',
-            context={'user': user['name']})
-
-    def test_limit(self):
+    def test_list_all_issues(self):
         user = factories.User()
         dataset = factories.Dataset()
 
@@ -160,11 +173,27 @@ class TestIssueList(object):
                           for i in range(0, 10)]
         issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
+                                          sort='oldest')['results']
+        assert_equals([i['id'] for i in created_issues],
+                      [i['id'] for i in issues_list])
+
+    def test_limit(self):
+        user = factories.User()
+        dataset = factories.Dataset()
+
+        created_issues = [issue_factories.Issue(user=user, user_id=user['id'],
+                                                dataset_id=dataset['id'],
+                                                description=i)
+                          for i in range(0, 10)]
+        search_res = helpers.call_action('issue_search',
+                                          context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest',
                                           limit=5)
+        issues_list = search_res['results']
         assert_equals([i['id'] for i in created_issues][:5],
                       [i['id'] for i in issues_list])
+        assert_equals(search_res['count'], 10)
 
     def test_offset(self):
         user = factories.User()
@@ -178,7 +207,7 @@ class TestIssueList(object):
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
                                           sort='oldest',
-                                          offset=5)
+                                          offset=5)['results']
         assert_equals([i['id'] for i in created_issues][5:],
                       [i['id'] for i in issues_list])
 
@@ -195,7 +224,7 @@ class TestIssueList(object):
                                           dataset_id=dataset['id'],
                                           sort='oldest',
                                           offset=5,
-                                          limit=3)
+                                          limit=3)['results']
         assert_equals([i['id'] for i in created_issues][5:8],
                       [i['id'] for i in issues_list])
 
@@ -205,11 +234,11 @@ class TestIssueList(object):
 
         issues = [issue_factories.Issue(user=user, user_id=user['id'],
                                dataset_id=dataset['id'], description=i)
-            for i in range(0, 10)]
+                  for i in range(0, 10)]
         issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
-                                          sort='newest')
+                                          sort='newest')['results']
         assert_equals(list(reversed([i['id'] for i in issues])),
                       [i['id'] for i in issues_list])
 
@@ -234,7 +263,7 @@ class TestIssueList(object):
         issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
-                                          sort='least_commented')
+                                          sort='least_commented')['results']
         assert_equals(reordered_ids, [i['id'] for i in issues_list])
         assert_equals([1, 2, 3], [i['comment_count'] for i in issues_list])
 
@@ -261,7 +290,7 @@ class TestIssueList(object):
         issues_list = helpers.call_action('issue_search',
                                           context={'user': user['name']},
                                           dataset_id=dataset['id'],
-                                          sort='most_commented')
+                                          sort='most_commented')['results']
         assert_equals(reordered_ids, [i['id'] for i in issues_list])
         assert_equals([3, 2, 1, 0], [i['comment_count'] for i in issues_list])
 
@@ -277,7 +306,7 @@ class TestIssueList(object):
         filtered_issues = helpers.call_action('issue_search',
                                               context={'user': user['name']},
                                               dataset_id=dataset['id'],
-                                              q='title')
+                                              q='title')['results']
 
         expected_issue_ids = [i['id'] for i in issues[:2]]
         assert_equals(expected_issue_ids, [i['id'] for i in filtered_issues])

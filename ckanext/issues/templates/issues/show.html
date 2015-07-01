@@ -108,7 +108,7 @@
       </div>
       {% if can_edit_issue %}
         <div class="issue-comment-label">
-           Owner 
+           Owner SPAM{{comment.spam_state}}
         </div>
       {% endif %}
       {% if comment.spam_state == 'hidden' %}

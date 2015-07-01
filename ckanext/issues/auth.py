@@ -20,6 +20,18 @@ def issue_auth(context, data_dict, privilege='package_update'):
 def issue_show(context, data_dict):
     return issue_auth(context, data_dict, 'package_show')
 
+@p.toolkit.auth_allow_anonymous_access
+def issue_search(context, data_dict):
+    try:
+        p.toolkit.check_access('package_search', context, dict(data_dict))
+        return {'success': True}
+    except p.toolkit.NotAuthorized:
+        return {
+            'success': False,
+            'msg': p.toolkit._('User {0} not authorized for action'
+                    .format(str(context['user'])))
+        }
+
 def issue_create(context, data_dict):
     # Any logged in user ...?
     return issue_auth(context, data_dict, 'package_create')

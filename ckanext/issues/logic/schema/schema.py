@@ -1,6 +1,7 @@
 from ckan.plugins import toolkit
 from ckanext.issues.logic.validators import (
     as_package_id,
+    as_org_id,
     is_valid_sort,
     is_valid_status,
     issue_exists,
@@ -12,6 +13,7 @@ ignore_missing = toolkit.get_validator('ignore_missing')
 package_exists = toolkit.get_validator('package_id_or_name_exists')
 resource_id_exists = toolkit.get_validator('resource_id_exists')
 user_exists = toolkit.get_validator('user_id_or_name_exists')
+organization_exists = toolkit.get_validator('group_id_or_name_exists')
 is_natural_number = toolkit.get_validator('natural_number_validator')
 is_positive_integer = toolkit.get_validator('is_positive_integer')
 boolean_validator = toolkit.get_validator('boolean_validator')
@@ -21,8 +23,9 @@ def issue_create_schema():
     return {
         'title': [not_missing, unicode],
         'description': [ignore_missing, unicode],
-        'dataset_id':[ not_missing, unicode, package_exists, as_package_id],
+        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
     }
+
 
 def issue_update_schema():
     return {
@@ -38,22 +41,15 @@ def issue_update_schema():
 
 def issue_search_schema():
     return {
-        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+        'dataset_id': [ignore_missing, unicode, as_package_id],
+        'organization_id': [ignore_missing, unicode, as_org_id],
         'status': [ignore_missing, unicode, is_valid_status],
         'sort': [ignore_missing, unicode, is_valid_sort],
         'limit': [ignore_missing, is_natural_number],
         'offset': [ignore_missing, is_natural_number],
         'q': [ignore_missing, unicode],
         'spam_state': [ignore_missing, unicode],
-    }
-
-
-def issue_count_schema():
-    return {
-        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
-        'status': [ignore_missing, unicode, is_valid_status],
-        'q': [ignore_missing, unicode],
-        'spam_state': [ignore_missing, unicode],
+        'include_datasets': [ignore_missing, bool],
     }
 
 
@@ -78,10 +74,10 @@ def issue_comment_report_spam_schema():
     }
 
 
-def issue_home_controller_schema():
+def issue_dataset_controller_schema():
     return {
         'status': [ignore_missing, unicode],
-        'sort': [ignore_missing, unicode ],
+        'sort': [ignore_missing, unicode],
         'page': [ignore_missing, is_positive_integer],
         'per_page': [ignore_missing, is_positive_integer],
         'q': [ignore_missing, unicode],

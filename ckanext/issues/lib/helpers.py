@@ -94,7 +94,7 @@ def issues_enabled(dataset):
         if dataset['name'] in datasets_with_issues_enabled:
             return True
     else:
-        extras = dataset.get('extras')
+        extras = dataset.get('extras', [])
         for extra in extras:
             if extra.get('key') == 'issues_enabled':
                 return toolkit.asbool(extra.get('value'))

@@ -111,9 +111,9 @@ class TestSearchBox(helpers.FunctionalTestBase):
 
         self.app = self._get_test_app()
 
-    def test_search_box_appears_issue_home_page(self):
+    def test_search_box_appears_issue_dataset_page(self):
         response = self.app.get(
-            url=toolkit.url_for('issues_home',
+            url=toolkit.url_for('issues_dataset',
                                 package_id=self.dataset['id'],
                                 id=self.issue['id']),
         )
@@ -134,13 +134,13 @@ class TestSearchBox(helpers.FunctionalTestBase):
                                title=title)
          for title in ['blah', 'issue']]
 
-        issue_home = self.app.get(
-            url=toolkit.url_for('issues_home',
+        issue_dataset = self.app.get(
+            url=toolkit.url_for('issues_dataset',
                                 package_id=self.dataset['id'],
                                 id=self.issue['id']),
         )
 
-        search_form = issue_home.forms[1]
+        search_form = issue_dataset.forms[1]
         search_form['q'] = 'title'
 
         res = search_form.submit()
@@ -213,7 +213,7 @@ class TestDelete(helpers.FunctionalTestBase):
         response = response.follow()
         assert_equals(200, response.status_int)
         assert_equals(
-            toolkit.url_for('issues_home', package_id=self.dataset['id']),
+            toolkit.url_for('issues_dataset', package_id=self.dataset['id']),
             response.request.path
         )
         # check the issue is now deleted.
@@ -284,3 +284,33 @@ class TestDelete(helpers.FunctionalTestBase):
         )
         form = response.forms['issue-comment-form']
         assert_not_in('Delete', form.text)
+
+
+class TestOrganization(helpers.FunctionalTestBase):
+    def setup(self):
+        super(TestOrganization, self).setup()
+        self.owner = factories.User()
+        self.org = factories.Organization(user=self.owner)
+        self.dataset = factories.Dataset(user=self.owner,
+                                         owner_org=self.org['name'])
+        self.issue = issue_factories.Issue(user=self.owner,
+                                           user_id=self.owner['id'],
+                                           dataset_id=self.dataset['id'])
+        self.app = self._get_test_app()
+
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_basic(self):
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.get(
+            url=toolkit.url_for('issues_for_organization',
+                                org_id=self.org['id']),
+            extra_environ=env
+        )
+        body = response.body.decode('utf8')
+        assert '1 issue found' in body
+        assert self.dataset['title'] in body
+        assert self.issue['title'] in body
+        assert self.issue['description'] not in body

@@ -6,12 +6,14 @@ from ckan.model import meta, User, Package, Session, Resource
 import ckan.lib.helpers as h
 
 import ckan.model.domain_object as domain_object
+from ckan.lib.dictization import model_dictize
 from datetime import datetime
 import logging
 
 import enum
 from sqlalchemy import func, types, Table, ForeignKey, Column
 from sqlalchemy.orm import relation, backref
+from sqlalchemy.sql.expression import or_
 
 log = logging.getLogger(__name__)
 
@@ -147,9 +149,45 @@ class Issue(domain_object.DomainObject):
         return session.query(cls).filter(cls.id == reference).first()
 
     @classmethod
-    def get_issues_for_dataset(cls, dataset_id, offset=None, limit=None,
-                               status=None, sort=None, q=None,
-                               spam_state=None, session=Session):
+    def apply_filters_to_an_issue_query(
+            cls, query,
+            organization_id=None, dataset_id=None,
+            status=None, q=None,
+            spam_state=None,
+            include_sub_organizations=False):
+        if dataset_id:
+            query = query.filter(cls.dataset_id == dataset_id)
+        if organization_id:
+            org = model.Group.get(organization_id)
+            assert org
+            query = query.join(model.Package,
+                               cls.dataset_id == model.Package.id)
+            if include_sub_organizations:
+                orgs = (org_.id
+                        for org_
+                        in org.get_children_groups(type='organization'))
+                query = query.filter(model.Package.owner_org.in_(orgs))
+            else:
+                query = query.filter(model.Package.owner_org == org.id)
+
+        if q:
+            search_expr = '%{0}%'.format(q)
+            query = query.filter(or_(cls.title.ilike(search_expr),
+                                     cls.description.ilike(search_expr)))
+
+        if status:
+            query = query.filter(cls.status == status)
+        if spam_state:
+            query = query.filter(cls.spam_state == spam_state)
+        return query
+
+    @classmethod
+    def get_issues(cls, organization_id=None, dataset_id=None,
+                   offset=None, limit=None,
+                   status=None, sort=None, q=None,
+                   spam_state=None, session=Session,
+                   include_sub_organizations=False,
+                   include_datasets=False):
         comment_count = func.count(IssueComment.id).label('comment_count')
         last_updated = func.max(IssueComment.created).label('updated')
         query = session.query(
@@ -157,43 +195,50 @@ class Issue(domain_object.DomainObject):
             model.User.name,
             comment_count,
             last_updated
-        ).filter(cls.dataset_id == dataset_id)\
-         .join(User, Issue.user_id == User.id)\
-         .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
-         .group_by(model.User.name, Issue.id)
-
-        if q:
-            query = query.filter(cls.title.ilike('%{0}%'.format(q)))
-
-        if status:
-            query = query.filter(cls.status == status)
-        if spam_state:
-            query = query.filter(cls.spam_state == spam_state)
+        )
+        query = cls.apply_filters_to_an_issue_query(
+            query,
+            organization_id=organization_id, dataset_id=dataset_id,
+            status=status, q=q,
+            spam_state=spam_state,
+            include_sub_organizations=include_sub_organizations)
         if sort:
             try:
                 query = IssueFilter.get_filter(sort)(query)
             except InvalidIssueFilterException:
                 pass
+
+        query = query.join(User, Issue.user_id == User.id)\
+            .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
+            .group_by(model.User.name, Issue.id)
+
+        count = query.count()
+
         if offset:
             query = query.offset(offset)
         if limit:
             query = query.limit(limit)
 
-        return (issue.as_plain_dict(user, comment_count, updated)
-                for (issue, user, comment_count, updated) in query.all())
+        return {
+            'count': count,
+            'results': [
+                issue.as_plain_dict(user, comment_count_, updated,
+                                    include_dataset=include_datasets)
+                for (issue, user, comment_count_, updated) in query.all()]
+            }
 
     @classmethod
-    def get_count_for_dataset(cls, dataset_id, status=None, sort=None, q=None,
-                              spam_state=None, session=Session):
-        query = session.query(func.count(cls.id)).\
-            filter(cls.dataset_id == dataset_id)
-        if q:
-            query = query.filter(cls.title.ilike('%{0}%'.format(q)))
-
-        if status:
-            query = query.filter(cls.status == status)
-        if spam_state:
-            query = query.filter(cls.spam_state == spam_state)
+    def get_count_for_dataset(cls, dataset_id=None, organization_id=None,
+                              status=None, sort=None, q=None,
+                              spam_state=None, session=Session,
+                              include_sub_organizations=False):
+        query = session.query(func.count(cls.id))
+        query = cls.apply_filters_to_an_issue_query(
+            query,
+            organization_id=organization_id, dataset_id=dataset_id,
+            status=status, q=q,
+            spam_state=spam_state,
+            include_sub_organizations=include_sub_organizations)
         return query.one()[0]
 
     def increase_spam_count(self, session):
@@ -224,7 +269,7 @@ class Issue(domain_object.DomainObject):
                                         id=self.id)
         return out
 
-    def as_plain_dict(self, user, comment_count, updated):
+    def as_plain_dict(self, user, comment_count, updated, include_dataset=False):
         '''Used for listing issues against a dataset
 
         Similar to as_dict, but we're not including full comments or the full
@@ -238,6 +283,10 @@ class Issue(domain_object.DomainObject):
             'comment_count': comment_count,
             'updated': updated,
         })
+        if include_dataset:
+            pkg = self.dataset
+            context = {'model': model, 'session': model.Session}
+            out['dataset'] = model_dictize.package_dictize(pkg, context)
         return out
 
 
@@ -297,6 +346,7 @@ def define_issue_tables():
         Column('created', types.DateTime, default=datetime.now,
                nullable=False))
 
+    # TODO get rid of these foreign key relations - not allowed for extensions
     issue_table = Table(
         'issue',
         meta.metadata,

@@ -21,7 +21,7 @@
     </div>
     <div>
       {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status), ('spam_state', spam_state)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=true, no_title=true %}
-      <h2>
+      <h2 id="issues-found">
         {{ ungettext('{number} issue found', '{number} issues found', pagination.total_count) .format(number=pagination.total_count) }}
       </h2>
     </div>
@@ -100,38 +100,6 @@
 {% endblock %}
 
 {% block secondary_content %}
-<div class="module module-narrow module-shallow">
-  <h2 class="module-heading">
-    <i class="icon-medium icon-filter"></i>
-    Status
-  </h2>
-  <ul class="unstyled nav nav-simple">
-    {% for valid_status in ['open', 'closed'] %}
-    <li class="nav-item {% if status==valid_status%}active{% endif %}">
-    {% set href = h.replace_url_param(new_params={'status': valid_status}, extras={'package_id':pkg['id']}) %}
-    <a href={{ href }}>
-      <span>{{_(valid_status.title())}}</span>
-    </a>
-    </li>
-    {% endfor %}
-  </ul>
-  {% if h.check_access('package_update', {'id': pkg.id }) %}
-  <h2 class="module-heading">
-    <i class="icon-medium icon-filter"></i>
-    Spam State
-  </h2>
-  <ul class="unstyled nav nav-simple nav-facet">
-    {% for valid_spam_state in ['visible', 'hidden'] %}
-    <li class="nav-item {% if spam_state==valid_spam_state%}active{% endif %}">
-    {% set href = h.remove_url_param('spam_state', extras={'package_id':pkg['id']}) if spam_state==valid_spam_state else h.replace_url_param(new_params={'spam_state': valid_spam_state}, extras={'package_id':pkg['id']}) %}
-    <a href={{ href }}>
-      <span>{{_(valid_spam_state.title())}}</span>
-    </a>
-    </li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-
-</div>
+    {{ common.search_options_sidebar(user_can_change_spam_state=h.check_access('package_update', {'id': pkg.id }), url_params={'package_id':pkg['id']}) }}
 {% endblock %}
 
