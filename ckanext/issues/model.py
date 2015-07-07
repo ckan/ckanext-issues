@@ -33,10 +33,15 @@ def setup():
         define_issue_tables()
         log.debug('Issue tables defined in memory')
 
-    if model.package_table.exists():
+    if not model.package_table.exists():
+        # during tests?
+        return
+
+    if not issue_table.exists():
         issue_category_table.create(checkfirst=True)
         issue_table.create(checkfirst=True)
         issue_comment_table.create(checkfirst=True)
+        log.debug('Issue tables created')
 
         # add default categories if they don't already exist
         session = model.meta.Session()
@@ -49,10 +54,11 @@ def setup():
                 category = IssueCategory(category_name)
                 category.description = category_desc
                 session.add(category)
-        session.commit()
-        log.debug('Issue tables created')
+        if session.new:
+            log.debug('Issue categories created')
+            session.commit()
     else:
-        log.debug('Issue Extension tables already exist')
+        log.debug('Issue tables already exist')
 
 ISSUE_CATEGORY_NAME_MAX_LENGTH = 100
 DEFAULT_CATEGORIES = {u"broken-resource-link": "Broken data link",
