@@ -67,8 +67,11 @@ def issue_update(context, data_dict):
     # all other cases not allowed
     return {
         'success': False,
-        'msg': p.toolkit._('User {0} not authorized for action on issue {1}'
-                .format(str(user), data_dict['id']))
+        'msg': p.toolkit._(
+            'User {0} not authorized for action on issue {1}'.format(
+                str(user),
+                data_dict['id'])
+            )
     }
 
 
@@ -77,13 +80,16 @@ def issue_delete(context, data_dict):
     return issue_auth(context, data_dict)
 
 
+@p.toolkit.auth_disallow_anonymous_access
 def issue_report(context, data_dict):
-    if context.get('user'):
-        return {'success': True}
-    else:
-        return {'success': False,
-                'msg': p.toolkit._("You must be logged in to report an issue")}
+    return {'success': True}
+    #    if context.get('user'):
+    #    return {'success': True}
+    #else:
+    #    return {'success': False,
+    #            'msg': p.toolkit._("You must be logged in to report an issue")}
+
 
 @p.toolkit.auth_disallow_anonymous_access
-def issue_reset_spam_state(context, data_dict):
-    return issue_auth(context, data_dict, 'package_update')
+def issue_report_clear(context, data_dict):
+    return {'success': True}

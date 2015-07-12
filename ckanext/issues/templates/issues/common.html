@@ -1,9 +1,16 @@
-{% macro issue_item(issue, pkg) -%}
+{% macro issue_item(issue, pkg, current_user) -%}
       <li class="list-group-item">
         <span class="list-group-item-number">#{{issue.id}}</span>
-        <div class="issue-comment-label">
-          {% if issue.spam_state == 'hidden' %}Marked as spam{%endif%}
-        </div>
+        {% set has_been_reported = h.issues_user_has_reported_issue(current_user, issue.abuse_reports) %}
+        {% if issue.spam_state == 'hidden' %}
+          <div class="issue-comment-label">
+            Abuse
+          </div>
+        {% elif has_been_reported %}
+          <div class="issue-comment-label">
+            <i class="icon-flag"></i>Notified to admin
+          </div>
+        {% endif%}
         <h4 class="list-group-item-name">
           {% set issue_icon = 'spam' if issue.spam_state == 'hidden' else issue.status %}
           <span class="{{ issue_icon }} icon" title="{{issue.status}} issue"><i class="icon-exclamation-sign"></i></span>

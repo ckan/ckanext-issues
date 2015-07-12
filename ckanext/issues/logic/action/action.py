@@ -7,12 +7,14 @@ import ckan.model as model
 from ckan.logic import validate
 import ckanext.issues.model as issuemodel
 from ckanext.issues.logic import schema
+from ckanext.issues.exception import ReportAlreadyExists
 try:
     import ckan.authz as authz
 except ImportError:
     import ckan.new_authz as authz
 
 from pylons import config
+from sqlalchemy.exc import IntegrityError
 
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
@@ -203,31 +205,68 @@ def issue_search(context, data_dict):
     dataset_id = data_dict.get('dataset_id')
     organization_id = data_dict.get('organization_id')
     spam_state = 'visible'
+    can_update = False
     if organization_id:
         try:
             p.toolkit.check_access('organization_update', context,
                                    data_dict={'id': organization_id})
             spam_state = data_dict.get('spam_state', None)
+            can_update = True
         except p.toolkit.NotAuthorized:
             pass
     elif dataset_id:
         try:
             p.toolkit.check_access('package_update', context,
-                                data_dict={'id': dataset_id})
+                                   data_dict={'id': dataset_id})
             spam_state = data_dict.get('spam_state', None)
+            can_update = True
         except p.toolkit.NotAuthorized:
             pass
     elif authz.is_sysadmin(user):
         spam_state = data_dict.get('spam_state', None)
+        can_update = True
 
     data_dict['spam_state'] = spam_state
     data_dict.pop('__extras', None)
-    data_dict['include_datasets'] = \
-        p.toolkit.asbool(data_dict.get('include_datasets'))
+    include_datasets = p.toolkit.asbool(data_dict.get('include_datasets'))
+    include_reports = p.toolkit.asbool(data_dict.get('include_reports'))
+    data_dict['include_datasets'] = include_datasets
 
-    return issuemodel.Issue.get_issues(
+    query = issuemodel.Issue.get_issues(
         session=context['session'],
         **data_dict)
+
+    count = query.count()
+    results = [issue.as_plain_dict(u, comment_count_, updated,
+                                   include_dataset=include_datasets,
+                                   include_reports=include_reports)
+               for (issue, u, comment_count_, updated) in query.all()]
+
+    if include_reports and not can_update:
+        user_obj = model.User.get(user)
+        if user_obj:
+            results = _filter_reports_for_user(user_obj.id, results)
+
+    return {
+        'count': count,
+        'results': results,
+    }
+
+
+def _filter_reports_for_user(user_id, results):
+    '''Filter the abuse reports
+
+    If the user does not have update permissions on the dataset, then they will
+    only be able to see reports that they have made, this function filters out
+    any reports made by other users
+    '''
+    for result in results:
+        if result.get('abuse_reports'):
+            if user_id in result['abuse_reports']:
+                result['abuse_reports'] = [user_id]
+            else:
+                result['abuse_reports'] = []
+    return results
 
 
 @validate(schema.issue_delete_schema)
@@ -295,6 +334,15 @@ def issue_report(context, data_dict):
 
     issue_id = data_dict['issue_id']
     issue = issuemodel.Issue.get(issue_id, session=session)
+    user_obj = model.User.get(context['user'])
+    #session.begin_nested()
+    try:
+        issue.report_abuse(session, user_obj.id)
+    except IntegrityError:
+        session.rollback()
+        raise ReportAlreadyExists(
+            'Issue has already been reported by this user'
+        )
     try:
         # if you're an org admin/editor (can edit the dataset, it gets marked
         # as spam immediately
@@ -306,17 +354,18 @@ def issue_report(context, data_dict):
         }
         p.toolkit.check_access('package_update', context,
                                data_dict={'id': dataset_id})
-        issue.mark_as_spam(session)
+
+        issue.change_visiblity(session, u'hidden')
     except p.toolkit.NotAuthorized:
-        issue.increase_spam_count(session)
-        max_strikes = config.get('ckanext.issues.spam_max_strikes')
-        if max_strikes and issue.spam_count > p.toolkit.asint(max_strikes):
-            issue.mark_as_spam(session)
+        max_strikes = config.get('ckanext.issues.max_strikes')
+        if max_strikes and len(issue.abuse_reports) >= p.toolkit.asint(max_strikes):
+            issue.change_visiblity(session, u'hidden')
+    session.commit()
 
 
 @validate(schema.issue_report_schema)
-def issue_reset_spam_state(context, data_dict):
-    '''Reset the spam status of a issue
+def issue_report_clear(context, data_dict):
+    '''Clears the reports on issue
 
     :param dataset_id: the name or id of the dataset that the issue item
         belongs to
@@ -324,12 +373,34 @@ def issue_reset_spam_state(context, data_dict):
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
     '''
-    p.toolkit.check_access('issue_reset_spam_state', context, data_dict)
+    p.toolkit.check_access('issue_report_clear', context, data_dict)
     session = context['session']
 
     issue_id = data_dict['issue_id']
     issue = issuemodel.Issue.get(issue_id, session=session)
-    issue.mark_as_not_spam(session)
+
+    user = context['user']
+    user_obj = model.User.get(user)
+    user_id = user_obj.id
+    try:
+        # if you're an org admin/editor (can edit the dataset, it gets marked
+        # as spam immediately
+        dataset_id = data_dict['dataset_id']
+        package_context = {
+            'user': context['user'],
+            'session': session,
+            'model': model,
+        }
+        p.toolkit.check_access('package_update', package_context,
+                               data_dict={'id': dataset_id})
+        issue.clear_all_abuse_reports(session)
+    except p.toolkit.NotAuthorized:
+        issue.clear_abuse_report(session, user_id)
+        max_strikes = config.get('ckanext.issues.spam_max_strikes')
+        if max_strikes and len(issue.abuse_reports) <= p.toolkit.asint(max_strikes):
+            issue.change_visiblity(session, u'visible')
+    session.commit()
+    return True
 
 
 @validate(schema.issue_comment_report_schema)
@@ -342,7 +413,7 @@ def issue_comment_reset_spam_state(context, data_dict):
     :param issue_comment_id: the id of the issue the comment belongs to
     :type issue_comment_id: integer
     '''
-    p.toolkit.check_access('issue_reset_spam_state', context, data_dict)
+    p.toolkit.check_access('issue_mark_as_not_abuse', context, data_dict)
     session = context['session']
 
     issue_comment_id = data_dict['issue_comment_id']
@@ -388,3 +459,43 @@ def issue_comment_report(context, data_dict):
         if max_strikes:
             if issue_comment.spam_count > p.toolkit.asint(max_strikes):
                 issue_comment.mark_as_spam(session)
+
+
+@validate(schema.issue_report_schema)
+def issue_report_show(context, data_dict):
+    '''Fetch the absuse reports for an issue
+
+    If you are a package owner, this returns the full list of users that have
+    reported this issue, otherwise it will return whether the user has marked
+    the issue as abuse
+
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to
+    :type dataset_id: string
+    :param issue_id: the id of the issue the comment belongs to
+    :type issue_id: integer
+    '''
+    p.toolkit.check_access('issue_report', context, data_dict)
+    session = context['session']
+
+    issue_id = data_dict['issue_id']
+    user = context['user']
+    user_obj = model.User.get(user)
+    user_id = user_obj.id
+
+    try:
+        # if you're an org admin/editor (can edit the dataset, it gets marked
+        # as spam immediately
+        dataset_id = data_dict['dataset_id']
+        package_context = {
+            'user': context['user'],
+            'session': session,
+            'model': model,
+        }
+        p.toolkit.check_access('package_update', package_context,
+                               data_dict={'id': dataset_id})
+        reports = issuemodel.IssueReport.get_reports(session, issue_id)
+    except p.toolkit.NotAuthorized:
+        reports = issuemodel.IssueReport.get_reports_for_user(session, user_id,
+                                                              issue_id)
+    return [ i.user_id for i in reports ]

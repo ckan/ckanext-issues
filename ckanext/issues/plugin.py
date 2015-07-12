@@ -43,6 +43,8 @@ class IssuesPlugin(p.SingletonPlugin):
             'get_issues_per_page': helpers.get_issues_per_page,
             'issues_enabled': helpers.issues_enabled,
             'issues_list': helpers.issues_list,
+            'issues_user_has_reported_issue':
+                helpers.issues_user_has_reported_issue,
         }
 
     # IConfigurable
@@ -74,9 +76,9 @@ class IssuesPlugin(p.SingletonPlugin):
             m.connect('issues_report',
                       '/dataset/:dataset_id/issues/:issue_id/report',
                       action='report'),
-            m.connect('issues_reset_spam_state',
-                      '/dataset/:dataset_id/issues/:issue_id/reset_spam_state',
-                      action='reset_spam_state'),
+            m.connect('issues_report_clear',
+                      '/dataset/:dataset_id/issues/:issue_id/report_clear',
+                      action='report_clear'),
             m.connect('issues_comment_report',
                       '/dataset/:dataset_id/issues/:issue_id/comment/:comment_id/report',
                       action='report_comment'),
@@ -109,5 +111,5 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_update': auth.issue_update,
             'issue_delete': auth.issue_delete,
             'issue_report': auth.issue_report,
-            'issue_reset_spam_state': auth.issue_reset_spam_state,
+            'issue_report_clear': auth.issue_report_clear,
         }

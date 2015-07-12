@@ -2,6 +2,7 @@ from math import ceil
 
 from pylons import config
 
+from ckan import model
 from ckan.plugins import toolkit
 from ckan.lib import helpers
 from ckanext.issues.model import IssueFilter
@@ -122,3 +123,11 @@ def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
 
     issues = toolkit.get_action('issue_search')(data_dict=params)
     return issues
+
+
+def issues_user_has_reported_issue(user, abuse_reports):
+    user_obj = model.User.get(user)
+    if user_obj:
+        return user_obj.id in abuse_reports
+    else:
+        return False

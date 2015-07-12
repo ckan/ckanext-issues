@@ -145,22 +145,22 @@ class TestReport(helpers.FunctionalTestBase):
         )
         assert_equals(response.status_int, 404)
 
-    def test_reset_spam_state(self):
+    def test_mark_as_not_abuse(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
-            url=toolkit.url_for('issues_reset_spam_state',
+            url=toolkit.url_for('issues_mark_as_not_abuse',
                                 dataset_id=self.dataset['id'],
                                 issue_id=self.issue['id']),
             extra_environ=env,
         )
         response = response.follow()
-        assert_in('Issue unflagged as spam', response.body)
+        assert_in('Issue no longer marked as abuse', response.body)
 
-    def test_reset_spam_state_normal_user_returns_401(self):
+    def test_mark_as_not_abuse_normal_user_returns_401(self):
         user = factories.User()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = self.app.post(
-            url=toolkit.url_for('issues_reset_spam_state',
+            url=toolkit.url_for('issues_mark_as_not_abuse',
                                 dataset_id=self.dataset['id'],
                                 issue_id=self.issue['id']),
             extra_environ=env,
@@ -171,7 +171,7 @@ class TestReport(helpers.FunctionalTestBase):
     def test_reset_on_issue_that_does_not_exist(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
-            url=toolkit.url_for('issues_reset_spam_state',
+            url=toolkit.url_for('issues_mark_as_not_abuse',
                                 dataset_id=self.dataset['id'],
                                 issue_id='1235455'),
             extra_environ=env,

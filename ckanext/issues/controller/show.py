@@ -15,6 +15,14 @@ def show(issue_id, dataset_id, session):
 
     issue['assignee'] = _get_assigned_user(issue['assignee_id'], session)
 
+    reports = toolkit.get_action('issue_report_show')(
+        data_dict={
+            'issue_id': issue_id,
+            'dataset_id': dataset_id,
+        }
+    )
+    issue['abuse_reports'] = reports
+
     return {
         'issue': issue,
         'comment_count': comment_count,

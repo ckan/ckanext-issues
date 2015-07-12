@@ -15,6 +15,7 @@ from ckan.plugins import toolkit
 
 import ckanext.issues.model as issuemodel
 from ckanext.issues.controller import show
+from ckanext.issues.exception import ReportAlreadyExists
 from ckanext.issues.lib import helpers as issues_helpers
 from ckanext.issues.logic import schema
 from ckanext.issues.lib.helpers import Pagination, get_issues_per_page
@@ -326,10 +327,12 @@ class IssueController(BaseController):
                     data_dict={'issue_id': issue_id, 'dataset_id': dataset_id}
                 )
                 h.flash_success(_('Issue reported to an administrator'))
-                h.redirect_to('issues_show', package_id=dataset_id,
-                              id=issue_id)
             except toolkit.ValidationError:
                 toolkit.abort(404)
+            except ReportAlreadyExists:
+                h.flash_error(_('You have already reported this issue'))
+            h.redirect_to('issues_show', package_id=dataset_id,
+                          id=issue_id)
 
     def report_comment(self, dataset_id, issue_id, comment_id):
         dataset = self._before(dataset_id)
@@ -351,18 +354,18 @@ class IssueController(BaseController):
             except toolkit.ValidationError:
                 toolkit.abort(404)
 
-    def reset_spam_state(self, dataset_id, issue_id):
+    def report_clear(self, dataset_id, issue_id):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             try:
-                toolkit.get_action('issue_reset_spam_state')(
+                toolkit.get_action('issue_report_clear')(
                     data_dict={'issue_id': issue_id, 'dataset_id': dataset_id}
                 )
-                h.flash_success(_('Issue unflagged as spam'))
+                h.flash_success(_('Issue report cleared'))
                 h.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.NotAuthorized:
-                msg = _('You must be logged in to reset spam counters')\
+                msg = _('You must be logged in clear abuse reports')\
                     .format(issue_id)
                 toolkit.abort(401, msg)
             except toolkit.ValidationError:
@@ -497,7 +500,8 @@ def _search_issues(dataset_id=None, organization_id=None,
                    status=issuemodel.ISSUE_STATUS.open,
                    sort='newest', spam_state=None, q='', page=1,
                    per_page=get_issues_per_page()[0],
-                   include_datasets=False):
+                   include_datasets=False,
+                   include_reports=True):
     # use the function params to set default for our arguments to our
     # data_dict if needed
     params = locals().copy()

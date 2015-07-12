@@ -19,7 +19,7 @@
         </div>
       </h1>
     </div>
-    <div>
+   <div>
       {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status), ('spam_state', spam_state)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=true, no_title=true %}
       <h2 id="issues-found">
         {{ ungettext('{number} issue found', '{number} issues found', pagination.total_count) .format(number=pagination.total_count) }}
@@ -28,7 +28,7 @@
   {% if issues %}
     <ul id="issue-list" class="issue-list-group list-group">
       {% for issue in issues %}
-        {{ common.issue_item(issue, pkg) }}
+        {{ common.issue_item(issue, pkg, c.user) }}
       {% endfor %}
     </ul>
   {% else %}

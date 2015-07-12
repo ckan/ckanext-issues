@@ -50,6 +50,8 @@ def issue_search_schema():
         'q': [ignore_missing, unicode],
         'spam_state': [ignore_missing, unicode],
         'include_datasets': [ignore_missing, bool],
+        'include_reports': [ignore_missing, bool],
+        'include_sub_organizations': [ignore_missing, bool],
     }
 
 

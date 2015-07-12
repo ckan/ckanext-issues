@@ -6,10 +6,12 @@ except ImportError:
     from ckan.new_tests import factories, helpers
 from ckan.plugins import toolkit
 
-from ckanext.issues.model import Issue
+from ckanext.issues.model import Issue, IssueReport
 from ckanext.issues.tests import factories as issue_factories
+from ckanext.issues.exception import ReportAlreadyExists
 
 from nose.tools import assert_equals, assert_raises
+from nose.plugins.skip import SkipTest
 import mock
 
 
@@ -193,7 +195,7 @@ class TestIssueSearch(object):
         issues_list = search_res['results']
         assert_equals([i['id'] for i in created_issues][:5],
                       [i['id'] for i in issues_list])
-        assert_equals(search_res['count'], 10)
+        assert_equals(search_res['count'], 5)
 
     def test_offset(self):
         user = factories.User()
@@ -308,8 +310,9 @@ class TestIssueSearch(object):
                                               dataset_id=dataset['id'],
                                               q='title')['results']
 
-        expected_issue_ids = [i['id'] for i in issues[:2]]
-        assert_equals(expected_issue_ids, [i['id'] for i in filtered_issues])
+        expected_issue_ids = set([i['id'] for i in issues[:2]])
+        assert_equals(expected_issue_ids,
+                      set([i['id'] for i in filtered_issues]))
 
 
 class TestIssueUpdate(object):
@@ -432,11 +435,16 @@ class TestOrganizationUsersAutocomplete(object):
 
 
 class TestReportAnIssue(object):
+    def setup(self):
+        if model.engine_is_sqlite():
+            raise SkipTest('sqlite does not support session.begin_nested()'
+                           'used in issue_report')
+
     def teardown(self):
         helpers.reset_db()
         search.clear()
 
-    def test_increase_spam(self):
+    def test_report_an_issue(self):
         owner = factories.User()
         org = factories.Organization(user=owner)
         dataset = factories.Dataset(owner_org=org['name'])
@@ -451,10 +459,12 @@ class TestReportAnIssue(object):
         helpers.call_action('issue_report', context=context,
                             dataset_id=dataset['id'], issue_id=issue['id'])
 
-        result = helpers.call_action('issue_show', id=issue['id'])
-        assert_equals(1, result['spam_count'])
+        issue_obj = Issue.get(issue['id'])
+        assert_equals(len(issue_obj.abuse_reports), 1)
+        assert_equals(issue_obj.spam_state, 'visible')
 
-    def test_publisher_mark_spam(self):
+    def test_publisher_reports_an_issue(self):
+        '''this should immediately hide the issue'''
         owner = factories.User()
         org = factories.Organization(user=owner)
         dataset = factories.Dataset(owner_org=org['name'])
@@ -474,7 +484,44 @@ class TestReportAnIssue(object):
     @mock.patch('ckanext.issues.logic.action.action.config')
     def test_max_strikes_marks_as_spam(self, mock):
         #mock out the config value of max_strikes
-        mock.get.return_value = '0'
+        mock.get.return_value = '1'
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user_id=owner['id'],
+                                      dataset_id=dataset['id'])
+
+        user_0 = factories.User()
+        context = {
+            'user': user_0['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_report', context=context,
+                            dataset_id=dataset['id'], issue_id=issue['id'])
+
+        user_1 = factories.User()
+        context = {
+            'user': user_1['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_report', context=context,
+                            dataset_id=dataset['id'], issue_id=issue['id'])
+
+        issue_obj = Issue.get(issue['id'])
+        assert_equals(len(issue_obj.abuse_reports), 2)
+        assert_equals('hidden', issue_obj.spam_state)
+
+class TestReportAnIssueTwice(object):
+    def setup(self):
+        if model.engine_is_sqlite():
+            raise SkipTest('sqlite does not support session.begin_nested()'
+                           'used in issue_report')
+
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_report_twice(self):
         owner = factories.User()
         org = factories.Organization(user=owner)
         dataset = factories.Dataset(owner_org=org['name'])
@@ -489,11 +536,22 @@ class TestReportAnIssue(object):
         helpers.call_action('issue_report', context=context,
                             dataset_id=dataset['id'], issue_id=issue['id'])
 
-        result = helpers.call_action('issue_show', id=issue['id'])
-        assert_equals(1, result['spam_count'])
-        assert_equals('hidden', result['spam_state'])
+        assert_raises(
+            ReportAlreadyExists,
+            helpers.call_action,
+            'issue_report',
+            context=context,
+            dataset_id=dataset['id'],
+            issue_id=issue['id']
+        )
 
-    def test_reset_spam_state(self):
+
+class TestReportClear(object):
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_clear_as_publisher(self):
         owner = factories.User()
         org = factories.Organization(user=owner)
         dataset = factories.Dataset(owner_org=org['name'])
@@ -505,11 +563,108 @@ class TestReportAnIssue(object):
             'user': owner['name'],
             'model': model,
         }
-        helpers.call_action('issue_reset_spam_state', context=context,
+        helpers.call_action('issue_report_clear', context=context,
                             dataset_id=dataset['id'], issue_id=issue['id'])
         result = helpers.call_action('issue_show', id=issue['id'])
-        assert_equals(0, result['spam_count'])
         assert_equals('visible', result['spam_state'])
+
+        issue_obj = Issue.get(issue['id'])
+        assert_equals(len(issue_obj.abuse_reports), 0)
+
+    def test_clear_as_user(self):
+        owner = factories.User()
+        org = factories.Organization(user=owner)
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user_id=owner['id'],
+                                      dataset_id=dataset['id'],
+                                      spam_state='hidden')
+        user = factories.User()
+        model.Session.add(IssueReport(user['id'], issue['id']))
+        model.Session.commit()
+        context = {
+            'user': user['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_report_clear', context=context,
+                            dataset_id=dataset['id'], issue_id=issue['id'])
+        result = helpers.call_action('issue_show', id=issue['id'])
+        assert_equals('visible', result['spam_state'])
+
+        issue_obj = Issue.get(issue['id'])
+        assert_equals(len(issue_obj.abuse_reports), 0)
+
+
+class TestIssueReportShow(object):
+    def setup(self):
+        self.owner = factories.User()
+        self.org = factories.Organization(user=self.owner)
+        self.dataset = factories.Dataset(owner_org=self.org['name'])
+        self.issue = issue_factories.Issue(user_id=self.owner['id'],
+                                      dataset_id=self.dataset['id'])
+
+        context = {
+            'user': self.owner['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_report', context=context,
+                            dataset_id=self.dataset['id'],
+                            issue_id=self.issue['id'])
+
+        self.user_0 = factories.User()
+        context = {
+            'user': self.user_0['name'],
+            'model': model,
+        }
+        helpers.call_action('issue_report', context=context,
+                            dataset_id=self.dataset['id'],
+                            issue_id=self.issue['id'])
+
+
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_issue_report_show_for_publisher(self):
+        context = {
+            'user': self.owner['name'],
+            'model': model,
+        }
+        result = helpers.call_action(
+            'issue_report_show',
+             context=context,
+             dataset_id=self.dataset['id'],
+             issue_id=self.issue['id'],
+        )
+        assert_equals(set([self.owner['id'], self.user_0['id']]), set(result))
+
+
+    def test_issue_report_show_for_user(self):
+        context = {
+            'user': self.user_0['name'],
+            'model': model,
+        }
+        result = helpers.call_action(
+            'issue_report_show',
+             context=context,
+             dataset_id=self.dataset['id'],
+             issue_id=self.issue['id'],
+        )
+        assert_equals([self.user_0['id']], result)
+
+    def test_issue_report_show_for_other(self):
+        context = {
+            'user': factories.User()['name'],
+            'model': model,
+        }
+        result = helpers.call_action(
+            'issue_report_show',
+             context=context,
+             dataset_id=self.dataset['id'],
+             issue_id=self.issue['id'],
+        )
+        assert_equals([], result)
+
+
 
 class TestReportCommentSpam(object):
     def teardown(self):
@@ -585,7 +740,7 @@ class TestReportCommentSpam(object):
         assert_equals(1, result['comments'][0]['spam_count'])
         assert_equals('hidden', result['comments'][0]['spam_state'])
 
-    def test_reset_spam_state(self):
+    def test_clear_abuse_reports(self):
         owner = factories.User()
         org = factories.Organization(user=owner)
         dataset = factories.Dataset(owner_org=org['name'])

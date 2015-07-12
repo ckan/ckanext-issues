@@ -39,23 +39,27 @@
             </a>
           </div>
         {% endif %}
-        {% if c.user and comment.spam_state =='visible' %}
-          <div id="issue-report-abuse-button" class="issue-comment-action">
-            <form id="issue-report-form" method="post" action="{{h.url_for('issues_report', dataset_id=dataset.name, issue_id=issue.id)}}">
-              <button class="subtle-btn subtle-btn-abuse" type="submit" title="Report">
-                <i class="icon-flag"></i>
-              </button>
-            </form>
-          </div>
-        {% elif can_edit_issue %}
-          <div id="issue-not-spam-button" class="issue-comment-action">
-            <form id="issue-not-spam-button" method="post" action="{{h.url_for('issues_reset_spam_state', dataset_id=dataset.name, issue_id=issue.id)}}">
-              <button class="subtle-btn-active subtle-btn-abuse-active" type="submit" data-toggle="tooltip" title="Cancel abuse notification">
-                <i class="icon-flag"></i>
-                {{ _('Abuse - admin notified') }}
-              </button>
-            </form>
-          </div>
+        {% if c.user %}
+          {% set has_been_reported = h.issues_user_has_reported_issue(c.user, issue.abuse_reports) %}
+          {% if not has_been_reported %}
+            <div id="issue-report-abuse-button" class="issue-comment-action">
+              <form id="issue-report-form" method="post" action="{{h.url_for('issues_report', dataset_id=dataset.name, issue_id=issue.id)}}">
+                <button class="subtle-btn-active subtle-btn-abuse" type="submit" title="Report">
+                  <i class="icon-exclamation-sign"></i>
+                  Report abuse
+                </button>
+              </form>
+            </div>
+          {% else %}
+            <div id="issue-not-spam-button" class="issue-comment-action">
+              <form id="issue-not-spam-button" method="post" action="{{h.url_for('issues_report_clear', dataset_id=dataset.name, issue_id=issue.id)}}">
+                <button class="subtle-btn-active subtle-btn-abuse-active" type="submit" data-toggle="tooltip" title="You have reported this as abuse, cancel the report">
+                  <i class="icon-remove"></i>
+                  {{ _('Not abuse') }}
+                </button>
+              </form>
+            </div>
+          {% endif %}
         {% endif %}
       </div>
       {% if can_edit_issue %}

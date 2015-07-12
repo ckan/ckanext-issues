@@ -11,8 +11,8 @@ from datetime import datetime
 import logging
 
 import enum
-from sqlalchemy import func, types, Table, ForeignKey, Column
-from sqlalchemy.orm import relation, backref
+from sqlalchemy import func, types, Table, ForeignKey, Column, UniqueConstraint
+from sqlalchemy.orm import relation, backref, subqueryload
 from sqlalchemy.sql.expression import or_
 
 log = logging.getLogger(__name__)
@@ -20,6 +20,8 @@ log = logging.getLogger(__name__)
 issue_table = None
 issue_category_table = None
 issue_comment_table = None
+issue_report_table = None
+issue_comment_report_table = None
 
 
 def setup():
@@ -41,6 +43,8 @@ def setup():
         issue_category_table.create(checkfirst=True)
         issue_table.create(checkfirst=True)
         issue_comment_table.create(checkfirst=True)
+        issue_report_table.create(checkfirst=True)
+        issue_comment_report_table.create(checkfirst=True)
         log.debug('Issue tables created')
 
         # add default categories if they don't already exist
@@ -193,14 +197,15 @@ class Issue(domain_object.DomainObject):
                    status=None, sort=None, q=None,
                    spam_state=None, session=Session,
                    include_sub_organizations=False,
-                   include_datasets=False):
+                   include_datasets=False,
+                   include_reports=False):
         comment_count = func.count(IssueComment.id).label('comment_count')
         last_updated = func.max(IssueComment.created).label('updated')
         query = session.query(
             cls,
             model.User.name,
             comment_count,
-            last_updated
+            last_updated,
         )
         query = cls.apply_filters_to_an_issue_query(
             query,
@@ -218,20 +223,15 @@ class Issue(domain_object.DomainObject):
             .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
             .group_by(model.User.name, Issue.id)
 
-        count = query.count()
-
         if offset:
             query = query.offset(offset)
         if limit:
             query = query.limit(limit)
 
-        return {
-            'count': count,
-            'results': [
-                issue.as_plain_dict(user, comment_count_, updated,
-                                    include_dataset=include_datasets)
-                for (issue, user, comment_count_, updated) in query.all()]
-            }
+        if include_reports:
+            query = query.options(subqueryload('abuse_reports'))
+
+        return query
 
     @classmethod
     def get_count_for_dataset(cls, dataset_id=None, organization_id=None,
@@ -247,21 +247,32 @@ class Issue(domain_object.DomainObject):
             include_sub_organizations=include_sub_organizations)
         return query.one()[0]
 
-    def increase_spam_count(self, session):
-        self.spam_count += 1
-        model.Session.add(self)
-        model.Session.commit()
+    def report_abuse(self, session, user_id, **kwargs):
+        self.abuse_reports.append(IssueReport(user_id, self.id))
+        session.add(self)
+        session.flush()
+        return self
 
-    def mark_as_spam(self, session):
-        self.spam_state = u'hidden'
-        model.Session.add(self)
-        model.Session.commit()
+    def change_visiblity(self, session, visibility):
+        self.spam_state = visibility
+        session.add(self)
+        session.flush()
+        return self
 
-    def mark_as_not_spam(self, session):
-        self.spam_count = 0
-        self.spam_state = u'visible'
-        model.Session.add(self)
-        model.Session.commit()
+    def clear_abuse_report(self, session, user_id):
+        report = IssueReport.get_reports_for_user(session, user_id,
+                                                  self.id).first()
+        if report:
+            session.delete(report)
+            session.flush()
+        return self
+
+    def clear_all_abuse_reports(self, session):
+        self.change_visiblity(session, u'visible')
+        for r in self.abuse_reports:
+            session.delete(r)
+        session.flush()
+        return self
 
     def as_dict(self):
         out = super(Issue, self).as_dict()
@@ -275,7 +286,8 @@ class Issue(domain_object.DomainObject):
                                         id=self.id)
         return out
 
-    def as_plain_dict(self, user, comment_count, updated, include_dataset=False):
+    def as_plain_dict(self, user, comment_count, updated,
+                      include_dataset=False, include_reports=False):
         '''Used for listing issues against a dataset
 
         Similar to as_dict, but we're not including full comments or the full
@@ -293,6 +305,8 @@ class Issue(domain_object.DomainObject):
             pkg = self.dataset
             context = {'model': model, 'session': model.Session}
             out['dataset'] = model_dictize.package_dictize(pkg, context)
+        if include_reports:
+            out['abuse_reports'] = [i.user_id for i in self.abuse_reports]
         return out
 
 
@@ -337,10 +351,33 @@ class IssueComment(domain_object.DomainObject):
         model.Session.commit()
 
 
+class IssueReport(domain_object.DomainObject):
+    def __init__(self, user_id, issue_id):
+        self.user_id = user_id
+        self.issue_id = issue_id
+
+    @classmethod
+    def get_reports(cls, session, issue_id):
+        return session.query(cls).filter(cls.issue_id == issue_id)
+
+    @classmethod
+    def get_reports_for_user(cls, session, user_id, issue_id):
+        return session.query(cls).filter(cls.issue_id == issue_id).\
+            filter(cls.user_id == user_id)
+
+
+class IssueCommentReport(domain_object.DomainObject):
+    def __init__(self, user_id, issue_comment_id):
+        self.user_id = user_id
+        self.issue_comment_id = issue_comment_id
+
+
 def define_issue_tables():
     global issue_category_table
     global issue_table
     global issue_comment_table
+    global issue_report_table
+    global issue_comment_report_table
 
     issue_category_table = Table(
         'issue_category',
@@ -397,6 +434,29 @@ def define_issue_tables():
         Column('spam_state', types.Unicode, default=u'visible'),
     )
 
+    issue_report_table = Table(
+        'issue_report',
+        meta.metadata,
+        Column('id', types.Integer, primary_key=True, autoincrement=True),
+        Column('user_id', types.Unicode, nullable=False),
+        Column('issue_id', types.Integer,
+            ForeignKey('issue.id', ondelete='CASCADE'),
+            nullable=False, index=True),
+        UniqueConstraint('user_id', 'issue_id'),
+    )
+
+    issue_comment_report_table = Table(
+        'issue_comment_report',
+        meta.metadata,
+        Column('id', types.Integer, primary_key=True, autoincrement=True),
+        Column('user_id', types.Unicode, nullable=False),
+        Column('issue_comment_id', types.Integer,
+            ForeignKey('issue_comment.id', ondelete='CASCADE'),
+            nullable=False, index=True),
+        UniqueConstraint('user_id', 'issue_comment_id'),
+    )
+
+
     meta.mapper(
         Issue,
         issue_table,
@@ -441,6 +501,32 @@ def define_issue_tables():
                 Issue,
                 backref=backref('comments', cascade='all, delete-orphan'),
                 primaryjoin=issue_comment_table.c.issue_id.__eq__(Issue.id)
+            ),
+        }
+    )
+
+    meta.mapper(
+        IssueReport,
+        issue_report_table,
+        properties={
+            'issue': relation(
+                Issue,
+                backref=backref('abuse_reports'),
+                primaryjoin=issue_report_table.c.issue_id.__eq__(Issue.id)
+            ),
+        }
+    )
+
+    meta.mapper(
+        IssueCommentReport,
+        issue_comment_report_table,
+        properties={
+            'issue_comment': relation(
+                IssueComment,
+                backref=backref('abuse_reports'),
+                primaryjoin=issue_comment_report_table.c.issue_comment_id.__eq__(
+                    IssueComment.id
+                )
             ),
         }
     )
