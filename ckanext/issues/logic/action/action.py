@@ -144,8 +144,7 @@ def issue_update(context, data_dict):
     status_change = data_dict.get('status') and (data_dict.get('status') !=
                                                  issue.status)
 
-    ignored_keys = ['id', 'created', 'user', 'dataset_id', 'spam_count',
-                    'spam_state']
+    ignored_keys = ['id', 'created', 'user', 'dataset_id', 'spam_state']
     for k, v in data_dict.items():
         if k not in ignored_keys:
             setattr(issue, k, v)
@@ -477,7 +476,6 @@ def issue_comment_report(context, data_dict):
                                data_dict={'id': dataset_id})
         issue_comment.change_visibility(session, u'hidden')
     except p.toolkit.NotAuthorized:
-        issue_comment.increase_spam_count(session)
         max_strikes = config.get('ckanext.issues.max_strikes')
         if max_strikes:
             if len(issue_comment.abuse_reports) > p.toolkit.asint(max_strikes):

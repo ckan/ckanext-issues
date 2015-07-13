@@ -564,8 +564,7 @@ class TestReportClear(object):
         dataset = factories.Dataset(owner_org=org['name'])
         issue = issue_factories.Issue(user_id=owner['id'],
                                       dataset_id=dataset['id'],
-                                      spam_state='hidden',
-                                      spam_count='20')
+                                      spam_state='hidden')
         context = {
             'user': owner['name'],
             'model': model,
@@ -800,8 +799,7 @@ class TestCommentReportClearAsPublisher(object):
                                       dataset_id=dataset['id'])
         comment = issue_factories.IssueComment(user_id=owner['id'],
                                                issue_id=issue['id'],
-                                               spam_state='hidden',
-                                               spam_count='20')
+                                               spam_state='hidden')
         context = {
             'user': owner['name'],
             'model': model,

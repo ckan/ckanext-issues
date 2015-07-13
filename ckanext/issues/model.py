@@ -333,11 +333,6 @@ class IssueComment(domain_object.DomainObject):
         out['user'] = _user_dict(self.user)
         return out
 
-    def increase_spam_count(self, session):
-        self.spam_count += 1
-        model.Session.add(self)
-        model.Session.commit()
-
     def report_abuse(self, session, user_id, **kwargs):
         self.abuse_reports.append(IssueCommentReport(user_id, self.id))
         session.add(self)
@@ -439,7 +434,6 @@ def define_issue_tables():
         Column('resolved', types.DateTime),
         Column('created', types.DateTime, default=datetime.now,
                nullable=False),
-        Column('spam_count', types.Integer, default=0),
         Column('spam_state', types.Unicode, default=u'visible'),
     )
 
@@ -456,7 +450,6 @@ def define_issue_tables():
                nullable=False, index=True),
         Column('created', types.DateTime, default=datetime.now,
                nullable=False),
-        Column('spam_count', types.Integer, default=0),
         Column('spam_state', types.Unicode, default=u'visible'),
     )
 
