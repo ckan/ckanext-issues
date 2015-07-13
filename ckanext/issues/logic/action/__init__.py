@@ -8,7 +8,7 @@ from action import (
     issue_report_show,
     issue_report_clear,
     issue_comment_report,
-    issue_comment_reset_spam_state,
+    issue_comment_report_clear,
     issue_update,
     organization_users_autocomplete,
 )

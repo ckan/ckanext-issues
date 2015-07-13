@@ -45,7 +45,7 @@
             <div id="issue-report-abuse-button" class="issue-comment-action">
               <form id="issue-report-form" method="post" action="{{h.url_for('issues_report', dataset_id=dataset.name, issue_id=issue.id)}}">
                 <button class="subtle-btn-active subtle-btn-abuse" type="submit" title="Report">
-                  <i class="icon-exclamation-sign"></i>
+                  <i class="icon-flag"></i>
                   Report abuse
                 </button>
               </form>
@@ -66,6 +66,11 @@
         <div class="issue-comment-label">
            Owner 
         </div>
+        {% if comment.spam_state == 'hidden' %}
+          <div class="issue-comment-label">
+            Abuse
+          </div>
+        {% endif %}
       {% endif %}
       <div class="issue-header-text">
         <a href="{{comment.user.ckan_url}}" class="author">{{ comment.user.name}}</a>
@@ -90,21 +95,22 @@
   <div class="issue-comment">
     <div class="issue-comment-header">
       <div class="issue-comment-actions">
-        {% if c.user and comment.spam_state =='visible' %}
-          <div id="issue-report-abuse-button" class="issue-comment-action">
-            <form class="issue-comment-report-abuse-form" method="post" action="{{h.url_for('issues_comment_report_abuse', dataset_id=dataset.name, issue_id=issue.id, comment_id=comment.id)}}">
-              <button class="btn btn-small" type="submit" "title"="Report Abuse">
-                <i class="icon-flag"></i>
-                {{ _('Report Abuse') }}
-              </button>
-            </form>
-          </div>
-        {% elif can_edit_issue %}
+        {% set has_been_reported = h.issues_user_has_reported_issue(c.user, comment.abuse_reports) %}
+        {% if has_been_reported %}
           <div id="issue-not-spam-button" class="issue-comment-action">
-            <form id="issue-not-spam-button" method="post" action="{{h.url_for('issues_comment_reset_spam_state', dataset_id=dataset.name, issue_id=issue.id, comment_id=comment.id)}}">
+            <form id="issue-not-spam-button" method="post" action="{{h.url_for('issues_comment_report_clear', dataset_id=dataset.name, issue_id=issue.id, comment_id=comment.id)}}">
               <button class="btn btn-small" type="submit" "title"="Not abuse">
                 <i class="icon-flag"></i>
                 {{ _('Not abuse') }}
+              </button>
+            </form>
+          </div>
+        {% else %}
+          <div id="issue-report-abuse-button" class="issue-comment-action">
+            <form class="issue-comment-report-abuse-form" method="post" action="{{h.url_for('issues_comment_report', dataset_id=dataset.name, issue_id=issue.id, comment_id=comment.id)}}">
+              <button class="btn btn-small" type="submit" "title"="Report Abuse">
+                <i class="icon-flag"></i>
+                {{ _('Report Abuse') }}
               </button>
             </form>
           </div>
@@ -112,12 +118,12 @@
       </div>
       {% if can_edit_issue %}
         <div class="issue-comment-label">
-           Owner SPAM{{comment.spam_state}}
+           Owner
         </div>
       {% endif %}
       {% if comment.spam_state == 'hidden' %}
         <div class="issue-comment-label">
-           Marked as abuse
+           Abuse
         </div>
       {% endif %}
       <div class="issue-header-text">

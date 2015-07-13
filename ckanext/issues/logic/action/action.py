@@ -22,6 +22,18 @@ _get_or_bust = logic.get_or_bust
 log = logging.getLogger(__name__)
 
 
+def _add_reports(obj, can_edit, current_user):
+    reports = [r.user_id for r in obj.abuse_reports]
+    if can_edit:
+        return reports
+    else:
+        user_obj = model.User.get(current_user)
+        if user_obj and user_obj.id in reports:
+            return [user_obj.id]
+        else:
+            return []
+
+
 def issue_show(context, data_dict=None):
     '''Return a single issue.
 
@@ -30,12 +42,36 @@ def issue_show(context, data_dict=None):
 
     :rtype: dictionary
     '''
+
     id = _get_or_bust(data_dict, 'id')
     issue = issuemodel.Issue.get(id)
     context['issue'] = issue
     if issue is None:
         raise NotFound
     issue_dict = issue.as_dict()
+
+    user = context.get('user')
+    if user:
+        try:
+            can_edit = p.toolkit.check_access('package_update', context,
+                                            data_dict={'id': issue.dataset_id})
+        except p.toolkit.NotAuthorized:
+            can_edit = False
+    else:
+        can_edit = False
+
+    include_reports = data_dict.get('include_reports')
+
+    comments = []
+    for comment in issue.comments:
+        comment_dict = comment.as_dict()
+        if include_reports:
+            comment_dict['abuse_reports'] = _add_reports(comment, can_edit,
+                                                         context['user'])
+        comments.append(comment_dict)
+
+    issue_dict['comments'] = comments
+
     p.toolkit.check_access('issue_show', context, issue_dict)
     return issue_dict
 
@@ -341,7 +377,7 @@ def issue_report(context, data_dict):
     except IntegrityError:
         session.rollback()
         raise ReportAlreadyExists(
-            'Issue has already been reported by this user'
+            p.toolkit._('Issue has already been reported by this user')
         )
     try:
         # if you're an org admin/editor (can edit the dataset, it gets marked
@@ -383,8 +419,6 @@ def issue_report_clear(context, data_dict):
     user_obj = model.User.get(user)
     user_id = user_obj.id
     try:
-        # if you're an org admin/editor (can edit the dataset, it gets marked
-        # as spam immediately
         dataset_id = data_dict['dataset_id']
         package_context = {
             'user': context['user'],
@@ -396,30 +430,11 @@ def issue_report_clear(context, data_dict):
         issue.clear_all_abuse_reports(session)
     except p.toolkit.NotAuthorized:
         issue.clear_abuse_report(session, user_id)
-        max_strikes = config.get('ckanext.issues.spam_max_strikes')
+        max_strikes = config.get('ckanext.issues.max_strikes')
         if max_strikes and len(issue.abuse_reports) <= p.toolkit.asint(max_strikes):
             issue.change_visiblity(session, u'visible')
     session.commit()
     return True
-
-
-@validate(schema.issue_comment_report_schema)
-def issue_comment_reset_spam_state(context, data_dict):
-    '''Reset the spam status of a issue_comment
-
-    :param dataset_id: the name or id of the dataset that the issue item
-        belongs to
-    :type dataset_id: string
-    :param issue_comment_id: the id of the issue the comment belongs to
-    :type issue_comment_id: integer
-    '''
-    p.toolkit.check_access('issue_mark_as_not_abuse', context, data_dict)
-    session = context['session']
-
-    issue_comment_id = data_dict['issue_comment_id']
-    issue_comment = issuemodel.IssueComment.get(issue_comment_id,
-                                                session=session)
-    issue_comment.mark_as_not_spam(session)
 
 
 @validate(schema.issue_comment_report_schema)
@@ -441,6 +456,14 @@ def issue_comment_report(context, data_dict):
 
     issue_id = data_dict['issue_comment_id']
     issue_comment = issuemodel.IssueComment.get(issue_id, session=session)
+    user_obj = model.User.get(context['user'])
+    try:
+        issue_comment.report_abuse(session, user_obj.id)
+    except IntegrityError:
+        session.rollback()
+        raise ReportAlreadyExists(
+            p.toolkit._('Comment has already been reported by this user')
+        )
     try:
         # if you're an org admin/editor (can edit the dataset, it gets marked
         # as spam immediately
@@ -452,13 +475,53 @@ def issue_comment_report(context, data_dict):
         }
         p.toolkit.check_access('package_update', package_context,
                                data_dict={'id': dataset_id})
-        issue_comment.mark_as_spam(session)
+        issue_comment.change_visibility(session, u'hidden')
     except p.toolkit.NotAuthorized:
         issue_comment.increase_spam_count(session)
-        max_strikes = config.get('ckanext.issues.spam_max_strikes')
+        max_strikes = config.get('ckanext.issues.max_strikes')
         if max_strikes:
-            if issue_comment.spam_count > p.toolkit.asint(max_strikes):
-                issue_comment.mark_as_spam(session)
+            if len(issue_comment.abuse_reports) > p.toolkit.asint(max_strikes):
+                issue_comment.change_visibility(session, u'hidden')
+    session.commit()
+
+
+@validate(schema.issue_comment_report_schema)
+def issue_comment_report_clear(context, data_dict):
+    '''Clear the reports on an comment
+
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to
+    :type dataset_id: string
+    :param issue_comment_id: the id of the issue the comment belongs to
+    :type issue_comment_id: integer
+    '''
+    p.toolkit.check_access('issue_report_clear', context, data_dict)
+    session = context['session']
+
+    issue_comment_id = data_dict['issue_comment_id']
+    issue_comment = issuemodel.IssueComment.get(issue_comment_id,
+                                                session=session)
+    user = context['user']
+    user_obj = model.User.get(user)
+    user_id = user_obj.id
+    try:
+        dataset_id = data_dict['dataset_id']
+        package_context = {
+            'user': context['user'],
+            'session': session,
+            'model': model,
+        }
+        p.toolkit.check_access('package_update', package_context,
+                               data_dict={'id': dataset_id})
+        issue_comment.clear_all_abuse_reports(session)
+    except p.toolkit.NotAuthorized:
+        issue_comment.clear_abuse_report(session, user_id)
+        max_strikes = config.get('ckanext.issues.max_strikes')
+        if (max_strikes and
+           len(issue_comment.abuse_reports) <= p.toolkit.asint(max_strikes)):
+            issue_comment.change_visibility(session, u'visible')
+    session.commit()
+    return True
 
 
 @validate(schema.issue_report_schema)
@@ -498,4 +561,4 @@ def issue_report_show(context, data_dict):
     except p.toolkit.NotAuthorized:
         reports = issuemodel.IssueReport.get_reports_for_user(session, user_id,
                                                               issue_id)
-    return [ i.user_id for i in reports ]
+    return [i.user_id for i in reports]

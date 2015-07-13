@@ -6,23 +6,31 @@ from ckanext.issues.logic import schema
 
 def show(issue_id, dataset_id, session):
     issue_id = _validate_show(issue_id, dataset_id, session)
-    issue = toolkit.get_action('issue_show')(data_dict={'id': issue_id})
-    issueobj = model.Issue.get(issue_id)
+    issue = toolkit.get_action('issue_show')(
+        data_dict={
+            'id': issue_id,
+            'include_reports': True,
+        }
+    )
 
     issue['comment'] = issue['description'] or toolkit._(
         'No description provided')
-    comment_count = len(issueobj.comments)
 
     issue['assignee'] = _get_assigned_user(issue['assignee_id'], session)
 
-    reports = toolkit.get_action('issue_report_show')(
-        data_dict={
-            'issue_id': issue_id,
-            'dataset_id': dataset_id,
-        }
-    )
-    issue['abuse_reports'] = reports
+    try:
+        reports = toolkit.get_action('issue_report_show')(
+            data_dict={
+                'issue_id': issue_id,
+                'dataset_id': dataset_id,
+            }
+        )
+        issue['abuse_reports'] = reports
+    except toolkit.NotAuthorized:
+        pass
 
+    issue_obj = model.Issue.get(issue_id)
+    comment_count = len(issue_obj.comments)
     return {
         'issue': issue,
         'comment_count': comment_count,

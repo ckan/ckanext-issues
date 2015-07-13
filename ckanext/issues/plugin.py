@@ -82,9 +82,9 @@ class IssuesPlugin(p.SingletonPlugin):
             m.connect('issues_comment_report',
                       '/dataset/:dataset_id/issues/:issue_id/comment/:comment_id/report',
                       action='report_comment'),
-            m.connect('issues_comment_reset_spam_state',
-                      '/dataset/:dataset_id/issues/:issue_id/comment/:comment_id/reset_spam_state',
-                      action='reset_comment_spam_state'),
+            m.connect('issues_comment_report_clear',
+                      '/dataset/:dataset_id/issues/:issue_id/comment/:comment_id/report_clear',
+                      action='comment_report_clear'),
             m.connect('add_issue_with_resource', '/dataset/:package_id/issues/new/:resource_id', action='add')
             m.connect('issues_show', '/dataset/:package_id/issues/:id',
                     action='show')

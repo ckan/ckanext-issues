@@ -329,8 +329,8 @@ class IssueController(BaseController):
                 h.flash_success(_('Issue reported to an administrator'))
             except toolkit.ValidationError:
                 toolkit.abort(404)
-            except ReportAlreadyExists:
-                h.flash_error(_('You have already reported this issue'))
+            except ReportAlreadyExists, e:
+                h.flash_error(e.message)
             h.redirect_to('issues_show', package_id=dataset_id,
                           id=issue_id)
 
@@ -353,6 +353,10 @@ class IssueController(BaseController):
                               id=issue_id)
             except toolkit.ValidationError:
                 toolkit.abort(404)
+            except ReportAlreadyExists, e:
+                h.flash_error(e.message)
+            h.redirect_to('issues_show', package_id=dataset_id,
+                          id=issue_id)
 
     def report_clear(self, dataset_id, issue_id):
         dataset = self._before(dataset_id)
@@ -371,19 +375,19 @@ class IssueController(BaseController):
             except toolkit.ValidationError:
                 toolkit.abort(404)
 
-    def reset_comment_spam_state(self, dataset_id, issue_id, comment_id):
+    def comment_report_clear(self, dataset_id, issue_id, comment_id):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             try:
-                toolkit.get_action('issue_comment_reset_spam_state')(
+                toolkit.get_action('issue_comment_report_clear')(
                     data_dict={'issue_comment_id': comment_id,
                                'dataset_id': dataset_id}
                 )
-                h.flash_success(_('Comment unflagged as spam'))
+                h.flash_success(_('Abuse report cleared'))
                 h.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.NotAuthorized:
-                msg = _('You must be logged in to reset spam counters')\
+                msg = _('You must be logged in to clear abuse reports')\
                     .format(issue_id)
                 toolkit.abort(401, msg)
             except toolkit.ValidationError:

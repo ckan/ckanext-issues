@@ -277,7 +277,6 @@ class Issue(domain_object.DomainObject):
     def as_dict(self):
         out = super(Issue, self).as_dict()
 
-        out['comments'] = [c.as_dict() for c in self.comments]
         out['user'] = _user_dict(self.user)
         # some cases dataset not yet set ...
         if self.dataset:
@@ -339,16 +338,32 @@ class IssueComment(domain_object.DomainObject):
         model.Session.add(self)
         model.Session.commit()
 
-    def mark_as_spam(self, session):
-        self.spam_state = u'hidden'
-        model.Session.add(self)
-        model.Session.commit()
+    def report_abuse(self, session, user_id, **kwargs):
+        self.abuse_reports.append(IssueCommentReport(user_id, self.id))
+        session.add(self)
+        session.flush()
+        return self
 
-    def mark_as_not_spam(self, session):
-        self.spam_count = 0
-        self.spam_state = u'visible'
-        model.Session.add(self)
-        model.Session.commit()
+    def change_visibility(self, session, visibility):
+        self.spam_state = visibility
+        session.add(self)
+        session.flush()
+        return self
+
+    def clear_abuse_report(self, session, user_id):
+        report = IssueCommentReport.get_reports_for_user(session, user_id,
+                                                         self.id).first()
+        if report:
+            session.delete(report)
+            session.flush()
+        return self
+
+    def clear_all_abuse_reports(self, session):
+        self.change_visibility(session, u'visible')
+        for r in self.abuse_reports:
+            session.delete(r)
+        session.flush()
+        return self
 
 
 class IssueReport(domain_object.DomainObject):
@@ -370,6 +385,17 @@ class IssueCommentReport(domain_object.DomainObject):
     def __init__(self, user_id, issue_comment_id):
         self.user_id = user_id
         self.issue_comment_id = issue_comment_id
+
+    @classmethod
+    def get_reports(cls, session, issue_comment_id):
+        return session.query(cls).filter(
+            cls.issue_comment_id == issue_comment_id)
+
+    @classmethod
+    def get_reports_for_user(cls, session, user_id, issue_comment_id):
+        return session.query(cls).filter(
+            cls.issue_comment_id == issue_comment_id
+        ).filter(cls.user_id == user_id)
 
 
 def define_issue_tables():
