@@ -26,7 +26,7 @@ set           {% for key, error in c.error_summary.items() %}
   {% block fields %}
     {{ form.input('title', label=_('Title'), id='field-title', placeholder=_('Title'), value=data.title, error=errors.title, classes=['control-full']) }}
     {{ form.markdown('description', label=_('Description'), id='field-description', placeholder=_('Add a comment'), value=data.description, error=errors.description) }}
-    {{ form.input('resource', label=_('Resource'), id='resource', attrs={'disabled':'1'}) }}
+    {#{{ form.input('resource', label=_('Resource'), id='resource', attrs={'disabled':'1'}) }} ]#}
   {% endblock %}
 
   <div class="form-actions">
