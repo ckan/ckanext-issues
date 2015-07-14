@@ -1,6 +1,11 @@
-{% extends "issues/base.html" %}
+{% extends "package/read_base.html" %}
 
 {% import "issues/common.html" as common with context %}
+
+{% block styles %}
+  {{ super() }}
+  <link rel="stylesheet" href="/ckanext-issues/style.css" />
+{% endblock %}
 
 {% set pkg = c.pkg %}
 {% set filters = h.get_issue_filter_types() %}
@@ -8,9 +13,8 @@
 
 {% block subtitle %}{{ _('Issues') }} - {{ super() }}{% endblock %}
 
-{% block primary_content %}
+{% block primary_content_inner %}
 <section class="module issues-home">
-  <div class="module-content">
     <div class="header">
       <h1 class="page-heading">
         {{ _('Issues') }}
@@ -18,7 +22,6 @@
           {{ h.nav_link(_('New Issue'), named_route='issues_new', package_id=pkg.name, class_='btn btn-success') }}
         </div>
       </h1>
-    </div>
    <div>
       {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status), ('spam_state', spam_state)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=true, no_title=true %}
       <h2 id="issues-found">
@@ -100,6 +103,7 @@
 {% endblock %}
 
 {% block secondary_content %}
-    {{ common.search_options_sidebar(user_can_change_spam_state=h.check_access('package_update', {'id': pkg.id }), url_params={'package_id':pkg['id']}) }}
+  {% snippet "package/snippets/info.html", pkg=pkg %}
+  {{ common.search_options_sidebar(user_can_change_spam_state=h.check_access('package_update', {'id': pkg.id }), url_params={'package_id':pkg['id']}) }}
 {% endblock %}
 

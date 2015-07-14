@@ -256,3 +256,9 @@
 .issue-home-sidebar {
   margin: 20px 0 0 15px;
 }
+
+.module-content .pagination {
+  margin-left: 0px;
+  margin-right: -15px;
+  margin-bottom: 0px;
+}
