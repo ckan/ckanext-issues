@@ -51,7 +51,7 @@ class TestAbuseReport(helpers.FunctionalTestBase):
         )
         res_chunks = parse_issues_dataset(response)
         assert_in('1 issue found', res_chunks['issues_found'])
-        assert_in('Test issue', res_chunks['issue_name'])
+        assert_in('Test Issue', res_chunks['issue_name'])
 
     def test_reported_as_abuse_does_not_appear_for_user(self):
         env = {'REMOTE_USER': self.user['name'].encode('ascii')}
