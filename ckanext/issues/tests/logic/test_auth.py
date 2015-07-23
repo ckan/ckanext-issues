@@ -10,16 +10,20 @@ from nose.tools import assert_true, assert_raises
 
 
 class TestIssueUpdate(object):
+    @classmethod
+    def setupClass(self):
+        helpers.reset_db()
+        search.clear()
+
     def teardown(self):
         helpers.reset_db()
         search.clear()
 
     def test_org_editor_can_update_an_issue(self):
         org_editor = factories.User()
-        org = factories.Organization()
-        helpers.call_action('member_create', object=org_editor['name'],
-                            id=org['id'], object_type='user',
-                            capacity='editor')
+        org = factories.Organization(
+            users=[{'name': org_editor['id'], 'capacity': 'editor'}]
+        )
         dataset = factories.Dataset(owner_org=org['name'], private=True)
         user = helpers.call_action('get_site_user')
         issue = issue_factories.Issue(user=user, dataset_id=dataset['id'])
@@ -28,8 +32,15 @@ class TestIssueUpdate(object):
             'user': org_editor['name'],
             'model': model,
         }
-        assert_true(helpers.call_auth('issue_update', context,
-                                      dataset_id=dataset['id']))
+        assert_true(
+            helpers.call_auth(
+                'issue_update',
+                context,
+                issue_number=issue['number'],
+                dataset_id=dataset['id'],
+                status='open'
+            )
+        )
 
     def test_issue_owner_can_update_issue(self):
         issue_owner = factories.User()
@@ -43,9 +54,41 @@ class TestIssueUpdate(object):
             'user': issue_owner['name'],
             'model': model,
         }
-        assert_true(helpers.call_auth('issue_update', context, id=issue['id'],
-                                      dataset_id=dataset['id'],
-                                      status='open'))
+        assert_true(
+            helpers.call_auth(
+                'issue_update',
+                context,
+                issue_number=issue['number'],
+                dataset_id=dataset['id'],
+                status='open'
+            )
+        )
+
+    def test_organization_member_cannot_update_issue(self):
+        user = factories.User()
+        issue_owner = factories.User()
+        org = factories.Organization(
+            users=[{'name': user['id'], 'capacity': 'member'}]
+        )
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user=issue_owner,
+                                      user_id=issue_owner['id'],
+                                      dataset_id=dataset['id'])
+
+        other_user = factories.User()
+        context = {
+            'user': other_user['name'],
+            'model': model,
+        }
+        assert_raises(
+            toolkit.NotAuthorized,
+            helpers.call_auth,
+            'issue_update',
+            context,
+            issue_number=issue['number'],
+            dataset_id=dataset['id'],
+            status='open'
+        )
 
     def test_normal_user_cannot_update_issue(self):
         issue_owner = factories.User()
@@ -60,9 +103,38 @@ class TestIssueUpdate(object):
             'user': other_user['name'],
             'model': model,
         }
-        assert_raises(toolkit.NotAuthorized, helpers.call_auth, 'issue_update',
-                      context, id=issue['id'], dataset_id=dataset['id'],
-                      status='open')
+        assert_raises(
+            toolkit.NotAuthorized,
+            helpers.call_auth,
+            'issue_update',
+            context,
+            issue_number=issue['number'],
+            dataset_id=dataset['id'],
+            status='open'
+        )
+
+    def test_anonymous_user_cannot_update_issue(self):
+        issue_owner = factories.User()
+        org = factories.Organization()
+        dataset = factories.Dataset(owner_org=org['name'])
+        issue = issue_factories.Issue(user=issue_owner,
+                                      user_id=issue_owner['id'],
+                                      dataset_id=dataset['id'])
+
+        other_user = factories.User()
+        context = {
+            'user': other_user['name'],
+            'model': model,
+        }
+        assert_raises(
+            toolkit.NotAuthorized,
+            helpers.call_auth,
+            'issue_update',
+            context,
+            issue_number=issue['number'],
+            dataset_id=dataset['id'],
+            status='open'
+        )
 
 
 class TestIssueDelete(object):

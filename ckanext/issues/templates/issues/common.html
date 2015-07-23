@@ -1,6 +1,6 @@
 {% macro issue_item(issue, pkg, current_user) -%}
       <li class="list-group-item">
-        <span class="list-group-item-number">#{{issue.id}}</span>
+        <span class="list-group-item-number">#{{issue.number}}</span>
         {% set has_been_reported = h.issues_user_has_reported_issue(current_user, issue.abuse_reports) %}
         {% if issue.spam_state == 'hidden' %}
           <div class="issue-comment-label">
@@ -14,7 +14,7 @@
         <h4 class="list-group-item-name">
           {% set issue_icon = 'spam' if issue.spam_state == 'hidden' else issue.status %}
           <span class="{{ issue_icon }} icon" title="{{issue.status}} issue"><i class="icon-exclamation-sign"></i></span>
-          <a href="{{ h.url_for('issues_show', package_id=pkg.id, id=issue.id) }}" {% if issue.spam_state == 'hidden'%} class="issue-spam"{% endif%}>
+          <a href="{{ h.url_for('issues_show', dataset_id=pkg.id, issue_number=issue.number) }}" {% if issue.spam_state == 'hidden'%} class="issue-spam"{% endif%}>
             {{issue.title}}
           </a>
         </h4>
@@ -44,7 +44,7 @@
         {% for valid_status in ['open', 'closed'] %}
         <li class="nav-item {% if status==valid_status%}active{% endif %}">
         {% set href = h.replace_url_param(new_params={'status': valid_status}, extras=url_params) %}
-        <a href={{ href }}>
+        <a id="{{ valid_status }}-filter" href="{{ href }}">
         <span>{{_(valid_status.title())}}</span>
         </a>
         </li>
@@ -59,7 +59,7 @@
         {% for valid_spam_state in ['visible', 'hidden'] %}
         <li class="nav-item {% if spam_state==valid_spam_state%}active{% endif %}">
         {% set href = h.remove_url_param('spam_state', extras=url_params) if spam_state==valid_spam_state else h.replace_url_param(new_params={'spam_state': valid_spam_state}, extras=url_params) %}
-        <a href={{ href }}>
+        <a id="{{ valid_spam_state }}-filter" href="{{ href }}">
         <span>{{_(valid_spam_state.title())}}</span>
         </a>
         </li>

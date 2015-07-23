@@ -1,5 +1,8 @@
 from ckanext.issues import model
-from ckan.new_tests import factories, helpers
+try:
+    from ckan.new_tests import factories, helpers
+except ImportError:
+    from ckan.tests import factories, helpers
 
 import factory
 
@@ -7,8 +10,9 @@ import factory
 class Issue(factory.Factory):
     FACTORY_FOR = model.Issue
 
-    title = 'Test issue'
+    title  = factory.Sequence(lambda n: 'Test Issue {n}'.format(n=n))
     description = 'Some description'
+    dataset_id = factory.LazyAttribute(lambda _: factories.Dataset()['id'])
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):

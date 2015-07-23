@@ -4,11 +4,13 @@ from ckanext.issues import model
 from ckanext.issues.logic import schema
 
 
-def show(issue_id, dataset_id, session):
-    issue_id = _validate_show(issue_id, dataset_id, session)
+def show(issue_number, dataset_id, session):
+    validated_data_dict = _validate_show(issue_number, dataset_id, session)
+    dataset_id = validated_data_dict['dataset_id']
     issue = toolkit.get_action('issue_show')(
         data_dict={
-            'id': issue_id,
+            'issue_number': issue_number,
+            'dataset_id': dataset_id,
             'include_reports': True,
         }
     )
@@ -21,7 +23,7 @@ def show(issue_id, dataset_id, session):
     try:
         reports = toolkit.get_action('issue_report_show')(
             data_dict={
-                'issue_id': issue_id,
+                'issue_number': issue_number,
                 'dataset_id': dataset_id,
             }
         )
@@ -29,7 +31,7 @@ def show(issue_id, dataset_id, session):
     except toolkit.NotAuthorized:
         pass
 
-    issue_obj = model.Issue.get(issue_id)
+    issue_obj = model.Issue.get_by_number(dataset_id, issue_number, session)
     comment_count = len(issue_obj.comments)
     return {
         'issue': issue,
@@ -37,14 +39,15 @@ def show(issue_id, dataset_id, session):
     }
 
 
-def _validate_show(issue_id, dataset_id, session,
+def _validate_show(issue_number, dataset_id, session,
                    schema=schema.issue_show_controller_schema()):
     query, errors = toolkit.navl_validate(
-        data={'id': issue_id, 'dataset_id': dataset_id}, schema=schema,
+        data={'issue_number': issue_number, 'dataset_id': dataset_id},
+        schema=schema,
         context={'session': session, 'model': cmodel})
     if errors:
         raise toolkit.ValidationError(errors)
-    return issue_id
+    return query
 
 
 def _get_assigned_user(assignee_id, session):

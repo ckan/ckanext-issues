@@ -19,7 +19,7 @@
       <h1 class="page-heading">
         {{ _('Issues') }}
         <div class="issues-actions">
-          {{ h.nav_link(_('New Issue'), named_route='issues_new', package_id=pkg.name, class_='btn btn-success') }}
+          {{ h.nav_link(_('New Issue'), named_route='issues_new', dataset_id=pkg.name, class_='btn btn-success') }}
         </div>
       </h1>
    <div>
@@ -42,13 +42,13 @@
     <ul>
     {% if pagination.has_previous %}
       <li>
-        {% set href = h.replace_url_param(new_params={'page': pagination.page - 1}, extras={'package_id':pkg['id']}) %}
+        {% set href = h.replace_url_param(new_params={'page': pagination.page - 1}, extras={'dataset_id':pkg['id']}) %}
         <a href={{ href }}>«</a>
       </li>
     {% endif %}
     {% if pagination.show_previous %}
       <li>
-        {% set href = h.replace_url_param(new_params={'page': 1}, extras={'package_id':pkg['id']}) %}
+        {% set href = h.replace_url_param(new_params={'page': 1}, extras={'dataset_id':pkg['id']}) %}
         <a href={{ href }}>1</a>
       </li>
       <li class="disabled">
@@ -57,7 +57,7 @@
     {% endif %}
     {% for page in pagination.iter_pages() %}
       {% if page %}
-        {% set href = h.replace_url_param(new_params={'page': page}, extras={'package_id':pkg['id']}) %}
+        {% set href = h.replace_url_param(new_params={'page': page}, extras={'dataset_id':pkg['id']}) %}
         {% if page != pagination.page %}
           <li>
             <a href={{ href }}>{{ page }}</a>
@@ -74,13 +74,13 @@
         <a href="#">...</a>
       </li>
       <li>
-        {% set href = h.replace_url_param(new_params={'page': pagination.pages }, extras={'package_id':pkg['id']}) %}
+        {% set href = h.replace_url_param(new_params={'page': pagination.pages }, extras={'dataset_id':pkg['id']}) %}
         <a href={{ href }}>{{ pagination.pages }}</a>
       </li>
     {% endif %}
     {% if pagination.has_next %}
       <li>
-      {% set href = h.replace_url_param(new_params={'page': pagination.page + 1}, extras={'package_id':pkg['id']}) %}
+      {% set href = h.replace_url_param(new_params={'page': pagination.page + 1}, extras={'dataset_id':pkg['id']}) %}
         <a href={{ href }}>»</a>
       </li>
     {% endif %}
@@ -90,7 +90,7 @@
     <ul>
       {% for per_page_option in issues_per_page %}
         <li{% if per_page_option==pagination.per_page %} class="active"{% endif %}>
-        {% set href = h.replace_url_param(new_params={'per_page': per_page_option, 'page': 1}, extras={'package_id':pkg['id']}) %}
+        {% set href = h.replace_url_param(new_params={'per_page': per_page_option, 'page': 1}, extras={'dataset_id':pkg['id']}) %}
         <a href={{ href }}>{{ per_page_option }}</a>
         </li>
       {% endfor %}
@@ -104,6 +104,6 @@
 
 {% block secondary_content %}
   {% snippet "package/snippets/info.html", pkg=pkg %}
-  {{ common.search_options_sidebar(user_can_change_spam_state=h.check_access('package_update', {'id': pkg.id }), url_params={'package_id':pkg['id']}) }}
+  {{ common.search_options_sidebar(user_can_change_spam_state=h.check_access('package_update', {'id': pkg.id }), url_params={'dataset_id':pkg['id']}) }}
 {% endblock %}
 

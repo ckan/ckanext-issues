@@ -11,7 +11,8 @@ from datetime import datetime
 import logging
 
 import enum
-from sqlalchemy import func, types, Table, ForeignKey, Column, UniqueConstraint
+from sqlalchemy import (func, types, Table, ForeignKey, Column,
+                        UniqueConstraint, Index)
 from sqlalchemy.orm import relation, backref, subqueryload
 from sqlalchemy.sql.expression import or_
 
@@ -151,12 +152,18 @@ class InvalidIssueFilterException(object):
 
 class Issue(domain_object.DomainObject):
     """A Issue Object"""
-    pass
 
     @classmethod
     def get(cls, reference, session=Session):
         """Returns an Issue object referenced by its id."""
         return session.query(cls).filter(cls.id == reference).first()
+
+    @classmethod
+    def get_by_number(cls, dataset_id, issue_number, session=Session):
+        return session.query(cls)\
+            .filter(cls.dataset_id == dataset_id)\
+            .filter(cls.number == issue_number)\
+            .first()
 
     @classmethod
     def apply_filters_to_an_issue_query(
@@ -260,8 +267,12 @@ class Issue(domain_object.DomainObject):
         return self
 
     def clear_abuse_report(self, session, user_id):
-        report = IssueReport.get_reports_for_user(session, user_id,
-                                                  self.id).first()
+        report = IssueReport.get_reports_for_user(
+            session,
+            dataset_id=self.dataset_id,
+            issue_number=self.number,
+            user_id=user_id
+        ).first()
         if report:
             session.delete(report)
             session.flush()
@@ -281,8 +292,8 @@ class Issue(domain_object.DomainObject):
         # some cases dataset not yet set ...
         if self.dataset:
             out['ckan_url'] = h.url_for('issues_show',
-                                        package_id=self.dataset.name,
-                                        id=self.id)
+                                        dataset_id=self.dataset.name,
+                                        issue_number=self.number)
         return out
 
     def as_plain_dict(self, user, comment_count, updated,
@@ -362,18 +373,30 @@ class IssueComment(domain_object.DomainObject):
 
 
 class IssueReport(domain_object.DomainObject):
-    def __init__(self, user_id, issue_id):
+    def __init__(self, user_id,
+                 issue_id=None,
+                 dataset_id=None,
+                 issue_number=None):
         self.user_id = user_id
-        self.issue_id = issue_id
+        if issue_id:
+            self.issue_id = issue_id
+        else:
+            issue_object = Issue.get_by_number(dataset_id=dataset_id,
+                                               issue_number=issue_number)
+            self.issue_id = issue_object.id
 
     @classmethod
-    def get_reports(cls, session, issue_id):
-        return session.query(cls).filter(cls.issue_id == issue_id)
+    def get_reports(cls, session, dataset_id, issue_number):
+        return session.query(cls).join(Issue)\
+            .filter(Issue.number == issue_number)\
+            .filter(Issue.dataset_id == dataset_id)
 
     @classmethod
-    def get_reports_for_user(cls, session, user_id, issue_id):
-        return session.query(cls).filter(cls.issue_id == issue_id).\
-            filter(cls.user_id == user_id)
+    def get_reports_for_user(cls, session, user_id, dataset_id, issue_number):
+        return session.query(cls).join(Issue)\
+            .filter(Issue.number == issue_number)\
+            .filter(Issue.dataset_id == dataset_id)\
+            .filter(cls.user_id == user_id)
 
 
 class IssueCommentReport(domain_object.DomainObject):
@@ -415,6 +438,7 @@ def define_issue_tables():
         'issue',
         meta.metadata,
         Column('id', types.Integer, primary_key=True, autoincrement=True),
+        Column('number', types.Integer, nullable=False),
         Column('title', types.UnicodeText, nullable=False),
         Column('description', types.UnicodeText),
         Column('dataset_id', types.UnicodeText,
@@ -435,6 +459,8 @@ def define_issue_tables():
         Column('created', types.DateTime, default=datetime.now,
                nullable=False),
         Column('spam_state', types.Unicode, default=u'visible'),
+        Index('idx_issue_number_dataset_id', 'dataset_id', 'number',
+              unique=True),
     )
 
     issue_comment_table = Table(
@@ -458,9 +484,10 @@ def define_issue_tables():
         meta.metadata,
         Column('id', types.Integer, primary_key=True, autoincrement=True),
         Column('user_id', types.Unicode, nullable=False),
-        Column('issue_id', types.Integer,
-            ForeignKey('issue.id', ondelete='CASCADE'),
-            nullable=False, index=True),
+        Column('issue_id',
+               types.Integer,
+               ForeignKey('issue.id', ondelete='CASCADE'),
+               nullable=False, index=True),
         UniqueConstraint('user_id', 'issue_id'),
     )
 
@@ -469,12 +496,12 @@ def define_issue_tables():
         meta.metadata,
         Column('id', types.Integer, primary_key=True, autoincrement=True),
         Column('user_id', types.Unicode, nullable=False),
-        Column('issue_comment_id', types.Integer,
-            ForeignKey('issue_comment.id', ondelete='CASCADE'),
-            nullable=False, index=True),
+        Column('issue_comment_id',
+               types.Integer,
+               ForeignKey('issue_comment.id', ondelete='CASCADE'),
+               nullable=False, index=True),
         UniqueConstraint('user_id', 'issue_comment_id'),
     )
-
 
     meta.mapper(
         Issue,

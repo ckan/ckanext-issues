@@ -1,6 +1,7 @@
 from ckan import model
 import ckan.plugins as p
-import ckanext.issues.model as issuemodel
+from ckanext.issues import model as issue_model
+
 
 def issue_auth(context, data_dict, privilege='package_update'):
     auth_data_dict = dict(data_dict)
@@ -12,13 +13,19 @@ def issue_auth(context, data_dict, privilege='package_update'):
     except p.toolkit.NotAuthorized:
         return {
             'success': False,
-            'msg': p.toolkit._('User {0} not authorized for action on issue {1}'
-                    .format(str(context['user']), auth_data_dict['id']))
+            'msg': p.toolkit._(
+                'User {0} not authorized for action on issue {1}'.format(
+                    str(context['user']),
+                    auth_data_dict['id']
+                )
+            )
         }
+
 
 @p.toolkit.auth_allow_anonymous_access
 def issue_show(context, data_dict):
     return issue_auth(context, data_dict, 'package_show')
+
 
 @p.toolkit.auth_allow_anonymous_access
 def issue_search(context, data_dict):
@@ -28,18 +35,24 @@ def issue_search(context, data_dict):
     except p.toolkit.NotAuthorized:
         return {
             'success': False,
-            'msg': p.toolkit._('User {0} not authorized for action'
-                    .format(str(context['user'])))
+            'msg': p.toolkit._(
+                'User {0} not authorized for action'.format(
+                    str(context['user'])
+                )
+            )
         }
+
 
 def issue_create(context, data_dict):
     # Any logged in user ...?
     return issue_auth(context, data_dict, 'package_create')
 
+
 @p.toolkit.auth_disallow_anonymous_access
 def issue_comment_create(context, data_dict):
-    # Any logged in user ...?
-    return issue_auth(context, data_dict, 'package_create')
+    return {'success': True}
+    # return issue_auth(context, data_dict, 'package_create')
+
 
 @p.toolkit.auth_disallow_anonymous_access
 def issue_update(context, data_dict):
@@ -55,22 +68,24 @@ def issue_update(context, data_dict):
     if out['success']:
         return out
     # now check if we created the issue
-    issue = issuemodel.Issue.get(data_dict['id'])
+    issue = issue_model.Issue.get_by_number(
+        issue_number=data_dict['issue_number'],
+        dataset_id=data_dict['dataset_id'],
+    )
     user = context['user']
     user_obj = model.User.get(user)
-    if (
-        (issue.user_id == user_obj.id) # we're the creator
-        and # we are not trying to change status
-        not (data_dict.get('status') and (issue.status != data_dict['status']))
-        ):
+    if ((issue.user_id == user_obj.id)  # we're the creator
+       and  # we are not trying to change status
+       not (data_dict.get('status')
+       and (issue.status != data_dict['status']))):
         return {'success': True}
     # all other cases not allowed
     return {
         'success': False,
         'msg': p.toolkit._(
-            'User {0} not authorized for action on issue {1}'.format(
-                str(user),
-                data_dict['id'])
+            'User {user} not authorized for action on issue {issue}'.format(
+                user=str(user),
+                issue=data_dict['issue_number'])
             )
     }
 
@@ -83,11 +98,6 @@ def issue_delete(context, data_dict):
 @p.toolkit.auth_disallow_anonymous_access
 def issue_report(context, data_dict):
     return {'success': True}
-    #    if context.get('user'):
-    #    return {'success': True}
-    #else:
-    #    return {'success': False,
-    #            'msg': p.toolkit._("You must be logged in to report an issue")}
 
 
 @p.toolkit.auth_disallow_anonymous_access

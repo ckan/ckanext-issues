@@ -54,9 +54,24 @@ def issue_exists(issue_id, context):
     return issue_id
 
 
+def issue_number_exists_for_dataset(key, data, errors, context):
+    # do not run this validator unless we passed the initial validation
+    if not (errors['dataset_id', ] or errors['issue_number', ]):
+        session = context['session']
+        dataset_id = data.get(('dataset_id',))
+        issue_number = data.get(('issue_number',))
+        issue = issuemodel.Issue.get_by_number(dataset_id, issue_number,
+                                               session)
+        if not issue:
+            raise toolkit.ObjectNotFound(toolkit._('Issue not found'))
+
+
 def issue_comment_exists(issue_comment_id, context):
     issue_comment_id = is_positive_integer(issue_comment_id, context)
-    result = issuemodel.IssueComment.get(issue_comment_id, session=context['session'])
+    result = issuemodel.IssueComment.get(issue_comment_id,
+                                         session=context['session'])
     if not result:
-        raise toolkit.Invalid(toolkit._('Issue Comment not found') + ': %s' % issue_comment_id)
+        raise toolkit.Invalid(
+            toolkit._('Issue Comment not found') + ': %s' % issue_comment_id
+        )
     return issue_comment_id

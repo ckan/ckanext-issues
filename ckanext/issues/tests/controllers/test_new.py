@@ -5,7 +5,7 @@ import ckan.new_tests.factories as factories
 
 from ckanext.issues.tests import factories as issue_factories
 
-from nose.tools import assert_equals
+from nose.tools import assert_equals, assert_in
 
 
 class TestCreateNewIssue(helpers.FunctionalTestBase):
@@ -19,13 +19,25 @@ class TestCreateNewIssue(helpers.FunctionalTestBase):
 
     def test_create_new_issue(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
-        response = self.app.post(
-            url=toolkit.url_for('issues_new', package_id=self.dataset['id']),
-            params={'title': 'new issue', 'description': 'test description'},
+        response = self.app.get(
+            url=toolkit.url_for('issues_new', dataset_id=self.dataset['id']),
             extra_environ=env,
         )
+        form = response.forms['issue-new']
+        form['title'] = 'new issue'
+        form['description'] = 'test_description'
+        response = helpers.webtest_submit(form, 'save', extra_environ=env)
+
         response = response.follow()
         assert_equals(200, response.status_int)
+        assert_in('Your issue has been registered, thank you for the feedback',
+                  response)
+
+        issues = helpers.call_action('issue_search',
+                                     dataset_id=self.dataset['id'])
+        assert_equals(1, issues['count'])
+        assert_equals('new issue', issues['results'][0]['title'])
+        assert_equals('test_description', issues['results'][0]['description'])
 
     def teardown(self):
         helpers.reset_db()
@@ -48,15 +60,18 @@ class TestCreateNewIssueComment(helpers.FunctionalTestBase):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
             url=toolkit.url_for('issues_comments',
-                                id=self.issue['id'],
-                                package_id=self.dataset['id']),
+                                issue_number=self.issue['number'],
+                                dataset_id=self.dataset['id']),
             params={'comment': 'Comment'},
             extra_environ=env,
         )
         response = response.follow()
         assert_equals(200, response.status_int)
         issue_dict = toolkit.get_action('issue_show')(
-            data_dict={'id': self.issue['id']}
+            data_dict={
+                'dataset_id': self.dataset['id'],
+                'issue_number': self.issue['number'],
+            }
         )
         assert_equals('Comment', issue_dict['comments'][0]['comment'])
 

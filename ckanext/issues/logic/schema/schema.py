@@ -6,6 +6,7 @@ from ckanext.issues.logic.validators import (
     is_valid_status,
     issue_exists,
     issue_comment_exists,
+    issue_number_exists_for_dataset,
 )
 
 not_missing = toolkit.get_validator('not_missing')
@@ -19,6 +20,15 @@ is_positive_integer = toolkit.get_validator('is_positive_integer')
 boolean_validator = toolkit.get_validator('boolean_validator')
 
 
+def issue_show_schema():
+    return {
+        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+        'include_reports': [ignore_missing, bool],
+        'issue_number': [not_missing, is_positive_integer],
+        '__after': [issue_number_exists_for_dataset],
+    }
+
+
 def issue_create_schema():
     return {
         'title': [not_missing, unicode],
@@ -29,13 +39,22 @@ def issue_create_schema():
 
 def issue_update_schema():
     return {
-        'id': [not_missing, unicode, issue_exists],
-        'title': [ignore_missing, unicode],
-        'description': [ignore_missing, unicode],
-        'dataset_id': [ignore_missing, unicode, package_exists, as_package_id],
-        'resource_id': [ignore_missing, unicode, resource_id_exists],
         'assignee_id': [ignore_missing, unicode, user_exists],
+        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+        'description': [ignore_missing, unicode],
+        'issue_number': [not_missing, is_positive_integer],
+        'resource_id': [ignore_missing, unicode, resource_id_exists],
         'status':  [ignore_missing, unicode],
+        'title': [ignore_missing, unicode],
+        '__after': [issue_number_exists_for_dataset],
+    }
+
+
+def issue_delete_schema():
+    return {
+        'issue_number': [not_missing, is_positive_integer],
+        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+        '__after': [issue_number_exists_for_dataset],
     }
 
 
@@ -55,24 +74,29 @@ def issue_search_schema():
     }
 
 
-def issue_delete_schema():
+def issue_comment_schema():
     return {
-        'issue_id': [not_missing, unicode, issue_exists],
+        'comment': [not_missing, unicode],
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+        'issue_number': [not_missing, is_positive_integer],
+        '__after': [issue_number_exists_for_dataset],
     }
 
 
 def issue_report_schema():
     return {
-        'dataset_id': [not_missing, unicode, package_exists],
-        'issue_id': [not_missing, unicode, issue_exists],
+        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+        'issue_number': [not_missing, is_positive_integer],
+        '__after': [issue_number_exists_for_dataset],
     }
 
 
 def issue_comment_report_schema():
     return {
-        'dataset_id': [not_missing, unicode, package_exists],
-        'issue_comment_id': [not_missing, unicode, issue_comment_exists],
+        'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+        'issue_number': [not_missing, is_positive_integer],
+        '__after': [issue_number_exists_for_dataset],
+        'comment_id': [not_missing, unicode, issue_comment_exists],
     }
 
 
@@ -89,8 +113,9 @@ def issue_dataset_controller_schema():
 
 def issue_show_controller_schema():
     return {
-        'id': [not_missing, unicode, issue_exists],
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
+        'issue_number': [not_missing, is_positive_integer],
+        '__after': [issue_number_exists_for_dataset],
     }
 
 

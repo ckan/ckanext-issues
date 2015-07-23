@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from nose.tools import assert_equals, assert_not_equals, assert_in
+from nose.tools import assert_equals, assert_in
 
 from ckan.lib import search
 from ckan.plugins import toolkit
@@ -28,8 +28,9 @@ class TestAssign(helpers.FunctionalTestBase):
     def test_user_self_assign(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_show', package_id=self.dataset['id'],
-                                id=self.issue['id']),
+            url=toolkit.url_for('issues_show',
+                                dataset_id=self.dataset['id'],
+                                issue_number=self.issue['number']),
             extra_environ=env,
         )
         form = response.forms['ckanext-issues-assign']
@@ -42,13 +43,19 @@ class TestAssign(helpers.FunctionalTestBase):
 
     def test_assign_an_editor_to_an_issue(self):
         editor = factories.User()
-        test = helpers.call_action('member_create', id=self.org['id'],
-            object=editor['id'], object_type='user', capacity='editor')
+        test = helpers.call_action(
+            'member_create',
+            id=self.org['id'],
+            object=editor['id'],
+            object_type='user',
+            capacity='editor'
+        )
 
         env = {'REMOTE_USER': editor['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_show', package_id=self.dataset['id'],
-                                id=self.issue['id']),
+            url=toolkit.url_for('issues_show',
+                                dataset_id=self.dataset['id'],
+                                issue_number=self.issue['number']),
             extra_environ=env,
         )
         form = response.forms['ckanext-issues-assign']
@@ -63,8 +70,9 @@ class TestAssign(helpers.FunctionalTestBase):
         user = factories.User()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = self.app.post(
-            toolkit.url_for('issues_assign', dataset_id=self.dataset['id'],
-                            issue_id=self.issue['id']),
+            toolkit.url_for('issues_assign',
+                            dataset_id=self.dataset['id'],
+                            issue_number=self.issue['number']),
             {'assignee': user['name']},
             extra_environ=env,
             expect_errors=True
@@ -75,8 +83,9 @@ class TestAssign(helpers.FunctionalTestBase):
     def test_cannot_assign_an_issue_that_does_not_exist(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
-            toolkit.url_for('issues_assign', dataset_id=self.dataset['id'],
-                            issue_id='not an issue'),
+            toolkit.url_for('issues_assign',
+                            dataset_id=self.dataset['id'],
+                            issue_number='not an issue'),
             {'assignee': self.owner['name']},
             extra_environ=env,
             expect_errors=True
@@ -84,13 +93,13 @@ class TestAssign(helpers.FunctionalTestBase):
 
         assert_equals(404, response.status_int)
 
-
     def test_assign_form_does_not_appear_for_unauthorized_user(self):
         user = factories.User()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_show', package_id=self.dataset['id'],
-                                id=self.issue['id']),
+            url=toolkit.url_for('issues_show',
+                                dataset_id=self.dataset['id'],
+                                issue_number=self.issue['number']),
             extra_environ=env,
         )
         try:
@@ -102,8 +111,9 @@ class TestAssign(helpers.FunctionalTestBase):
     def test_assign_form_does_not_appear_for_anon_user(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_show', package_id=self.dataset['id'],
-                                id=self.issue['id']),
+            url=toolkit.url_for('issues_show',
+                                dataset_id=self.dataset['id'],
+                                issue_number=self.issue['number']),
         )
         try:
             form = response.forms['ckanext-issues-assign']
@@ -114,8 +124,9 @@ class TestAssign(helpers.FunctionalTestBase):
     def test_cannot_assign_if_user_does_not_exist(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_show', package_id=self.dataset['id'],
-                                id=self.issue['id']),
+            url=toolkit.url_for('issues_show',
+                                dataset_id=self.dataset['id'],
+                                issue_number=self.issue['number']),
             extra_environ=env,
         )
         form = response.forms['ckanext-issues-assign']
@@ -126,12 +137,13 @@ class TestAssign(helpers.FunctionalTestBase):
     def test_issue_creator_cannot_assign_if_they_cannot_package_update(self):
         user = factories.User()
         issue = issue_factories.Issue(user=user,
-                                     user_id=user['id'],
-                                     dataset_id=self.dataset['id'])
+                                      user_id=user['id'],
+                                      dataset_id=self.dataset['id'])
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = self.app.post(
-            toolkit.url_for('issues_assign', dataset_id=self.dataset['id'],
-                            issue_id=self.issue['id']),
+            toolkit.url_for('issues_assign',
+                            dataset_id=self.dataset['id'],
+                            issue_number=self.issue['number']),
             {'assignee': user['name']},
             extra_environ=env,
             expect_errors=True

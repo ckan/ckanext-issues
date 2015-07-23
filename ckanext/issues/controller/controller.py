@@ -61,7 +61,7 @@ def _notify(issue):
         'site_url': h.url_for(
             controller='ckanext.issues.controller:IssueController',
             action='issue_page',
-            package_id=issue.package.name,
+            dataset_id=issue.package.name,
             qualified=True
         )
     }
@@ -85,11 +85,11 @@ def _notify(issue):
 
 
 class IssueController(BaseController):
-    def _before(self, package_id):
+    def _before(self, dataset_id):
         self.context = {'for_view': True}
         try:
-            pkg = logic.get_action('package_show')(self.context, {'id':
-                                                   package_id})
+            pkg = logic.get_action('package_show')(self.context,
+                                                   {'id': dataset_id})
             # need this as some templates in core explicitly reference
             # c.pkg_dict
             c.pkg = pkg
@@ -107,15 +107,15 @@ class IssueController(BaseController):
             p.toolkit.abort(401,
                             _('Unauthorized to view issues for this dataset'))
 
-    def new(self, package_id, resource_id=None):
-        self._before(package_id)
+    def new(self, dataset_id, resource_id=None):
+        dataset_dict = self._before(dataset_id)
         if not c.user:
             abort(401, _('Please login to add a new issue'))
 
         data_dict = {
-            'dataset_id': c.pkg['id'],
+            'dataset_id': dataset_dict['id'],
             'creator_id': c.userobj.id
-            }
+        }
         try:
             logic.check_access('issue_create', self.context, data_dict)
         except logic.NotAuthorized:
@@ -148,28 +148,33 @@ class IssueController(BaseController):
                 )
                 h.flash_success(_('Your issue has been registered, '
                                   'thank you for the feedback'))
-                redirect(h.url_for(
-                    'issues_show',
-                    package_id=c.pkg['name'],
-                    id=issue_dict['id']
-                    ))
+                redirect(h.url_for('issues_show',
+                                   dataset_id=dataset_dict['name'],
+                                   issue_number=issue_dict['number']))
 
         c.data_dict = data_dict
         return render("issues/add.html")
 
-    def show(self, id, package_id):
-        dataset = self._before(package_id)
+    def show(self, issue_number, dataset_id):
+        dataset = self._before(dataset_id)
         try:
-            extra_vars = show.show(id, package_id, session=model.Session)
+            extra_vars = show.show(issue_number,
+                                   dataset_id,
+                                   session=model.Session)
         except toolkit.ValidationError, e:
             p.toolkit.abort(
                 404, toolkit._('Issue not found: {0}'.format(e.error_summary)))
         extra_vars['dataset'] = dataset
         return p.toolkit.render('issues/show.html', extra_vars=extra_vars)
 
-    def edit(self, id, package_id):
-        self._before(package_id)
-        issue = p.toolkit.get_action('issue_show')(data_dict={'id': id})
+    def edit(self, dataset_id, issue_number):
+        self._before(dataset_id)
+        issue = p.toolkit.get_action('issue_show')(
+            data_dict={
+                'issue_number': issue_number,
+                'dataset_id': dataset_id,
+            }
+        )
         if request.method == 'GET':
             return p.toolkit.render(
                 'issues/edit.html',
@@ -180,12 +185,13 @@ class IssueController(BaseController):
             )
         elif request.method == 'POST':
             data_dict = dict(request.params)
-            data_dict['id'] = id
-            data_dict['dataset_id'] = package_id
+            data_dict['issue_number'] = issue_number
+            data_dict['dataset_id'] = dataset_id
             try:
                 p.toolkit.get_action('issue_update')(data_dict=data_dict)
-                return p.toolkit.redirect_to('issues_show', id=id,
-                                             package_id=package_id)
+                return p.toolkit.redirect_to('issues_show',
+                                             issue_number=issue_number,
+                                             dataset_id=dataset_id)
             except p.toolkit.ValidationError, e:
                 errors = e.error_dict
                 return p.toolkit.render(
@@ -198,16 +204,16 @@ class IssueController(BaseController):
             except p.toolkit.NotAuthorized, e:
                 p.toolkit.abort(401, e.message)
 
-    def comments(self, id, package_id):
+    def comments(self, dataset_id, issue_number):
         # POST only
         if request.method != 'POST':
             abort(500, _('Invalid request'))
 
-        self._before(package_id)
+        dataset = self._before(dataset_id)
 
         auth_dict = {
             'dataset_id': c.pkg['id'],
-            'id': id
+            'issue_number': issue_number
             }
         # Are we not repeating stuff in logic ???
         try:
@@ -215,11 +221,10 @@ class IssueController(BaseController):
         except logic.NotAuthorized:
             abort(401, _('Not authorized'))
 
-        next_url = h.url_for(
-            'issues_show',
-            package_id=c.pkg['name'],
-            id=id
-            )
+        next_url = h.url_for('issues_show',
+                             dataset_id=c.pkg['name'],
+                             issue_number=issue_number)
+
         # TODO: (?) move validation somewhere better than controller
         comment = request.POST.get('comment')
         if not comment or comment.strip() == '':
@@ -233,8 +238,8 @@ class IssueController(BaseController):
             status = (issuemodel.ISSUE_STATUS.closed if 'close' in request.POST
                       else issuemodel.ISSUE_STATUS.open)
             issue_dict = {
-                'id': id,
-                'dataset_id': package_id,
+                'issue_number': issue_number,
+                'dataset_id': dataset['id'],
                 'status': status
                 }
             logic.get_action('issue_update')(self.context, issue_dict)
@@ -244,49 +249,57 @@ class IssueController(BaseController):
                 h.flash_success(_("Issue re-opened"))
 
         data_dict = {
-            'issue_id': id,
             'author_id': c.userobj.id,
-            'comment': comment.strip()
+            'comment': comment.strip(),
+            'dataset_id': dataset['id'],
+            'issue_number': issue_number,
             }
         logic.get_action('issue_comment_create')(self.context, data_dict)
 
         redirect(next_url)
 
-    def dataset(self, package_id):
+    def dataset(self, dataset_id):
         """
         Display a page containing a list of all issues items for a dataset,
         sorted by category.
         """
-        self._before(package_id)
+        self._before(dataset_id)
         try:
-            extra_vars = issues_for_dataset(package_id, request.GET)
+            extra_vars = issues_for_dataset(dataset_id, request.GET)
         except toolkit.ValidationError, e:
-            _dataset_handle_error(package_id, e)
+            _dataset_handle_error(dataset_id, e)
         return render("issues/dataset.html", extra_vars=extra_vars)
 
-    def delete(self, dataset_id, issue_id):
+    def delete(self, dataset_id, issue_number):
         dataset = self._before(dataset_id)
         if 'cancel' in request.params:
-            h.redirect_to('issues_show', package_id=dataset_id, id=issue_id)
+            h.redirect_to('issues_show',
+                          dataset_id=dataset_id,
+                          issue_number=issue_number)
 
         if request.method == 'POST':
             try:
                 toolkit.get_action('issue_delete')(
-                    data_dict={'issue_id': issue_id, 'dataset_id': dataset_id})
+                    data_dict={'issue_number': issue_number,
+                               'dataset_id': dataset_id}
+                )
             except toolkit.NotAuthorized:
-                msg = _('Unauthorized to delete issue {0}'.format(issue_id))
+                msg = _('Unauthorized to delete issue {0}'.format(
+                    issue_number))
                 toolkit.abort(401, msg)
 
-            h.flash_notice(_('Issue {0} has been deleted.'.format(issue_id)))
-            h.redirect_to('issues_dataset', package_id=dataset_id)
+            h.flash_notice(
+                _('Issue {0} has been deleted.'.format(issue_number))
+            )
+            h.redirect_to('issues_dataset', dataset_id=dataset_id)
         else:
             return render('issues/confirm_delete.html',
                           extra_vars={
-                              'issue_id': issue_id,
+                              'issue_number': issue_number,
                               'pkg': dataset,
                           })
 
-    def assign(self, dataset_id, issue_id):
+    def assign(self, dataset_id, issue_number):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             try:
@@ -296,101 +309,125 @@ class IssueController(BaseController):
             except toolkit.ObjectNotFound:
                 h.flash_error(_('User {0} does not exist'.format(assignee_id)))
                 return p.toolkit.redirect_to('issues_show',
-                                             id=issue_id,
-                                             package_id=dataset_id)
+                                             issue_number=issue_number,
+                                             dataset_id=dataset_id)
 
             try:
                 toolkit.get_action('issue_update')(
-                    data_dict={'id': issue_id, 'assignee_id': assignee['id'],
-                               'dataset_id': dataset_id})
+                    data_dict={
+                        'issue_number': issue_number,
+                        'assignee_id': assignee['id'],
+                        'dataset_id': dataset_id
+                    }
+                )
             except toolkit.NotAuthorized:
                 msg = _('Unauthorized to assign users to issue'.format(
-                    issue_id))
+                    issue_number))
                 toolkit.abort(401, msg)
             except toolkit.ValidationError, e:
                 toolkit.abort(404)
 
-
         return p.toolkit.redirect_to('issues_show',
-                                     id=issue_id,
-                                     package_id=dataset_id)
+                                     issue_number=issue_number,
+                                     dataset_id=dataset_id)
 
-    def report(self, dataset_id, issue_id):
+    def report(self, dataset_id, issue_number):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             if not c.user:
                 msg = _('You must be logged in to report issues'.format(
-                    issue_id))
+                    issue_number))
                 toolkit.abort(401, msg)
             try:
                 toolkit.get_action('issue_report')(
-                    data_dict={'issue_id': issue_id, 'dataset_id': dataset_id}
+                    data_dict={
+                        'issue_number': issue_number,
+                        'dataset_id': dataset_id
+                    }
                 )
                 h.flash_success(_('Issue reported to an administrator'))
             except toolkit.ValidationError:
                 toolkit.abort(404)
             except ReportAlreadyExists, e:
                 h.flash_error(e.message)
-            h.redirect_to('issues_show', package_id=dataset_id,
-                          id=issue_id)
 
-    def report_comment(self, dataset_id, issue_id, comment_id):
+            h.redirect_to('issues_show',
+                          dataset_id=dataset_id,
+                          issue_number=issue_number)
+
+    def report_comment(self, dataset_id, issue_number, comment_id):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             if not c.user:
                 msg = _('You must be logged in to report comments')\
-                    .format(issue_id)
+                    .format(issue_number)
                 toolkit.abort(401, msg)
             try:
                 toolkit.get_action('issue_comment_report')(
-                    data_dict={'issue_comment_id': comment_id,
-                               'dataset_id': dataset_id}
+                    data_dict={
+                        'comment_id': comment_id,
+                        'issue_number': issue_number,
+                        'dataset_id': dataset_id
+                    }
                 )
                 h.flash_success(
                     _('Comment has been reported to an administrator')
                 )
-                h.redirect_to('issues_show', package_id=dataset_id,
-                              id=issue_id)
+                h.redirect_to('issues_show',
+                              dataset_id=dataset_id,
+                              issue_number=issue_number)
             except toolkit.ValidationError:
                 toolkit.abort(404)
             except ReportAlreadyExists, e:
                 h.flash_error(e.message)
-            h.redirect_to('issues_show', package_id=dataset_id,
-                          id=issue_id)
+            h.redirect_to('issues_show', dataset_id=dataset_id,
+                          issue_number=issue_number)
 
-    def report_clear(self, dataset_id, issue_id):
+    def report_clear(self, dataset_id, issue_number):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             try:
                 toolkit.get_action('issue_report_clear')(
-                    data_dict={'issue_id': issue_id, 'dataset_id': dataset_id}
+                    data_dict={
+                        'issue_number': issue_number,
+                        'dataset_id': dataset_id
+                    }
                 )
                 h.flash_success(_('Issue report cleared'))
-                h.redirect_to('issues_show', package_id=dataset_id,
-                              id=issue_id)
+                h.redirect_to('issues_show',
+                              dataset_id=dataset_id,
+                              issue_number=issue_number)
             except toolkit.NotAuthorized:
-                msg = _('You must be logged in clear abuse reports')\
-                    .format(issue_id)
+                msg = _('You must be logged in clear abuse reports').format(
+                    issue_number
+                )
                 toolkit.abort(401, msg)
             except toolkit.ValidationError:
                 toolkit.abort(404)
+            except toolkit.ObjectNotFound:
+                toolkit.abort(404)
 
-    def comment_report_clear(self, dataset_id, issue_id, comment_id):
+    def comment_report_clear(self, dataset_id, issue_number, comment_id):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             try:
                 toolkit.get_action('issue_comment_report_clear')(
-                    data_dict={'issue_comment_id': comment_id,
+                    data_dict={'comment_id': comment_id,
+                               'issue_number': issue_number,
                                'dataset_id': dataset_id}
                 )
                 h.flash_success(_('Abuse report cleared'))
-                h.redirect_to('issues_show', package_id=dataset_id,
-                              id=issue_id)
+                h.redirect_to('issues_show',
+                              dataset_id=dataset_id,
+                              issue_number=issue_number)
             except toolkit.NotAuthorized:
-                msg = _('You must be logged in to clear abuse reports')\
-                    .format(issue_id)
+                msg = _('You must be logged in to clear abuse reports').format(
+                    issue_number
+                )
                 toolkit.abort(401, msg)
             except toolkit.ValidationError:
+                toolkit.abort(404)
+            except toolkit.ObjectNotFound:
                 toolkit.abort(404)
 
     def issues_for_organization(self, org_id):
@@ -403,7 +440,8 @@ class IssueController(BaseController):
             msg = toolkit._("Validation error: {0}".format(e.error_summary))
             log.warning(msg + ' - Issues for org: %s', org_id)
             h.flash(msg, category='alert-error')
-            return p.toolkit.redirect_to('issues_for_organization', org_id=org_id)
+            return p.toolkit.redirect_to('issues_for_organization',
+                                         org_id=org_id)
         return render("issues/organization_issues.html",
                       extra_vars=template_params)
 
@@ -419,9 +457,9 @@ class IssueController(BaseController):
         """.format(gid=c.org.id)
         results = model.Session.execute(q)
 
-        package_ids = [x['table_id'] for x in results]
+        dataset_ids = [x['table_id'] for x in results]
         issues = model.Session.query(issuemodel.Issue)\
-            .filter(issuemodel.Issue.dataset_id.in_(package_ids))\
+            .filter(issuemodel.Issue.dataset_id.in_(dataset_ids))\
             .order_by(issuemodel.Issue.created.desc())
 
         c.results = collections.defaultdict(list)
@@ -452,23 +490,28 @@ class IssueController(BaseController):
             tc.issue_count = t.issue_count
 
             # get issues items for each category
-            tc.issues = model.Session.query(issuemodel.Issue).filter(issuemodel.Issue.resolved == None)\
-                .filter(issuemodel.Issue.issue_category_id == t.issue_category_id) \
+            tc.issues = model.Session.query(issuemodel.Issue)\
+                .filter(issuemodel.Issue.resolved == None)\
+                .filter(
+                    issuemodel.Issue.issue_category_id == t.issue_category_id
+                )\
                 .order_by(issuemodel.Issue.created.desc())
 
             for issues in tc.issues:
                 if issues.package_id:
-                    c.pkg_names[issues.package_id] = model.Package.get(issues.package_id).name
+                    c.pkg_names[issues.package_id] = model.Package.get(
+                        issues.package_id).name
+
             c.categories.append(tc)
         # sort into alphabetical order
-        c.categories.sort(key = lambda x: x.name)
+        c.categories.sort(key=lambda x: x.name)
         return render("issues/all_issues.html")
 
 
-def _dataset_handle_error(package_id, exc):
+def _dataset_handle_error(dataset_id, exc):
     msg = toolkit._("Validation error: {0}".format(exc.error_summary))
     h.flash(msg, category='alert-error')
-    return p.toolkit.redirect_to('issues_dataset', package_id=package_id)
+    return p.toolkit.redirect_to('issues_dataset', dataset_id=dataset_id)
 
 
 def issues_for_dataset(dataset_id, get_query_dict):
@@ -500,9 +543,13 @@ def issues_for_org(org_id, get_query_dict):
     return template_params
 
 
-def _search_issues(dataset_id=None, organization_id=None,
+def _search_issues(dataset_id=None,
+                   organization_id=None,
                    status=issuemodel.ISSUE_STATUS.open,
-                   sort='newest', spam_state=None, q='', page=1,
+                   sort='newest',
+                   spam_state=None,
+                   q='',
+                   page=1,
                    per_page=get_issues_per_page()[0],
                    include_datasets=False,
                    include_reports=True):
@@ -522,6 +569,7 @@ def _search_issues(dataset_id=None, organization_id=None,
     issue_count = search_result['count']
 
     pagination = Pagination(page, limit, issue_count)
+    import ipdb; ipdb.set_trace()
 
     template_variables = {
         'issues': issues,

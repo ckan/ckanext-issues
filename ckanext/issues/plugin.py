@@ -60,36 +60,48 @@ class IssuesPlugin(p.SingletonPlugin):
     def before_map(self, map):
         from ckan.config.routing import SubMapper
 
-        with SubMapper(map, controller='ckanext.issues.controller:IssueController') as m:
-            m.connect('issues_dataset', '/dataset/:package_id/issues', action='dataset')
-            m.connect('issues_new', '/dataset/:package_id/issues/new',
-                    action='new')
-            m.connect('issues_edit', '/dataset/:package_id/issues/:id/edit',
-                    action='edit')
-            m.connect('issues_delete', '/dataset/:dataset_id/issues/:issue_id/delete',
-                    action='delete')
+        controller_name = 'ckanext.issues.controller:IssueController'
+        with SubMapper(map, controller=controller_name) as m:
+            m.connect('issues_dataset',
+                      '/dataset/:dataset_id/issues',
+                      action='dataset')
+            m.connect('issues_new',
+                      '/dataset/:dataset_id/issues/new',
+                      action='new')
+            m.connect('issues_edit',
+                      '/dataset/:dataset_id/issues/:issue_number/edit',
+                      action='edit')
+            m.connect('issues_delete',
+                      '/dataset/:dataset_id/issues/:issue_number/delete',
+                      action='delete')
             m.connect('issues_assign',
-                      '/dataset/:dataset_id/issues/:issue_id/assign',
+                      '/dataset/:dataset_id/issues/:issue_number/assign',
                       action='assign')
-            m.connect('issues_comments', '/dataset/:package_id/issues/:id/comments',
-                    action='comments')
+            m.connect('issues_comments',
+                      '/dataset/:dataset_id/issues/:issue_number/comments',
+                      action='comments')
             m.connect('issues_report',
-                      '/dataset/:dataset_id/issues/:issue_id/report',
+                      '/dataset/:dataset_id/issues/:issue_number/report',
                       action='report'),
             m.connect('issues_report_clear',
-                      '/dataset/:dataset_id/issues/:issue_id/report_clear',
+                      '/dataset/:dataset_id/issues/:issue_number/report_clear',
                       action='report_clear'),
             m.connect('issues_comment_report',
-                      '/dataset/:dataset_id/issues/:issue_id/comment/:comment_id/report',
+                      '/dataset/:dataset_id/issues/:issue_number/comment/:comment_id/report',
                       action='report_comment'),
             m.connect('issues_comment_report_clear',
-                      '/dataset/:dataset_id/issues/:issue_id/comment/:comment_id/report_clear',
+                      '/dataset/:dataset_id/issues/:issue_number/comment/:comment_id/report_clear',
                       action='comment_report_clear'),
-            m.connect('add_issue_with_resource', '/dataset/:package_id/issues/new/:resource_id', action='add')
-            m.connect('issues_show', '/dataset/:package_id/issues/:id',
-                    action='show')
+            m.connect('add_issue_with_resource',
+                      '/dataset/:dataset_id/issues/new/:resource_id',
+                      action='add')
+            m.connect('issues_show',
+                      '/dataset/:dataset_id/issues/:issue_number',
+                      action='show')
             # Broken: m.connect('all_issues_page', '/issues', action='all_issues_page')
-            m.connect('issues_for_organization', '/organization/:org_id/issues', action='issues_for_organization')
+            m.connect('issues_for_organization',
+                      '/organization/:org_id/issues',
+                      action='issues_for_organization')
 
         return map
 
@@ -97,8 +109,8 @@ class IssuesPlugin(p.SingletonPlugin):
 
     def get_actions(self):
         return dict((name, function) for name, function
-            in action.__dict__.items()
-            if callable(function))
+                    in action.__dict__.items()
+                    if callable(function))
 
     # IAuthFunctions
 

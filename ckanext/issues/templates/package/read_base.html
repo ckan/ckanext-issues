@@ -3,6 +3,6 @@
 {% block content_primary_nav %}
   {{ super() }}
   {% if h.issues_enabled(pkg) %}
-    {{ h.build_nav_icon('issues_dataset', _('Issues'), package_id=pkg.name) }}
+    {{ h.build_nav_icon('issues_dataset', _('Issues'), dataset_id=pkg.name) }}
   {% endif %}
 {% endblock %}

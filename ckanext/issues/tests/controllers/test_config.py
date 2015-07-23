@@ -19,12 +19,14 @@ class TestDatasetList(helpers.FunctionalTestBase):
                                          owner_org=self.org['id'],
                                          name='test-dataset',
                                          )
-        self.dataset_1 = factories.Dataset(user=self.owner,
-                                         extras=[{
-                                             'key': 'issues_enabled',
-                                             'value': True
-                                             }],
-                                         owner_org=self.org['name'])
+        self.dataset_1 = factories.Dataset(
+            user=self.owner,
+            extras=[{
+                'key': 'issues_enabled',
+                'value': True
+            }],
+            owner_org=self.org['name']
+        )
         self.issue = issue_factories.Issue(user=self.owner,
                                            user_id=self.owner['id'],
                                            dataset_id=self.dataset['id'],
@@ -38,7 +40,8 @@ class TestDatasetList(helpers.FunctionalTestBase):
     def test_issues_enabled_for_test_dataset(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_dataset', package_id=self.dataset['id']),
+            url=toolkit.url_for('issues_dataset',
+                                dataset_id=self.dataset['id']),
             extra_environ=env,
         )
         assert_equals(200, response.status_int)
@@ -50,7 +53,7 @@ class TestDatasetList(helpers.FunctionalTestBase):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
             url=toolkit.url_for('issues_dataset',
-                                package_id=self.dataset_1['id']),
+                                dataset_id=self.dataset_1['id']),
             extra_environ=env,
             expect_errors=True
         )
@@ -64,15 +67,16 @@ class TestDatasetExtra(helpers.FunctionalTestBase):
         self.org = factories.Organization(user=self.owner)
         self.dataset = factories.Dataset(user=self.owner,
                                          owner_org=self.org['id'],
-                                         name='test-dataset',
-                                         )
+                                         name='test-dataset')
 
-        self.dataset_1 = factories.Dataset(user=self.owner,
-                                         extras=[{
-                                             'key': 'issues_enabled',
-                                             'value': True
-                                             }],
-                                         owner_org=self.org['name'])
+        self.dataset_1 = factories.Dataset(
+            user=self.owner,
+            extras=[{
+                'key': 'issues_enabled',
+                'value': True
+            }],
+            owner_org=self.org['name']
+        )
         self.issue = issue_factories.Issue(user=self.owner,
                                            user_id=self.owner['id'],
                                            dataset_id=self.dataset['id'],
@@ -87,7 +91,8 @@ class TestDatasetExtra(helpers.FunctionalTestBase):
         '''test-dataset has no extra'''
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
-            url=toolkit.url_for('issues_dataset', package_id=self.dataset['id']),
+            url=toolkit.url_for('issues_dataset',
+                                dataset_id=self.dataset['id']),
             extra_environ=env,
             expect_errors=True
         )
@@ -97,7 +102,7 @@ class TestDatasetExtra(helpers.FunctionalTestBase):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
             url=toolkit.url_for('issues_dataset',
-                                package_id=self.dataset_1['id']),
+                                dataset_id=self.dataset_1['id']),
             extra_environ=env,
         )
         assert_equals(200, response.status_int)

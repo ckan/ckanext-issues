@@ -15,6 +15,7 @@ except ImportError:
 
 from pylons import config
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import desc
 
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
@@ -34,27 +35,37 @@ def _add_reports(obj, can_edit, current_user):
             return []
 
 
-def issue_show(context, data_dict=None):
+@validate(schema.issue_show_schema)
+def issue_show(context, data_dict):
     '''Return a single issue.
 
-    :param id: the id of the issue to show
-    :type id: string
+    :param dataset_id: the dataset id of the issue to show
+    :type dataset_id: string
+    :param issue_number: the issue number
+    :type issue_number: string
+    :param include_reports: whether to include abuse reports in the output
+    :type include_reports: bool
 
     :rtype: dictionary
     '''
+    session = context['session']
+    dataset_id = data_dict['dataset_id']
+    issue_number = data_dict['issue_number']
+    issue = issuemodel.Issue.get_by_number(dataset_id, issue_number, session)
+    if not issue:
+        raise p.toolkit.NotFound(p.toolkit._('Issue does not exist'))
 
-    id = _get_or_bust(data_dict, 'id')
-    issue = issuemodel.Issue.get(id)
     context['issue'] = issue
-    if issue is None:
-        raise NotFound
     issue_dict = issue.as_dict()
 
     user = context.get('user')
     if user:
         try:
-            can_edit = p.toolkit.check_access('package_update', context,
-                                            data_dict={'id': issue.dataset_id})
+            can_edit = p.toolkit.check_access(
+                'package_update',
+                context,
+                data_dict={'id': issue.dataset_id}
+            )
         except p.toolkit.NotAuthorized:
             can_edit = False
     else:
@@ -74,6 +85,15 @@ def issue_show(context, data_dict=None):
 
     p.toolkit.check_access('issue_show', context, issue_dict)
     return issue_dict
+
+
+def _get_next_issue_number(session, dataset_id):
+    q = session.query(issuemodel.Issue)\
+        .filter(issuemodel.Issue.dataset_id == dataset_id)\
+        .order_by(desc('number')).first()
+    if not q:
+        return 1
+    return q.number + 1
 
 
 @validate(schema.issue_create_schema)
@@ -104,13 +124,17 @@ def issue_create(context, data_dict):
 
     issue = issuemodel.Issue(**data_dict)
     issue.dataset = dataset
-    model.Session.add(issue)
-    model.Session.commit()
+    session = context['session']
+    issue.number = _get_next_issue_number(session, dataset.id)
+
+    session.add(issue)
+    session.commit()
 
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()
 
 
+@validate(schema.issue_update_schema)
 def issue_update(context, data_dict):
     '''Update an issue.
 
@@ -123,28 +147,27 @@ def issue_update(context, data_dict):
     :param dataset_id: the name or id of the dataset that the issue item
         belongs to (optional)
     :type dataset_id: string
+    :param issue_number: the number of the issue.
+    :type issue_number: int
 
     :returns: the newly updated issue item
     :rtype: dictionary
     '''
     p.toolkit.check_access('issue_update', context, data_dict)
-    validated_data_dict, errors = p.toolkit.navl_validate(
-        data_dict,
-        schema.issue_update_schema(),
-        context
-    )
-    if errors:
-        raise p.toolkit.ValidationError(errors)
-
-    # TODO:fix below to use validated_data_dict,
-    #      and move validation into the schema
     session = context['session']
 
-    issue = issuemodel.Issue.get(data_dict['id'], session=session)
+    issue = issuemodel.Issue.get_by_number(
+        dataset_id=data_dict['dataset_id'],
+        issue_number=data_dict['issue_number'],
+        session=session
+    )
     status_change = data_dict.get('status') and (data_dict.get('status') !=
                                                  issue.status)
 
-    ignored_keys = ['id', 'created', 'user', 'dataset_id', 'spam_state']
+    # TODO: move to validation?
+    ignored_keys = ['id', 'created', 'user', 'dataset_id', 'spam_state',
+                    'issue_number', '__extras']
+
     for k, v in data_dict.items():
         if k not in ignored_keys:
             setattr(issue, k, v)
@@ -164,40 +187,35 @@ def issue_update(context, data_dict):
     return issue.as_dict()
 
 
-def issue_comment_create(context, data_dict):
-    '''Add a new issue comment.
+@validate(schema.issue_delete_schema)
+def issue_delete(context, data_dict):
+    '''Delete and issues
 
-    You must provide your API key in the Authorization header.
-
-    :param comment: the comment text
-    :type comment: string
-    :param issue_id: the id of the issue the comment belongs to
-    :type dataset_id: integer
-
-    :returns: the newly created issue comment
-    :rtype: dictionary
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to
+    :type dataset_id: string
+    :param issue_number: the number of the issue.
+    :type issue_number: integer
     '''
-    user = context['user']
-    user_obj = model.User.get(user)
+    p.toolkit.check_access('issue_delete', context, data_dict)
+    session = context['session']
+    dataset_id = data_dict['dataset_id']
+    issue_number = data_dict['issue_number']
 
-    issue = issuemodel.Issue.get(data_dict['issue_id'])
-    if issue is None:
-        raise p.toolkit.ValidationError({
-            'issue_id': ['No issue exists with id %s' % data_dict['issue_id']]
-        })
-
-    auth_dict = {'dataset_id': issue.dataset_id}
-    p.toolkit.check_access('issue_comment_create', context, auth_dict)
-
-    data_dict['user_id'] = user_obj.id
-
-    issue = issuemodel.IssueComment(**data_dict)
-    model.Session.add(issue)
-    model.Session.commit()
-
-    log.debug('Created issue comment %s' % (issue.id))
-
-    return issue.as_dict()
+    issue = issuemodel.Issue.get_by_number(
+        dataset_id=dataset_id,
+        issue_number=issue_number,
+        session=session
+    )
+    if not issue:
+        raise NotFound(
+            '{issue_number} for dataset {dataset_id} was not found.'.format(
+                issue_number=issue_number,
+                dataset_id=dataset_id,
+            )
+        )
+    session.delete(issue)
+    session.commit()
 
 
 @p.toolkit.side_effect_free
@@ -304,24 +322,45 @@ def _filter_reports_for_user(user_id, results):
     return results
 
 
-@validate(schema.issue_delete_schema)
-def issue_delete(context, data_dict):
-    '''Delete and issues
+@validate(schema.issue_comment_schema)
+def issue_comment_create(context, data_dict):
+    '''Add a new issue comment.
 
-    :param dataset_id: the name or id of the dataset that the issue item
-        belongs to
-    :type dataset_id: string
-    :param issue_id: the id of the issue the comment belongs to
-    :type issue_id: integer
+    You must provide your API key in the Authorization header.
+
+    :param comment: the comment text
+    :type comment: string
+    :param issue_number: the number of the issue the comment belongs to
+    :type issue_number: integer
+    :param dataset_id: the dataset id of the issue the comment belongs to
+    :type dataset_id: unicode
+
+    :returns: the newly created issue comment
+    :rtype: dictionary
     '''
-    p.toolkit.check_access('issue_delete', context, data_dict)
-    session = context['session']
-    issue_id = data_dict['issue_id']
-    issue = issuemodel.Issue.get(issue_id, session=session)
-    if not issue:
-        raise NotFound('{0} was not found.'.format(issue_id))
-    session.delete(issue)
-    session.commit()
+    p.toolkit.check_access('issue_comment_create', context, data_dict)
+    user = context['user']
+    user_obj = model.User.get(user)
+
+    issue = issuemodel.Issue.get_by_number(
+        dataset_id=data_dict['dataset_id'],
+        issue_number=data_dict['issue_number'],
+    )
+
+    comment_dict = data_dict.copy()
+    del comment_dict['dataset_id']
+    del comment_dict['issue_number']
+    comment_dict.update({
+        'user_id': user_obj.id,
+        'issue_id': issue.id,
+    })
+
+    issue_comment = issuemodel.IssueComment(**comment_dict)
+    model.Session.add(issue_comment)
+    model.Session.commit()
+
+    log.debug('Created issue comment %s' % (issue.id))
+    return issue_comment.as_dict()
 
 
 @p.toolkit.side_effect_free
@@ -367,10 +406,12 @@ def issue_report(context, data_dict):
     p.toolkit.check_access('issue_report', context, data_dict)
     session = context['session']
 
-    issue_id = data_dict['issue_id']
-    issue = issuemodel.Issue.get(issue_id, session=session)
+    issue = issuemodel.Issue.get_by_number(
+        issue_number=data_dict['issue_number'],
+        dataset_id=data_dict['dataset_id'],
+        session=session,
+    )
     user_obj = model.User.get(context['user'])
-    #session.begin_nested()
     try:
         issue.report_abuse(session, user_obj.id)
     except IntegrityError:
@@ -393,9 +434,57 @@ def issue_report(context, data_dict):
         issue.change_visiblity(session, u'hidden')
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
-        if max_strikes and len(issue.abuse_reports) >= p.toolkit.asint(max_strikes):
+        if (max_strikes
+           and len(issue.abuse_reports) >= p.toolkit.asint(max_strikes)):
             issue.change_visiblity(session, u'hidden')
     session.commit()
+
+
+@validate(schema.issue_report_schema)
+def issue_report_show(context, data_dict):
+    '''Fetch the abuse reports for an issue
+
+    If you are a package owner, this returns the full list of users that have
+    reported this issue, otherwise it will return whether the user has marked
+    the issue as abuse
+
+    :param dataset_id: the name or id of the dataset that the issue item
+        belongs to
+    :type dataset_id: string
+    :param issue_number: the number of the issue the comment belongs to
+    :type issue_number: integer
+    '''
+    p.toolkit.check_access('issue_report', context, data_dict)
+    session = context['session']
+
+    user = context['user']
+    user_obj = model.User.get(user)
+    user_id = user_obj.id
+
+    try:
+        dataset_id = data_dict['dataset_id']
+        issue_number = data_dict['issue_number']
+        package_context = {
+            'user': context['user'],
+            'session': session,
+            'model': model,
+        }
+        p.toolkit.check_access('package_update', package_context,
+                               data_dict={'id': dataset_id})
+        reports = issuemodel.IssueReport.get_reports(
+            session,
+            issue_number=issue_number,
+            dataset_id=dataset_id,
+        )
+    except p.toolkit.NotAuthorized:
+        reports = issuemodel.IssueReport.get_reports_for_user(
+            session,
+            user_id,
+            dataset_id,
+            issue_number,
+        )
+
+    return [i.user_id for i in reports]
 
 
 @validate(schema.issue_report_schema)
@@ -405,14 +494,19 @@ def issue_report_clear(context, data_dict):
     :param dataset_id: the name or id of the dataset that the issue item
         belongs to
     :type dataset_id: string
-    :param issue_id: the id of the issue the comment belongs to
-    :type issue_id: integer
+    :param issue_number: the id of the issue the comment belongs to
+    :type issue_number: integer
     '''
     p.toolkit.check_access('issue_report_clear', context, data_dict)
     session = context['session']
 
-    issue_id = data_dict['issue_id']
-    issue = issuemodel.Issue.get(issue_id, session=session)
+    issue_number = data_dict['issue_number']
+    dataset_id = data_dict['dataset_id']
+    issue = issuemodel.Issue.get_by_number(
+        session=session,
+        dataset_id=dataset_id,
+        issue_number=issue_number
+    )
 
     user = context['user']
     user_obj = model.User.get(user)
@@ -430,7 +524,8 @@ def issue_report_clear(context, data_dict):
     except p.toolkit.NotAuthorized:
         issue.clear_abuse_report(session, user_id)
         max_strikes = config.get('ckanext.issues.max_strikes')
-        if max_strikes and len(issue.abuse_reports) <= p.toolkit.asint(max_strikes):
+        if (max_strikes
+           and len(issue.abuse_reports) <= p.toolkit.asint(max_strikes)):
             issue.change_visiblity(session, u'visible')
     session.commit()
     return True
@@ -444,20 +539,17 @@ def issue_comment_report(context, data_dict):
     any other user, this will up the spam count until it exceeds the config
     option ckanext.issues.max_strikes
 
-    :param dataset_id: the name or id of the dataset that the issue item
-        belongs to
-    :type dataset_id: string
-    :param issue_comment_id: the id of the issue the comment belongs to
-    :type issue_comment_id: integer
+    :param comment_id: the id of the issue the comment belongs to
+    :type comment_id: integer
     '''
     p.toolkit.check_access('issue_report', context, data_dict)
     session = context['session']
 
-    issue_id = data_dict['issue_comment_id']
-    issue_comment = issuemodel.IssueComment.get(issue_id, session=session)
+    comment_id = data_dict['comment_id']
+    comment = issuemodel.IssueComment.get(comment_id, session=session)
     user_obj = model.User.get(context['user'])
     try:
-        issue_comment.report_abuse(session, user_obj.id)
+        comment.report_abuse(session, user_obj.id)
     except IntegrityError:
         session.rollback()
         raise ReportAlreadyExists(
@@ -466,7 +558,7 @@ def issue_comment_report(context, data_dict):
     try:
         # if you're an org admin/editor (can edit the dataset, it gets marked
         # as spam immediately
-        dataset_id = data_dict['dataset_id']
+        dataset_id = comment.issue.dataset_id
         package_context = {
             'user': context['user'],
             'session': session,
@@ -474,12 +566,12 @@ def issue_comment_report(context, data_dict):
         }
         p.toolkit.check_access('package_update', package_context,
                                data_dict={'id': dataset_id})
-        issue_comment.change_visibility(session, u'hidden')
+        comment.change_visibility(session, u'hidden')
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
         if max_strikes:
-            if len(issue_comment.abuse_reports) > p.toolkit.asint(max_strikes):
-                issue_comment.change_visibility(session, u'hidden')
+            if len(comment.abuse_reports) > p.toolkit.asint(max_strikes):
+                comment.change_visibility(session, u'hidden')
     session.commit()
 
 
@@ -490,20 +582,20 @@ def issue_comment_report_clear(context, data_dict):
     :param dataset_id: the name or id of the dataset that the issue item
         belongs to
     :type dataset_id: string
-    :param issue_comment_id: the id of the issue the comment belongs to
-    :type issue_comment_id: integer
+    :param comment_id: the id of the issue the comment belongs to
+    :type comment_id: integer
     '''
     p.toolkit.check_access('issue_report_clear', context, data_dict)
     session = context['session']
 
-    issue_comment_id = data_dict['issue_comment_id']
-    issue_comment = issuemodel.IssueComment.get(issue_comment_id,
-                                                session=session)
+    comment_id = data_dict['comment_id']
+    comment = issuemodel.IssueComment.get(comment_id,
+                                          session=session)
     user = context['user']
     user_obj = model.User.get(user)
     user_id = user_obj.id
     try:
-        dataset_id = data_dict['dataset_id']
+        dataset_id = comment.issue.dataset_id
         package_context = {
             'user': context['user'],
             'session': session,
@@ -511,52 +603,12 @@ def issue_comment_report_clear(context, data_dict):
         }
         p.toolkit.check_access('package_update', package_context,
                                data_dict={'id': dataset_id})
-        issue_comment.clear_all_abuse_reports(session)
+        comment.clear_all_abuse_reports(session)
     except p.toolkit.NotAuthorized:
-        issue_comment.clear_abuse_report(session, user_id)
+        comment.clear_abuse_report(session, user_id)
         max_strikes = config.get('ckanext.issues.max_strikes')
         if (max_strikes and
-           len(issue_comment.abuse_reports) <= p.toolkit.asint(max_strikes)):
-            issue_comment.change_visibility(session, u'visible')
+           len(comment.abuse_reports) <= p.toolkit.asint(max_strikes)):
+            comment.change_visibility(session, u'visible')
     session.commit()
     return True
-
-
-@validate(schema.issue_report_schema)
-def issue_report_show(context, data_dict):
-    '''Fetch the absuse reports for an issue
-
-    If you are a package owner, this returns the full list of users that have
-    reported this issue, otherwise it will return whether the user has marked
-    the issue as abuse
-
-    :param dataset_id: the name or id of the dataset that the issue item
-        belongs to
-    :type dataset_id: string
-    :param issue_id: the id of the issue the comment belongs to
-    :type issue_id: integer
-    '''
-    p.toolkit.check_access('issue_report', context, data_dict)
-    session = context['session']
-
-    issue_id = data_dict['issue_id']
-    user = context['user']
-    user_obj = model.User.get(user)
-    user_id = user_obj.id
-
-    try:
-        # if you're an org admin/editor (can edit the dataset, it gets marked
-        # as spam immediately
-        dataset_id = data_dict['dataset_id']
-        package_context = {
-            'user': context['user'],
-            'session': session,
-            'model': model,
-        }
-        p.toolkit.check_access('package_update', package_context,
-                               data_dict={'id': dataset_id})
-        reports = issuemodel.IssueReport.get_reports(session, issue_id)
-    except p.toolkit.NotAuthorized:
-        reports = issuemodel.IssueReport.get_reports_for_user(session, user_id,
-                                                              issue_id)
-    return [i.user_id for i in reports]
