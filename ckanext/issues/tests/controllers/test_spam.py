@@ -39,7 +39,7 @@ class TestAbuseReport(helpers.FunctionalTestBase):
             extra_environ=env,
         )
         res_chunks = parse_issues_show(response)
-        assert_in('Test issue', res_chunks['issue_name'])
+        assert_in('Test Issue', res_chunks['issue_name'])
         assert_in('Abuse', res_chunks['issue_comment_label'])
 
     def test_reported_as_abuse_appears_in_search_for_publisher(self):

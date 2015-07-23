@@ -13,7 +13,7 @@ from nose.tools import assert_equals, assert_raises
 
 class TestIssueShow(object):
     def setup(self):
-        self.issue = issue_factories.Issue()
+        self.issue = issue_factories.Issue(title='Test Issue')
 
     def teardown(self):
         helpers.reset_db()
@@ -25,7 +25,7 @@ class TestIssueShow(object):
             dataset_id=self.issue['dataset_id'],
             issue_number=self.issue['number'],
         )
-        assert_equals('Test issue', issue['title'])
+        assert_equals('Test Issue', issue['title'])
         assert_equals('Some description', issue['description'])
 
 

@@ -6,7 +6,8 @@ import ckan.new_tests.factories as factories
 from ckanext.issues.tests import factories as issue_factories
 
 import bs4
-from nose.tools import assert_equals, assert_in
+from nose.tools import (assert_equals, assert_in, assert_is_not_none,
+                        assert_is_none)
 
 
 class TestIssueEdit(helpers.FunctionalTestBase):

@@ -569,7 +569,6 @@ def _search_issues(dataset_id=None,
     issue_count = search_result['count']
 
     pagination = Pagination(page, limit, issue_count)
-    import ipdb; ipdb.set_trace()
 
     template_variables = {
         'issues': issues,
