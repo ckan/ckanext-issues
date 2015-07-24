@@ -9,8 +9,6 @@ from ckanext.issues.tests import factories as issue_factories
 from ckanext.issues.model import (
     Issue,
     IssueComment,
-    IssueReport,
-    IssueCommentReport
 )
 from ckanext.issues.exception import ReportAlreadyExists
 
@@ -191,7 +189,7 @@ class TestIssueReportClear(object):
                                       dataset_id=dataset['id'],
                                       spam_state='hidden')
         user = factories.User()
-        model.Session.add(IssueReport(user['id'], issue['id']))
+        model.Session.add(Issue.Report(user['id'], issue['id']))
         model.Session.commit()
         context = {
             'user': user['name'],
@@ -442,6 +440,9 @@ class TestCommentReportClearAsPublisher(object):
             'user': owner['name'],
             'model': model,
         }
+        model.Session.add(IssueComment.Report(owner['id'],
+                                              parent_id=comment['id']))
+        model.Session.commit()
         helpers.call_action('issue_comment_report_clear', context=context,
                             dataset_id=dataset['id'],
                             issue_number=issue['number'],
@@ -451,6 +452,7 @@ class TestCommentReportClearAsPublisher(object):
                                      dataset_id=dataset['id'])
         assert_equals('visible', result['comments'][0]['spam_state'])
         comment_obj = IssueComment.get(comment['id'])
+        model.Session.refresh(comment_obj)
         assert_equals(len(comment_obj.abuse_reports), 0)
 
 
@@ -458,6 +460,7 @@ class TestCommentReportClearAsUser(object):
     @classmethod
     def setup_class(self):
         helpers.reset_db()
+
     # only allow one test here,
     def teardown(self):
         helpers.reset_db()
@@ -474,10 +477,8 @@ class TestCommentReportClearAsUser(object):
                                                issue_number=issue['number'])
 
         user = factories.User()
-        model.Session.add(IssueReport(user['id'],
-                                      dataset_id=dataset['id'],
-                                      issue_number=issue['number'],
-                                      ))
+        model.Session.add(IssueComment.Report(user['id'],
+                                              parent_id=comment['id']))
         model.Session.commit()
         context = {
             'user': user['name'],

@@ -13,7 +13,7 @@ import logging
 import enum
 from sqlalchemy import (func, types, Table, ForeignKey, Column,
                         UniqueConstraint, Index)
-from sqlalchemy.orm import relation, backref, subqueryload
+from sqlalchemy.orm import relation, backref, subqueryload, class_mapper
 from sqlalchemy.sql.expression import or_
 
 log = logging.getLogger(__name__)
@@ -34,6 +34,7 @@ def setup():
     """
     if issue_table is None:
         define_issue_tables()
+        report_tables = define_report_tables([Issue, IssueComment])
         log.debug('Issue tables defined in memory')
 
     if not model.package_table.exists():
@@ -44,8 +45,11 @@ def setup():
         issue_category_table.create(checkfirst=True)
         issue_table.create(checkfirst=True)
         issue_comment_table.create(checkfirst=True)
-        issue_report_table.create(checkfirst=True)
-        issue_comment_report_table.create(checkfirst=True)
+        #issue_report_table.create(checkfirst=True)
+        #issue_comment_report_table.create(checkfirst=True)
+        if report_tables:
+            for table in report_tables:
+                table.create(checkfirst=True)
         log.debug('Issue tables created')
 
         # add default categories if they don't already exist
@@ -255,7 +259,7 @@ class Issue(domain_object.DomainObject):
         return query.one()[0]
 
     def report_abuse(self, session, user_id, **kwargs):
-        self.abuse_reports.append(IssueReport(user_id, self.id))
+        self.abuse_reports.append(self.Report(user_id, self.id))
         session.add(self)
         session.flush()
         return self
@@ -267,11 +271,10 @@ class Issue(domain_object.DomainObject):
         return self
 
     def clear_abuse_report(self, session, user_id):
-        report = IssueReport.get_reports_for_user(
+        report = self.Report.get_reports_for_user(
             session,
-            dataset_id=self.dataset_id,
-            issue_number=self.number,
-            user_id=user_id
+            user_id=user_id,
+            parent_id=self.id,
         ).first()
         if report:
             session.delete(report)
@@ -345,7 +348,7 @@ class IssueComment(domain_object.DomainObject):
         return out
 
     def report_abuse(self, session, user_id, **kwargs):
-        self.abuse_reports.append(IssueCommentReport(user_id, self.id))
+        self.abuse_reports.append(IssueComment.Report(user_id, self.id))
         session.add(self)
         session.flush()
         return self
@@ -357,8 +360,8 @@ class IssueComment(domain_object.DomainObject):
         return self
 
     def clear_abuse_report(self, session, user_id):
-        report = IssueCommentReport.get_reports_for_user(session, user_id,
-                                                         self.id).first()
+        report = IssueComment.Report.get_reports_for_user(session, user_id,
+                                                          self.id).first()
         if report:
             session.delete(report)
             session.flush()
@@ -372,47 +375,20 @@ class IssueComment(domain_object.DomainObject):
         return self
 
 
-class IssueReport(domain_object.DomainObject):
-    def __init__(self, user_id,
-                 issue_id=None,
-                 dataset_id=None,
-                 issue_number=None):
+class Report(domain_object.DomainObject):
+    def __init__(self, user_id, parent_id):
         self.user_id = user_id
-        if issue_id:
-            self.issue_id = issue_id
-        else:
-            issue_object = Issue.get_by_number(dataset_id=dataset_id,
-                                               issue_number=issue_number)
-            self.issue_id = issue_object.id
+        self.parent_id = parent_id
 
     @classmethod
-    def get_reports(cls, session, dataset_id, issue_number):
-        return session.query(cls).join(Issue)\
-            .filter(Issue.number == issue_number)\
-            .filter(Issue.dataset_id == dataset_id)
-
-    @classmethod
-    def get_reports_for_user(cls, session, user_id, dataset_id, issue_number):
-        return session.query(cls).join(Issue)\
-            .filter(Issue.number == issue_number)\
-            .filter(Issue.dataset_id == dataset_id)\
-            .filter(cls.user_id == user_id)
-
-
-class IssueCommentReport(domain_object.DomainObject):
-    def __init__(self, user_id, issue_comment_id):
-        self.user_id = user_id
-        self.issue_comment_id = issue_comment_id
-
-    @classmethod
-    def get_reports(cls, session, issue_comment_id):
+    def get_reports(cls, session, parent_id):
         return session.query(cls).filter(
-            cls.issue_comment_id == issue_comment_id)
+            cls.parent_id == parent_id)
 
     @classmethod
-    def get_reports_for_user(cls, session, user_id, issue_comment_id):
+    def get_reports_for_user(cls, session, user_id, parent_id):
         return session.query(cls).filter(
-            cls.issue_comment_id == issue_comment_id
+            cls.parent_id == parent_id
         ).filter(cls.user_id == user_id)
 
 
@@ -479,30 +455,6 @@ def define_issue_tables():
         Column('spam_state', types.Unicode, default=u'visible'),
     )
 
-    issue_report_table = Table(
-        'issue_report',
-        meta.metadata,
-        Column('id', types.Integer, primary_key=True, autoincrement=True),
-        Column('user_id', types.Unicode, nullable=False),
-        Column('issue_id',
-               types.Integer,
-               ForeignKey('issue.id', ondelete='CASCADE'),
-               nullable=False, index=True),
-        UniqueConstraint('user_id', 'issue_id'),
-    )
-
-    issue_comment_report_table = Table(
-        'issue_comment_report',
-        meta.metadata,
-        Column('id', types.Integer, primary_key=True, autoincrement=True),
-        Column('user_id', types.Unicode, nullable=False),
-        Column('issue_comment_id',
-               types.Integer,
-               ForeignKey('issue_comment.id', ondelete='CASCADE'),
-               nullable=False, index=True),
-        UniqueConstraint('user_id', 'issue_comment_id'),
-    )
-
     meta.mapper(
         Issue,
         issue_table,
@@ -551,28 +503,38 @@ def define_issue_tables():
         }
     )
 
-    meta.mapper(
-        IssueReport,
-        issue_report_table,
-        properties={
-            'issue': relation(
-                Issue,
-                backref=backref('abuse_reports'),
-                primaryjoin=issue_report_table.c.issue_id.__eq__(Issue.id)
-            ),
-        }
-    )
 
-    meta.mapper(
-        IssueCommentReport,
-        issue_comment_report_table,
-        properties={
-            'issue_comment': relation(
-                IssueComment,
-                backref=backref('abuse_reports'),
-                primaryjoin=issue_comment_report_table.c.issue_comment_id.__eq__(
-                    IssueComment.id
-                )
-            ),
-        }
-    )
+def define_report_tables(models):
+    report_tables = []
+    for model_ in models:
+        mapped_class = class_mapper(model_)
+        table_name = mapped_class.mapped_table.fullname
+        report_table = Table(
+            '{0}_report'.format(table_name),
+            meta.metadata,
+            Column('id', types.Integer, primary_key=True, autoincrement=True),
+            Column('user_id', types.Unicode, nullable=False),
+            Column(
+                'parent_id',
+                types.Integer,
+                ForeignKey('{0}.id'.format(table_name), ondelete='CASCADE'),
+                nullable=False, index=True),
+            UniqueConstraint('user_id', 'parent_id'.format(table_name)),
+        )
+
+        ReportClass = type('{0}Report'.format(model_.__name__), (Report,), {})
+        model_.Report = ReportClass
+
+        meta.mapper(
+            ReportClass,
+            report_table,
+            properties={
+                table_name: relation(
+                    model_,
+                    backref=backref('abuse_reports'),
+                    primaryjoin=report_table.c.parent_id == model_.id
+                ),
+            }
+        )
+        report_tables.append(report_table)
+    return report_tables

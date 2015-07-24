@@ -477,9 +477,11 @@ def issue_report_show(context, data_dict):
     user_obj = model.User.get(user)
     user_id = user_obj.id
 
+    dataset_id = data_dict['dataset_id']
+    issue_number = data_dict['issue_number']
+    issue = issuemodel.Issue.get_by_number(dataset_id, issue_number, session)
+
     try:
-        dataset_id = data_dict['dataset_id']
-        issue_number = data_dict['issue_number']
         package_context = {
             'user': context['user'],
             'session': session,
@@ -487,17 +489,13 @@ def issue_report_show(context, data_dict):
         }
         p.toolkit.check_access('package_update', package_context,
                                data_dict={'id': dataset_id})
-        reports = issuemodel.IssueReport.get_reports(
-            session,
-            issue_number=issue_number,
-            dataset_id=dataset_id,
-        )
+        reports = issuemodel.Issue.Report.get_reports(session,
+                                                      parent_id=issue.id)
     except p.toolkit.NotAuthorized:
-        reports = issuemodel.IssueReport.get_reports_for_user(
+        reports = issuemodel.Issue.Report.get_reports_for_user(
             session,
-            user_id,
-            dataset_id,
-            issue_number,
+            user_id=user_id,
+            parent_id=issue.id
         )
 
     return [i.user_id for i in reports]
@@ -543,7 +541,8 @@ def issue_report_clear(context, data_dict):
         if (max_strikes
            and len(issue.abuse_reports) <= p.toolkit.asint(max_strikes)):
             issue.change_visiblity(session, u'visible')
-    session.commit()
+    finally:
+        session.commit()
     return True
 
 
@@ -588,7 +587,8 @@ def issue_comment_report(context, data_dict):
         if max_strikes:
             if len(comment.abuse_reports) > p.toolkit.asint(max_strikes):
                 comment.change_visibility(session, u'hidden')
-    session.commit()
+    finally:
+        session.commit()
 
 
 @validate(schema.issue_comment_report_schema)
@@ -626,5 +626,6 @@ def issue_comment_report_clear(context, data_dict):
         if (max_strikes and
            len(comment.abuse_reports) <= p.toolkit.asint(max_strikes)):
             comment.change_visibility(session, u'visible')
-    session.commit()
+    finally:
+        session.commit()
     return True

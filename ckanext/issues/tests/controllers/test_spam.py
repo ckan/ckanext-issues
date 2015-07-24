@@ -6,9 +6,8 @@ from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
 
-from ckanext.issues.model import Issue
+from ckanext.issues.model import Issue, IssueComment
 from ckanext.issues.tests import factories as issue_factories
-from ckanext.issues.model import IssueReport, IssueCommentReport
 
 from lxml import etree
 from nose.tools import assert_equals, assert_in
@@ -164,9 +163,8 @@ class TestReport(helpers.FunctionalTestBase):
 
     def test_report_clear_normal_user(self):
         user = factories.User()
-        model.Session.add(IssueReport(user['id'],
-                                      dataset_id=self.dataset['id'],
-                                      issue_number=self.issue['number']))
+        model.Session.add(Issue.Report(user['id'],
+                                      self.issue['id']))
         model.Session.commit()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = self.app.post(
@@ -262,7 +260,7 @@ class TestCommentAbuseReports(helpers.FunctionalTestBase):
 
     def test_report_clear_state_normal_user(self):
         user = factories.User()
-        model.Session.add(IssueCommentReport(user['id'], self.comment['id']))
+        model.Session.add(IssueComment.Report(user['id'], self.comment['id']))
         model.Session.commit()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = self.app.post(
