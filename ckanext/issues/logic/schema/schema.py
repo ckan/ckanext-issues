@@ -68,8 +68,10 @@ def issue_search_schema():
         'offset': [ignore_missing, is_natural_number],
         'q': [ignore_missing, unicode],
         'spam_state': [ignore_missing, unicode],
+        'include_count': [ignore_missing, bool],
         'include_datasets': [ignore_missing, bool],
         'include_reports': [ignore_missing, bool],
+        'include_results': [ignore_missing, bool],
         'include_sub_organizations': [ignore_missing, bool],
     }
 

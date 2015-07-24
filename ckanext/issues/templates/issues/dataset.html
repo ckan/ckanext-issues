@@ -43,13 +43,13 @@
     {% if pagination.has_previous %}
       <li>
         {% set href = h.replace_url_param(new_params={'page': pagination.page - 1}, extras={'dataset_id':pkg['id']}) %}
-        <a href={{ href }}>«</a>
+        <a id="pagination-previous-link" href="{{ href }}">«</a>
       </li>
     {% endif %}
     {% if pagination.show_previous %}
       <li>
         {% set href = h.replace_url_param(new_params={'page': 1}, extras={'dataset_id':pkg['id']}) %}
-        <a href={{ href }}>1</a>
+        <a id="pagination-1-link"href="{{ href }}">1</a>
       </li>
       <li class="disabled">
         <a href="#">...</a>
@@ -60,7 +60,7 @@
         {% set href = h.replace_url_param(new_params={'page': page}, extras={'dataset_id':pkg['id']}) %}
         {% if page != pagination.page %}
           <li>
-            <a href={{ href }}>{{ page }}</a>
+          <a id="pagination-{{ page }}-link" href="{{ href }}">{{ page }}</a>
           </li>
         {% else %}
           <li class="disabled">
@@ -75,13 +75,13 @@
       </li>
       <li>
         {% set href = h.replace_url_param(new_params={'page': pagination.pages }, extras={'dataset_id':pkg['id']}) %}
-        <a href={{ href }}>{{ pagination.pages }}</a>
+        <a id="pagination-{{ pagination.pages }}-link" href="{{ href }}">{{ pagination.pages }}</a>
       </li>
     {% endif %}
     {% if pagination.has_next %}
       <li>
       {% set href = h.replace_url_param(new_params={'page': pagination.page + 1}, extras={'dataset_id':pkg['id']}) %}
-        <a href={{ href }}>»</a>
+      <a id="pagination-next-link" href="{{ href }}">»</a>
       </li>
     {% endif %}
     </ul>
@@ -91,7 +91,7 @@
       {% for per_page_option in issues_per_page %}
         <li{% if per_page_option==pagination.per_page %} class="active"{% endif %}>
         {% set href = h.replace_url_param(new_params={'per_page': per_page_option, 'page': 1}, extras={'dataset_id':pkg['id']}) %}
-        <a href={{ href }}>{{ per_page_option }}</a>
+        <a id="per-page-{{ per_page_option }}-link" href="{{ href }}">{{ per_page_option }}</a>
         </li>
       {% endfor %}
         <li class="disabled">

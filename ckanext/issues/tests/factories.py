@@ -10,7 +10,7 @@ import factory
 class Issue(factory.Factory):
     FACTORY_FOR = model.Issue
 
-    title  = factory.Sequence(lambda n: 'Test Issue {n}'.format(n=n))
+    title  = factory.Sequence(lambda n: 'Test Issue [{n}]'.format(n=n))
     description = 'Some description'
     dataset_id = factory.LazyAttribute(lambda _: factories.Dataset()['id'])
 

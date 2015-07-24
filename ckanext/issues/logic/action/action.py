@@ -248,6 +248,13 @@ def issue_search(context, data_dict):
     :param include_datasets: include details of the dataset each issue is
         attached to
     :type include_datasets: bool
+    :param include_count: perform an additional query to count the number of
+        datasets
+    :type include_count: bool
+    :param include_results: include dictized results of the issues, you will
+        only want to do this if you're just looking to get a count of the
+        number of datasets without fetching and dictizing the issue objects
+    :type include_results: bool
 
     :returns: list of issues
     :rtype: list of dictionaries
@@ -283,17 +290,26 @@ def issue_search(context, data_dict):
     data_dict.pop('__extras', None)
     include_datasets = p.toolkit.asbool(data_dict.get('include_datasets'))
     include_reports = p.toolkit.asbool(data_dict.get('include_reports'))
+    include_count = p.toolkit.asbool(data_dict.pop('include_count', True))
+    include_results = p.toolkit.asbool(data_dict.pop('include_results', True))
     data_dict['include_datasets'] = include_datasets
 
     query = issuemodel.Issue.get_issues(
         session=context['session'],
         **data_dict)
 
-    count = query.count()
-    results = [issue.as_plain_dict(u, comment_count_, updated,
-                                   include_dataset=include_datasets,
-                                   include_reports=include_reports)
-               for (issue, u, comment_count_, updated) in query.all()]
+    if include_count:
+        count = query.count()
+    else:
+        count = None
+
+    if include_results:
+        results = [issue.as_plain_dict(u, comment_count_, updated,
+                                       include_dataset=include_datasets,
+                                       include_reports=include_reports)
+                   for (issue, u, comment_count_, updated) in query.all()]
+    else:
+        results = []
 
     if include_reports and not can_update:
         user_obj = model.User.get(user)

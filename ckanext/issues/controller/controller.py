@@ -562,11 +562,26 @@ def _search_issues(dataset_id=None,
     offset = (page - 1) * limit
     params.pop('page', None)
     params.pop('per_page', None)
-    params['offset'] = offset
 
-    search_result = toolkit.get_action('issue_search')(data_dict=params)
-    issues = search_result['results']
-    issue_count = search_result['count']
+    # fetch only the results for the current page
+    params.update({
+        'include_count': False,
+        'limit': limit,
+        'offset': offset,
+    })
+
+    results_for_current_page = toolkit.get_action('issue_search')(
+        data_dict=params
+    )
+    issues = results_for_current_page['results']
+
+    # fetch the total count of all the search results without dictizing
+    params['include_count'] = True
+    params['include_results'] = False
+    params.pop('limit', None)
+    params.pop('offset', None)
+    all_search_results = toolkit.get_action('issue_search')(data_dict=params)
+    issue_count = all_search_results['count']
 
     pagination = Pagination(page, limit, issue_count)
 
