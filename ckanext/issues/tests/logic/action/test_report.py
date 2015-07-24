@@ -45,7 +45,7 @@ class TestReportAnIssue(object):
 
         issue_obj = Issue.get(issue['id'])
         assert_equals(len(issue_obj.abuse_reports), 1)
-        assert_equals(issue_obj.spam_state, 'visible')
+        assert_equals(issue_obj.visibility, 'visible')
 
     def test_publisher_reports_an_issue(self):
         '''this should immediately hide the issue'''
@@ -71,7 +71,7 @@ class TestReportAnIssue(object):
             dataset_id=dataset['id'],
             issue_number=issue['number'],
         )
-        assert_equals('hidden', result['spam_state'])
+        assert_equals('hidden', result['visibility'])
 
     @mock.patch('ckanext.issues.logic.action.action.config')
     def test_max_strikes_hides_issues(self, mock):
@@ -109,7 +109,7 @@ class TestReportAnIssue(object):
 
         issue_obj = Issue.get(issue['id'])
         assert_equals(len(issue_obj.abuse_reports), 2)
-        assert_equals('hidden', issue_obj.spam_state)
+        assert_equals('hidden', issue_obj.visibility)
 
 
 #class TestReportAnIssueTwice(object):
@@ -160,7 +160,7 @@ class TestIssueReportClear(object):
         dataset = factories.Dataset(owner_org=org['name'])
         issue = issue_factories.Issue(user_id=owner['id'],
                                       dataset_id=dataset['id'],
-                                      spam_state='hidden')
+                                      visibility='hidden')
         context = {
             'user': owner['name'],
             'model': model,
@@ -176,7 +176,7 @@ class TestIssueReportClear(object):
             dataset_id=dataset['id'],
             issue_number=issue['number'],
         )
-        assert_equals('visible', result['spam_state'])
+        assert_equals('visible', result['visibility'])
 
         issue_obj = Issue.get(issue['id'])
         assert_equals(len(issue_obj.abuse_reports), 0)
@@ -187,7 +187,7 @@ class TestIssueReportClear(object):
         dataset = factories.Dataset(owner_org=org['name'])
         issue = issue_factories.Issue(user_id=owner['id'],
                                       dataset_id=dataset['id'],
-                                      spam_state='hidden')
+                                      visibility='hidden')
         user = factories.User()
         model.Session.add(Issue.Report(user['id'], issue['id']))
         model.Session.commit()
@@ -204,7 +204,7 @@ class TestIssueReportClear(object):
         result = helpers.call_action('issue_show',
                                      dataset_id=dataset['id'],
                                      issue_number=issue['number'])
-        assert_equals('visible', result['spam_state'])
+        assert_equals('visible', result['visibility'])
 
         issue_obj = Issue.get(issue['id'])
         assert_equals(len(issue_obj.abuse_reports), 0)
@@ -317,7 +317,7 @@ class TestReportComment(object):
 
         comment_obj = IssueComment.get(comment['id'])
         assert_equals(len(comment_obj.abuse_reports), 1)
-        assert_equals(comment_obj.spam_state, 'visible')
+        assert_equals(comment_obj.visibility, 'visible')
 
     def test_publisher_reports_a_comment(self):
         owner = factories.User()
@@ -342,7 +342,7 @@ class TestReportComment(object):
         result = helpers.call_action('issue_show',
                                      issue_number=issue['number'],
                                      dataset_id=dataset['id'])
-        assert_equals('hidden', result['comments'][0]['spam_state'])
+        assert_equals('hidden', result['comments'][0]['visibility'])
 
     @mock.patch('ckanext.issues.logic.action.action.config')
     def test_max_strikes_hides_comment(self, mock):
@@ -372,7 +372,7 @@ class TestReportComment(object):
                                      issue_number=issue['number'])
         comment_obj = IssueComment.get(comment['id'])
         assert_equals(len(comment_obj.abuse_reports), 1)
-        assert_equals('hidden', result['comments'][0]['spam_state'])
+        assert_equals('hidden', result['comments'][0]['visibility'])
 
 
 #class TestReportCommentTwice(object):
@@ -435,7 +435,7 @@ class TestCommentReportClearAsPublisher(object):
         comment = issue_factories.IssueComment(user_id=owner['id'],
                                                dataset_id=dataset['id'],
                                                issue_number=issue['number'],
-                                               spam_state='hidden')
+                                               visibility='hidden')
         context = {
             'user': owner['name'],
             'model': model,
@@ -450,7 +450,7 @@ class TestCommentReportClearAsPublisher(object):
         result = helpers.call_action('issue_show',
                                      issue_number=issue['number'],
                                      dataset_id=dataset['id'])
-        assert_equals('visible', result['comments'][0]['spam_state'])
+        assert_equals('visible', result['comments'][0]['visibility'])
         comment_obj = IssueComment.get(comment['id'])
         model.Session.refresh(comment_obj)
         assert_equals(len(comment_obj.abuse_reports), 0)
@@ -491,4 +491,4 @@ class TestCommentReportClearAsUser(object):
 
         comment_obj = IssueComment.get(comment['id'])
         assert_equals(len(comment_obj.abuse_reports), 0)
-        assert_equals('visible', comment_obj.spam_state)
+        assert_equals('visible', comment_obj.visibility)

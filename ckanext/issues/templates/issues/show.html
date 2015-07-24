@@ -51,8 +51,8 @@
               </form>
             </div>
           {% else %}
-            <div id="issue-not-spam-button" class="issue-comment-action">
-              <form id="issue-not-spam-button" method="post" action="{{h.url_for('issues_report_clear', dataset_id=dataset.name, issue_number=issue.number)}}">
+            <div id="issue-not-abuse-button" class="issue-comment-action">
+              <form id="issue-not-abuse-button" method="post" action="{{h.url_for('issues_report_clear', dataset_id=dataset.name, issue_number=issue.number)}}">
                 <button class="subtle-btn-active subtle-btn-abuse-active" type="submit" data-toggle="tooltip" title="You have reported this as abuse, cancel the report">
                   <i class="icon-remove"></i>
                   {{ _('Not abuse') }}
@@ -66,7 +66,7 @@
         <div class="issue-comment-label">
            Owner 
         </div>
-        {% if comment.spam_state == 'hidden' %}
+        {% if comment.visibility == 'hidden' %}
           <div class="issue-comment-label">
             Abuse
           </div>
@@ -78,7 +78,7 @@
         <span title="{{comment.created}}">{{ h.time_ago_from_timestamp(comment.created) }}</span>
       </div>
     </div>
-    <div class="issue-comment-content{% if comment.spam_state == 'hidden' %} issue-spam{% endif %}">
+    <div class="issue-comment-content{% if comment.visibility == 'hidden' %} issue-abuse{% endif %}">
       {{ h.render_markdown(comment.comment) }}
     </div>
   </div>
@@ -97,8 +97,8 @@
       <div class="issue-comment-actions">
         {% set has_been_reported = h.issues_user_has_reported_issue(c.user, comment.abuse_reports) %}
         {% if has_been_reported %}
-          <div id="issue-not-spam-button" class="issue-comment-action">
-            <form id="issue-not-spam-button" method="post" action="{{h.url_for('issues_comment_report_clear', dataset_id=dataset.name, issue_number=issue.number, comment_id=comment.id)}}">
+          <div id="issue-not-abuse-button" class="issue-comment-action">
+            <form id="issue-not-abuse-button" method="post" action="{{h.url_for('issues_comment_report_clear', dataset_id=dataset.name, issue_number=issue.number, comment_id=comment.id)}}">
               <button class="btn btn-small" type="submit" "title"="Not abuse">
                 <i class="icon-flag"></i>
                 {{ _('Not abuse') }}
@@ -121,7 +121,7 @@
            Owner
         </div>
       {% endif %}
-      {% if comment.spam_state == 'hidden' %}
+      {% if comment.visibility == 'hidden' %}
         <div class="issue-comment-label">
            Abuse
         </div>
@@ -132,7 +132,7 @@
         <span title="{{comment.created}}">{{ h.time_ago_from_timestamp(comment.created) }}</span>
       </div>
     </div>
-    <div class="issue-comment-content{% if comment.spam_state == 'hidden' %} issue-spam{% endif %}">
+    <div class="issue-comment-content{% if comment.visibility == 'hidden' %} issue-abuse{% endif %}">
       {{ h.render_markdown(comment.comment) }}
     </div>
   </div>
@@ -159,7 +159,7 @@
       {{ issue_description(issue) }}
 
       {% for comment in issue.comments %}
-        {% if comment.spam_state == 'visible' or can_edit_issue %}
+        {% if comment.visibility == 'visible' or can_edit_issue %}
           {{ issue_comment(comment) }}
         {% endif %}
       {% endfor %}

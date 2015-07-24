@@ -2,7 +2,7 @@
       <li class="list-group-item">
         <span class="list-group-item-number">#{{issue.number}}</span>
         {% set has_been_reported = h.issues_user_has_reported_issue(current_user, issue.abuse_reports) %}
-        {% if issue.spam_state == 'hidden' %}
+        {% if issue.visibility == 'hidden' %}
           <div class="issue-comment-label">
             Abuse
           </div>
@@ -12,9 +12,9 @@
           </div>
         {% endif%}
         <h4 class="list-group-item-name">
-          {% set issue_icon = 'spam' if issue.spam_state == 'hidden' else issue.status %}
+          {% set issue_icon = 'abuse' if issue.visibility == 'hidden' else issue.status %}
           <span class="{{ issue_icon }} icon" title="{{issue.status}} issue"><i class="icon-exclamation-sign"></i></span>
-          <a href="{{ h.url_for('issues_show', dataset_id=pkg.id, issue_number=issue.number) }}" {% if issue.spam_state == 'hidden'%} class="issue-spam"{% endif%}>
+          <a href="{{ h.url_for('issues_show', dataset_id=pkg.id, issue_number=issue.number) }}" {% if issue.visibility == 'hidden'%} class="issue-abuse"{% endif%}>
             {{issue.title}}
           </a>
         </h4>
@@ -34,7 +34,7 @@
       </li>
 {%- endmacro %}
 
-{% macro search_options_sidebar(user_can_change_spam_state, url_params) -%}
+{% macro search_options_sidebar(user_can_change_visibility, url_params) -%}
   <div class="module module-narrow module-shallow">
     <h2 class="module-heading">
         <i class="icon-medium icon-filter"></i>
@@ -50,17 +50,17 @@
         </li>
         {% endfor %}
     </ul>
-    {% if user_can_change_spam_state %}
+    {% if user_can_change_visibility %}
     <h2 class="module-heading">
         <i class="icon-medium icon-filter"></i>
         Visibility
     </h2>
     <ul class="unstyled nav nav-simple nav-facet">
-        {% for valid_spam_state in ['visible', 'hidden'] %}
-        <li class="nav-item {% if spam_state==valid_spam_state%}active{% endif %}">
-        {% set href = h.remove_url_param('spam_state', extras=url_params) if spam_state==valid_spam_state else h.replace_url_param(new_params={'spam_state': valid_spam_state}, extras=url_params) %}
-        <a id="{{ valid_spam_state }}-filter" href="{{ href }}">
-        <span>{{_(valid_spam_state.title())}}</span>
+        {% for valid_visibility in ['visible', 'hidden'] %}
+        <li class="nav-item {% if visibility==valid_visibility%}active{% endif %}">
+        {% set href = h.remove_url_param('visibility', extras=url_params) if visibility==valid_visibility else h.replace_url_param(new_params={'visibility': valid_visibility}, extras=url_params) %}
+        <a id="{{ valid_visibility }}-filter" href="{{ href }}">
+        <span>{{_(valid_visibility.title())}}</span>
         </a>
         </li>
         {% endfor %}

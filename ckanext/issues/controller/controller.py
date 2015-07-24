@@ -547,7 +547,7 @@ def _search_issues(dataset_id=None,
                    organization_id=None,
                    status=issuemodel.ISSUE_STATUS.open,
                    sort='newest',
-                   spam_state=None,
+                   visibility=None,
                    q='',
                    page=1,
                    per_page=get_issues_per_page()[0],
@@ -592,6 +592,6 @@ def _search_issues(dataset_id=None,
         'q': q,
         'pagination': pagination,
     }
-    if spam_state:
-        template_variables['spam_state'] = spam_state
+    if visibility:
+        template_variables['visibility'] = visibility
     return template_variables

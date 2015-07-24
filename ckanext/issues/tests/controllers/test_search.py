@@ -82,7 +82,7 @@ class TestSearchFilters(helpers.FunctionalTestBase):
             'hidden': issue_factories.Issue(user=self.owner,
                                             title='hidden_issue',
                                             dataset_id=self.dataset['id'],
-                                            spam_state='hidden'),
+                                            visibility='hidden'),
         }
         # close our issue
         helpers.call_action(
@@ -93,7 +93,7 @@ class TestSearchFilters(helpers.FunctionalTestBase):
             status='closed'
         )
         issue = issue_model.Issue.get(self.issues['hidden']['id'])
-        issue.spam_state = 'hidden'
+        issue.visibility = 'hidden'
         issue.save()
 
         self.app = self._get_test_app()

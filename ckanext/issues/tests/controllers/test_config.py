@@ -30,7 +30,7 @@ class TestDatasetList(helpers.FunctionalTestBase):
         self.issue = issue_factories.Issue(user=self.owner,
                                            user_id=self.owner['id'],
                                            dataset_id=self.dataset['id'],
-                                           spam_state='hidden')
+                                           visibility='hidden')
         self.app = self._get_test_app()
 
     @classmethod
@@ -80,7 +80,7 @@ class TestDatasetExtra(helpers.FunctionalTestBase):
         self.issue = issue_factories.Issue(user=self.owner,
                                            user_id=self.owner['id'],
                                            dataset_id=self.dataset['id'],
-                                           spam_state='hidden')
+                                           visibility='hidden')
         self.app = self._get_test_app()
 
     @classmethod

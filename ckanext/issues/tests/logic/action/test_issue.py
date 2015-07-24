@@ -139,18 +139,18 @@ class TestIssueNew(object):
             }
         )
 
-    def test_issue_create_cannot_set_spam(self):
+    def test_issue_create_cannot_set_abuse(self):
         issue_create_result = toolkit.get_action('issue_create')(
             context={'user': self.user['name']},
             data_dict={
                 'title': 'Title',
                 'description': 'Description',
                 'dataset_id': self.dataset['id'],
-                'spam_state': 'hidden'
+                'visibility': 'hidden'
             }
         )
         issue_object = Issue.get(issue_create_result['id'])
-        assert_equals('visible', issue_object.spam_state)
+        assert_equals('visible', issue_object.visibility)
 
 
 class TestIssueComment(object):
@@ -507,7 +507,7 @@ class TestIssueUpdate(object):
         assert_equals('open', reopened['status'])
 
     def test_cannot_update_visiblity_using_update(self):
-        '''we don't want users to be able to set their own spam status/count'''
+        '''we don't want users to be able to set their own abuse status'''
         user = factories.User()
         dataset = factories.Dataset()
         issue = issue_factories.Issue(user=user, user_id=user['id'],
@@ -517,7 +517,7 @@ class TestIssueUpdate(object):
             context={'user': user['name']},
             dataset_id=dataset['id'],
             issue_number=issue['number'],
-            spam_state='hidden'
+            visibility='hidden'
         )
 
         after_update = helpers.call_action(
@@ -526,7 +526,7 @@ class TestIssueUpdate(object):
             issue_number=issue['number'],
             dataset_id=dataset['id'],
         )
-        assert_equals('visible', after_update['spam_state'])
+        assert_equals('visible', after_update['visibility'])
 
     def test_updating_issue_that_does_not_exist_raises_not_found(self):
         user = factories.User()

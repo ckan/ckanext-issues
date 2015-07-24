@@ -171,12 +171,14 @@ class Issue(domain_object.DomainObject):
             .first()
 
     @classmethod
-    def apply_filters_to_an_issue_query(
-            cls, query,
-            organization_id=None, dataset_id=None,
-            status=None, q=None,
-            spam_state=None,
-            include_sub_organizations=False):
+    def apply_filters_to_an_issue_query(cls,
+                                        query,
+                                        organization_id=None,
+                                        dataset_id=None,
+                                        status=None,
+                                        q=None,
+                                        visibility=None,
+                                        include_sub_organizations=False):
         if dataset_id:
             query = query.filter(cls.dataset_id == dataset_id)
         if organization_id:
@@ -199,18 +201,24 @@ class Issue(domain_object.DomainObject):
 
         if status:
             query = query.filter(cls.status == status)
-        if spam_state:
-            query = query.filter(cls.spam_state == spam_state)
+        if visibility:
+            query = query.filter(cls.visibility == visibility)
         return query
 
     @classmethod
-    def get_issues(cls, organization_id=None, dataset_id=None,
-                   offset=None, limit=None,
-                   status=None, sort=None, q=None,
-                   spam_state=None, session=Session,
+    def get_issues(cls,
+                   organization_id=None,
+                   dataset_id=None,
+                   offset=None,
+                   limit=None,
+                   status=None,
+                   sort=None,
+                   q=None,
+                   visibility=None,
                    include_sub_organizations=False,
                    include_datasets=False,
-                   include_reports=False):
+                   include_reports=False,
+                   session=Session):
         comment_count = func.count(IssueComment.id).label('comment_count')
         last_updated = func.max(IssueComment.created).label('updated')
         query = session.query(
@@ -221,9 +229,11 @@ class Issue(domain_object.DomainObject):
         )
         query = cls.apply_filters_to_an_issue_query(
             query,
-            organization_id=organization_id, dataset_id=dataset_id,
-            status=status, q=q,
-            spam_state=spam_state,
+            organization_id=organization_id,
+            dataset_id=dataset_id,
+            status=status,
+            q=q,
+            visibility=visibility,
             include_sub_organizations=include_sub_organizations)
         if sort:
             try:
@@ -248,14 +258,14 @@ class Issue(domain_object.DomainObject):
     @classmethod
     def get_count_for_dataset(cls, dataset_id=None, organization_id=None,
                               status=None, sort=None, q=None,
-                              spam_state=None, session=Session,
+                              visibility=None, session=Session,
                               include_sub_organizations=False):
         query = session.query(func.count(cls.id))
         query = cls.apply_filters_to_an_issue_query(
             query,
             organization_id=organization_id, dataset_id=dataset_id,
             status=status, q=q,
-            spam_state=spam_state,
+            visibility=visibility,
             include_sub_organizations=include_sub_organizations)
         return query.one()[0]
 
@@ -265,8 +275,8 @@ class Issue(domain_object.DomainObject):
         session.flush()
         return self
 
-    def change_visiblity(self, session, visibility):
-        self.spam_state = visibility
+    def change_visibility(self, session, visibility):
+        self.visibility = visibility
         session.add(self)
         session.flush()
         return self
@@ -283,7 +293,7 @@ class Issue(domain_object.DomainObject):
         return self
 
     def clear_all_abuse_reports(self, session):
-        self.change_visiblity(session, u'visible')
+        self.change_visibility(session, u'visible')
         for r in self.abuse_reports:
             session.delete(r)
         session.flush()
@@ -355,7 +365,7 @@ class IssueComment(domain_object.DomainObject):
         return self
 
     def change_visibility(self, session, visibility):
-        self.spam_state = visibility
+        self.visibility = visibility
         session.add(self)
         session.flush()
         return self
@@ -418,7 +428,8 @@ def define_issue_tables():
         Column('resolved', types.DateTime),
         Column('created', types.DateTime, default=datetime.now,
                nullable=False),
-        Column('spam_state', types.Unicode, default=u'visible'),
+        Column('visibility', types.Unicode, default=u'visible'),
+        Column('abuse_status', types.Boolean),
         Index('idx_issue_number_dataset_id', 'dataset_id', 'number',
               unique=True),
     )
@@ -436,7 +447,8 @@ def define_issue_tables():
                nullable=False, index=True),
         Column('created', types.DateTime, default=datetime.now,
                nullable=False),
-        Column('spam_state', types.Unicode, default=u'visible'),
+        Column('visibility', types.Unicode, default=u'visible'),
+        Column('abuse_status', types.Boolean),
     )
 
     meta.mapper(

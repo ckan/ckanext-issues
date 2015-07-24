@@ -165,7 +165,7 @@ def issue_update(context, data_dict):
                                                  issue.status)
 
     # TODO: move to validation?
-    ignored_keys = ['id', 'created', 'user', 'dataset_id', 'spam_state',
+    ignored_keys = ['id', 'created', 'user', 'dataset_id', 'visibility',
                     'issue_number', '__extras']
 
     for k, v in data_dict.items():
@@ -243,8 +243,8 @@ def issue_search(context, data_dict):
     :type limit: int
     :param offset: offset of the search results to return
     :type offset: int
-    :param spam_state: filter on spam_state
-    :type spam_state: string in 'visible', 'hidden', ''
+    :param visibility: filter on visibility
+    :type visibility: string in 'visible', 'hidden', ''
     :param include_datasets: include details of the dataset each issue is
         attached to
     :type include_datasets: bool
@@ -264,13 +264,13 @@ def issue_search(context, data_dict):
     user = context['user']
     dataset_id = data_dict.get('dataset_id')
     organization_id = data_dict.get('organization_id')
-    spam_state = 'visible'
+    visibility = 'visible'
     can_update = False
     if organization_id:
         try:
             p.toolkit.check_access('organization_update', context,
                                    data_dict={'id': organization_id})
-            spam_state = data_dict.get('spam_state', None)
+            visibility = data_dict.get('visibility', None)
             can_update = True
         except p.toolkit.NotAuthorized:
             pass
@@ -278,15 +278,15 @@ def issue_search(context, data_dict):
         try:
             p.toolkit.check_access('package_update', context,
                                    data_dict={'id': dataset_id})
-            spam_state = data_dict.get('spam_state', None)
+            visibility = data_dict.get('visibility', None)
             can_update = True
         except p.toolkit.NotAuthorized:
             pass
     elif authz.is_sysadmin(user):
-        spam_state = data_dict.get('spam_state', None)
+        visibility = data_dict.get('visibility', None)
         can_update = True
 
-    data_dict['spam_state'] = spam_state
+    data_dict['visibility'] = visibility
     data_dict.pop('__extras', None)
     include_datasets = p.toolkit.asbool(data_dict.get('include_datasets'))
     include_reports = p.toolkit.asbool(data_dict.get('include_reports'))
@@ -409,9 +409,9 @@ def organization_users_autocomplete(context, data_dict):
 def issue_report(context, data_dict):
     '''Report an issue
 
-    If you are a org admin/editor, this marks the comment as spam; if you are
-    any other user, this will up the spam count until it exceeds the config
-    option ckanext.issues.max_strikes
+    If you are a org admin/editor, this marks the comment as abuse; if you are
+    any other user, if the number of reports exceeds ckanext.issues.max_strikes
+    the issues will be hidden
 
     :param dataset_id: the name or id of the dataset that the issue item
         belongs to
@@ -437,7 +437,7 @@ def issue_report(context, data_dict):
         )
     try:
         # if you're an org admin/editor (can edit the dataset, it gets marked
-        # as spam immediately
+        # as abuse immediately
         dataset_id = data_dict['dataset_id']
         context = {
             'user': context['user'],
@@ -447,12 +447,12 @@ def issue_report(context, data_dict):
         p.toolkit.check_access('package_update', context,
                                data_dict={'id': dataset_id})
 
-        issue.change_visiblity(session, u'hidden')
+        issue.change_visibility(session, u'hidden')
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
         if (max_strikes
            and len(issue.abuse_reports) >= p.toolkit.asint(max_strikes)):
-            issue.change_visiblity(session, u'hidden')
+            issue.change_visibility(session, u'hidden')
     session.commit()
 
 
@@ -540,7 +540,7 @@ def issue_report_clear(context, data_dict):
         max_strikes = config.get('ckanext.issues.max_strikes')
         if (max_strikes
            and len(issue.abuse_reports) <= p.toolkit.asint(max_strikes)):
-            issue.change_visiblity(session, u'visible')
+            issue.change_visibility(session, u'visible')
     finally:
         session.commit()
     return True
@@ -550,9 +550,9 @@ def issue_report_clear(context, data_dict):
 def issue_comment_report(context, data_dict):
     '''Report a comment made on an issue.
 
-    If you are a org admin/editor, this marks the comment as spam; if you are
-    any other user, this will up the spam count until it exceeds the config
-    option ckanext.issues.max_strikes
+    If you are a org admin/editor, this marks the comment as abuse; if you are
+    any other user, if the number of abuse reports exceeds
+    ckanext.issues.max_strikes then the issue will be hidden.
 
     :param comment_id: the id of the issue the comment belongs to
     :type comment_id: integer
@@ -572,7 +572,7 @@ def issue_comment_report(context, data_dict):
         )
     try:
         # if you're an org admin/editor (can edit the dataset, it gets marked
-        # as spam immediately
+        # as abuse immediately
         dataset_id = comment.issue.dataset_id
         package_context = {
             'user': context['user'],

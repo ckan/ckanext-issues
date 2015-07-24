@@ -145,7 +145,7 @@
     border-radius: 3px;
 }
 
-.issue-spam {
+.issue-abuse {
   color: #b0b0b0;
 }
 
@@ -243,7 +243,7 @@
   color: #6cc644;
 }
 
-.list-group-item-name .icon.spam {
+.list-group-item-name .icon.abuse {
   color: #ffa500;
 }
 

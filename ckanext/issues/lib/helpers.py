@@ -109,7 +109,7 @@ def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
     '''
     Returns list of issue dicts.
 
-    This is just basic - no options for sorting, closed issues, spam. No
+    This is just basic - no options for sorting, closed issues, abuse. No
     pagination. For those, use the issues home page.
     '''
     if status not in issuemodel.ISSUE_STATUS:
@@ -118,7 +118,7 @@ def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
     params = dict(dataset_id=dataset_ref,
                   status=getattr(issuemodel.ISSUE_STATUS, status),
                   sort='newest',
-                  spam_state=None,
+                  visibility=None,
                   q='')
 
     issues = toolkit.get_action('issue_search')(data_dict=params)

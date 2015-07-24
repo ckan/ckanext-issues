@@ -67,7 +67,7 @@ def issue_search_schema():
         'limit': [ignore_missing, is_natural_number],
         'offset': [ignore_missing, is_natural_number],
         'q': [ignore_missing, unicode],
-        'spam_state': [ignore_missing, unicode],
+        'visibility': [ignore_missing, unicode],
         'include_count': [ignore_missing, bool],
         'include_datasets': [ignore_missing, bool],
         'include_reports': [ignore_missing, bool],
@@ -109,7 +109,7 @@ def issue_dataset_controller_schema():
         'page': [ignore_missing, is_positive_integer],
         'per_page': [ignore_missing, is_positive_integer],
         'q': [ignore_missing, unicode],
-        'spam_state': [ignore_missing, unicode],
+        'visibility': [ignore_missing, unicode],
     }
 
 

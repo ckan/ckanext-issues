@@ -24,7 +24,7 @@ class TestAbuseReport(helpers.FunctionalTestBase):
                                            user_id=self.owner['id'],
                                            dataset_id=self.dataset['id'])
         issue = Issue.get(self.issue['id'])
-        issue.spam_state = 'hidden'
+        issue.visibility = 'hidden'
         issue.save()
         self.user = factories.User()
         self.app = self._get_test_app()

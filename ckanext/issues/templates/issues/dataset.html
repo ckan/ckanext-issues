@@ -23,7 +23,7 @@
         </div>
       </h1>
    <div>
-      {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status), ('spam_state', spam_state)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=true, no_title=true %}
+      {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status), ('visibility', visibility)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=true, no_title=true %}
       <h2 id="issues-found">
         {{ ungettext('{number} issue found', '{number} issues found', pagination.total_count) .format(number=pagination.total_count) }}
       </h2>
@@ -104,6 +104,6 @@
 
 {% block secondary_content %}
   {% snippet "package/snippets/info.html", pkg=pkg %}
-  {{ common.search_options_sidebar(user_can_change_spam_state=h.check_access('package_update', {'id': pkg.id }), url_params={'dataset_id':pkg['id']}) }}
+  {{ common.search_options_sidebar(user_can_change_visibility=h.check_access('package_update', {'id': pkg.id }), url_params={'dataset_id':pkg['id']}) }}
 {% endblock %}
 

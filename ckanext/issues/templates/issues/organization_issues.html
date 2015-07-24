@@ -22,7 +22,7 @@
       </h1>
     </div>
     <div>
-      {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status), ('spam_state', spam_state)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=true, no_title=true %}
+      {% snippet 'snippets/search_form.html', query=q, fields=(('page', pagination.page), ('per_page', pagination.per_page), ('status', status), ('visibility', visibility)), sorting=filters, sorting_selected=sort, placeholder=_('Search issues...'), no_bottom_border=true, no_title=true %}
       <h2>
         {{ ungettext('{number} issue found', '{number} issues found', pagination.total_count) .format(number=pagination.total_count) }}
       </h2>
@@ -51,10 +51,10 @@
                     <br/><br/>
                     Resource: {{issue.resource.name or issue.resource.description}}
                   {% endif %}
-                  {% if issue.spam_state == 'hidden' %}
+                  {% if issue.visibility == 'hidden' %}
                     <br/><br/>
                     <div class="issue-comment-label">
-                      Marked as spam
+                      Reported as abuse 
                     </div>
                   {%endif%}
                 </td>
@@ -87,5 +87,5 @@
 {% endblock %}
 
 {% block secondary_content %}
-    {{ common.search_options_sidebar(user_can_change_spam_state=h.check_access('organization_update', {'id': org.id }), url_params={'org_id': org.name}) }}
+    {{ common.search_options_sidebar(user_can_change_visibility=h.check_access('organization_update', {'id': org.id }), url_params={'org_id': org.name}) }}
 {% endblock %}
