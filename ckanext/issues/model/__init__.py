@@ -7,13 +7,15 @@ import ckan.lib.helpers as h
 
 import ckan.model.domain_object as domain_object
 from ckan.lib.dictization import model_dictize
+
+from ckanext.issues.model.report import define_report_tables
+
 from datetime import datetime
 import logging
 
 import enum
-from sqlalchemy import (func, types, Table, ForeignKey, Column,
-                        UniqueConstraint, Index)
-from sqlalchemy.orm import relation, backref, subqueryload, class_mapper
+from sqlalchemy import func, types, Table, ForeignKey, Column, Index
+from sqlalchemy.orm import relation, backref, subqueryload
 from sqlalchemy.sql.expression import or_
 
 log = logging.getLogger(__name__)
@@ -45,8 +47,7 @@ def setup():
         issue_category_table.create(checkfirst=True)
         issue_table.create(checkfirst=True)
         issue_comment_table.create(checkfirst=True)
-        #issue_report_table.create(checkfirst=True)
-        #issue_comment_report_table.create(checkfirst=True)
+
         if report_tables:
             for table in report_tables:
                 table.create(checkfirst=True)
@@ -375,23 +376,6 @@ class IssueComment(domain_object.DomainObject):
         return self
 
 
-class Report(domain_object.DomainObject):
-    def __init__(self, user_id, parent_id):
-        self.user_id = user_id
-        self.parent_id = parent_id
-
-    @classmethod
-    def get_reports(cls, session, parent_id):
-        return session.query(cls).filter(
-            cls.parent_id == parent_id)
-
-    @classmethod
-    def get_reports_for_user(cls, session, user_id, parent_id):
-        return session.query(cls).filter(
-            cls.parent_id == parent_id
-        ).filter(cls.user_id == user_id)
-
-
 def define_issue_tables():
     global issue_category_table
     global issue_table
@@ -502,39 +486,3 @@ def define_issue_tables():
             ),
         }
     )
-
-
-def define_report_tables(models):
-    report_tables = []
-    for model_ in models:
-        mapped_class = class_mapper(model_)
-        table_name = mapped_class.mapped_table.fullname
-        report_table = Table(
-            '{0}_report'.format(table_name),
-            meta.metadata,
-            Column('id', types.Integer, primary_key=True, autoincrement=True),
-            Column('user_id', types.Unicode, nullable=False),
-            Column(
-                'parent_id',
-                types.Integer,
-                ForeignKey('{0}.id'.format(table_name), ondelete='CASCADE'),
-                nullable=False, index=True),
-            UniqueConstraint('user_id', 'parent_id'.format(table_name)),
-        )
-
-        ReportClass = type('{0}Report'.format(model_.__name__), (Report,), {})
-        model_.Report = ReportClass
-
-        meta.mapper(
-            ReportClass,
-            report_table,
-            properties={
-                table_name: relation(
-                    model_,
-                    backref=backref('abuse_reports'),
-                    primaryjoin=report_table.c.parent_id == model_.id
-                ),
-            }
-        )
-        report_tables.append(report_table)
-    return report_tables
