@@ -103,3 +103,11 @@ def issue_report(context, data_dict):
 @p.toolkit.auth_disallow_anonymous_access
 def issue_report_clear(context, data_dict):
     return {'success': True}
+
+
+@p.toolkit.auth_disallow_anonymous_access
+def issue_admin(context, data_dict):
+    '''Who can administrate and issue
+
+    sysadmins/organization admins and organization editors'''
+    return issue_auth(context, data_dict)

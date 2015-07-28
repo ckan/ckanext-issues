@@ -448,6 +448,7 @@ def issue_report(context, data_dict):
                                data_dict={'id': dataset_id})
 
         issue.change_visibility(session, u'hidden')
+        issue.abuse_status = issuemodel.AbuseStatus.abuse.value
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
         if (max_strikes
@@ -535,6 +536,7 @@ def issue_report_clear(context, data_dict):
         p.toolkit.check_access('package_update', package_context,
                                data_dict={'id': dataset_id})
         issue.clear_all_abuse_reports(session)
+        issue.abuse_status = issuemodel.AbuseStatus.not_abuse.value
     except p.toolkit.NotAuthorized:
         issue.clear_abuse_report(session, user_id)
         max_strikes = config.get('ckanext.issues.max_strikes')
@@ -582,6 +584,7 @@ def issue_comment_report(context, data_dict):
         p.toolkit.check_access('package_update', package_context,
                                data_dict={'id': dataset_id})
         comment.change_visibility(session, u'hidden')
+        comment.abuse_status = issuemodel.AbuseStatus.abuse.value
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
         if max_strikes:
@@ -620,6 +623,7 @@ def issue_comment_report_clear(context, data_dict):
         p.toolkit.check_access('package_update', package_context,
                                data_dict={'id': dataset_id})
         comment.clear_all_abuse_reports(session)
+        comment.abuse_status = issuemodel.AbuseStatus.not_abuse.value
     except p.toolkit.NotAuthorized:
         comment.clear_abuse_report(session, user_id)
         max_strikes = config.get('ckanext.issues.max_strikes')

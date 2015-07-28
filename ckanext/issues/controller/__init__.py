@@ -1,1 +1,2 @@
 from controller import IssueController
+from moderation import ModerationController

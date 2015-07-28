@@ -4,6 +4,7 @@ from ckanext.issues.logic.validators import (
     as_org_id,
     is_valid_sort,
     is_valid_status,
+    is_valid_abuse_status,
     issue_exists,
     issue_comment_exists,
     issue_number_exists_for_dataset,
@@ -73,6 +74,7 @@ def issue_search_schema():
         'include_reports': [ignore_missing, bool],
         'include_results': [ignore_missing, bool],
         'include_sub_organizations': [ignore_missing, bool],
+        'abuse_status': [ignore_missing, unicode, is_valid_abuse_status],
     }
 
 
@@ -93,6 +95,12 @@ def issue_report_schema():
     }
 
 
+def issue_report_clear_schema():
+    schema = issue_report_schema()
+    schema.update({'clear_abuse_status': [ignore_missing, bool]})
+    return schema
+
+
 def issue_comment_report_schema():
     return {
         'dataset_id': [not_missing, unicode, package_exists, as_package_id],
@@ -100,6 +108,12 @@ def issue_comment_report_schema():
         '__after': [issue_number_exists_for_dataset],
         'comment_id': [not_missing, unicode, issue_comment_exists],
     }
+
+
+def issue_comment_report_clear_schema():
+    schema = issue_report_schema()
+    schema.update({'clear_abuse_status': [ignore_missing, bool]})
+    return schema
 
 
 def issue_dataset_controller_schema():
@@ -110,6 +124,7 @@ def issue_dataset_controller_schema():
         'per_page': [ignore_missing, is_positive_integer],
         'q': [ignore_missing, unicode],
         'visibility': [ignore_missing, unicode],
+        'abuse_status': [ignore_missing, unicode],
     }
 
 

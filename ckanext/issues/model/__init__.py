@@ -155,6 +155,12 @@ class InvalidIssueFilterException(object):
     pass
 
 
+class AbuseStatus(enum.Enum):
+    unmoderated = 0
+    abuse = 1
+    not_abuse = 2
+
+
 class Issue(domain_object.DomainObject):
     """A Issue Object"""
 
@@ -178,6 +184,7 @@ class Issue(domain_object.DomainObject):
                                         status=None,
                                         q=None,
                                         visibility=None,
+                                        abuse_status=None,
                                         include_sub_organizations=False):
         if dataset_id:
             query = query.filter(cls.dataset_id == dataset_id)
@@ -203,6 +210,9 @@ class Issue(domain_object.DomainObject):
             query = query.filter(cls.status == status)
         if visibility:
             query = query.filter(cls.visibility == visibility)
+        if abuse_status:
+            query = query.filter(cls.abuse_status == abuse_status.value)
+
         return query
 
     @classmethod
@@ -212,6 +222,7 @@ class Issue(domain_object.DomainObject):
                    offset=None,
                    limit=None,
                    status=None,
+                   abuse_status=None,
                    sort=None,
                    q=None,
                    visibility=None,
@@ -232,6 +243,7 @@ class Issue(domain_object.DomainObject):
             organization_id=organization_id,
             dataset_id=dataset_id,
             status=status,
+            abuse_status=abuse_status,
             q=q,
             visibility=visibility,
             include_sub_organizations=include_sub_organizations)
@@ -250,8 +262,10 @@ class Issue(domain_object.DomainObject):
         if limit:
             query = query.limit(limit)
 
+
         if include_reports:
             query = query.options(subqueryload('abuse_reports'))
+
 
         return query
 
@@ -302,6 +316,12 @@ class Issue(domain_object.DomainObject):
     def as_dict(self):
         out = super(Issue, self).as_dict()
 
+        # TODO: move this stuff to a schema
+        try:
+            out['abuse_status'] = AbuseStatus(out['abuse_status']).name
+        except ValueError:
+            pass
+
         out['user'] = _user_dict(self.user)
         # some cases dataset not yet set ...
         if self.dataset:
@@ -320,6 +340,12 @@ class Issue(domain_object.DomainObject):
         returns an issue_dict with a comment_count and a user as a string.
         '''
         out = super(Issue, self).as_dict()
+
+        # TODO: move this stuff to a schema
+        try:
+            out['abuse_status'] = AbuseStatus(out['abuse_status']).name
+        except ValueError:
+            pass
         out.update({
             'user': user,
             'comment_count': comment_count,
@@ -385,6 +411,16 @@ class IssueComment(domain_object.DomainObject):
         session.flush()
         return self
 
+#    def get_all_reported(self, session, organization,
+#                         include_sub_organizations=False):
+#        session.query(cls)\
+#            .join(Issue)\
+#            .join(model.Package)
+#            .filter(cls.issue_id == Issue.id).\
+#            .filter(cls.visibility == u'hidden').\
+#            .filter(cls.abuse_status == AbuseStatus.unmoderated.value).\
+#
+
 
 def define_issue_tables():
     global issue_category_table
@@ -429,7 +465,9 @@ def define_issue_tables():
         Column('created', types.DateTime, default=datetime.now,
                nullable=False),
         Column('visibility', types.Unicode, default=u'visible'),
-        Column('abuse_status', types.Boolean),
+        Column('abuse_status',
+               types.Integer,
+               default=AbuseStatus.unmoderated.value),
         Index('idx_issue_number_dataset_id', 'dataset_id', 'number',
               unique=True),
     )
@@ -448,7 +486,9 @@ def define_issue_tables():
         Column('created', types.DateTime, default=datetime.now,
                nullable=False),
         Column('visibility', types.Unicode, default=u'visible'),
-        Column('abuse_status', types.Boolean),
+        Column('abuse_status',
+               types.Integer,
+               default=AbuseStatus.unmoderated.value),
     )
 
     meta.mapper(

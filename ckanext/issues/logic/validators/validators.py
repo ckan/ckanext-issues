@@ -15,10 +15,22 @@ def is_valid_status(value, context):
 
 
 def is_valid_sort(filter_string, context):
+    '''takes a string, validates and returns an IssueFilter enum'''
     try:
         return issuemodel.IssueFilter[filter_string]
     except KeyError:
         msg_str = 'Cannot apply filter. "{0}" is not a valid filter'
+        raise toolkit.Invalid(
+            toolkit._(msg_str.format(filter_string))
+        )
+
+
+def is_valid_abuse_status(filter_string, context):
+    '''takes a string, validates and returns an AbuseStatus enum'''
+    try:
+        return issuemodel.AbuseStatus[filter_string]
+    except KeyError:
+        msg_str = 'Cannot apply filter. "{0}" is not a valid abuse status'
         raise toolkit.Invalid(
             toolkit._(msg_str.format(filter_string))
         )

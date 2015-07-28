@@ -335,8 +335,7 @@ class IssueController(BaseController):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             if not c.user:
-                msg = _('You must be logged in to report issues'.format(
-                    issue_number))
+                msg = _('You must be logged in to report issues')
                 toolkit.abort(401, msg)
             try:
                 toolkit.get_action('issue_report')(
@@ -359,8 +358,7 @@ class IssueController(BaseController):
         dataset = self._before(dataset_id)
         if request.method == 'POST':
             if not c.user:
-                msg = _('You must be logged in to report comments')\
-                    .format(issue_number)
+                msg = _('You must be logged in to report comments')
                 toolkit.abort(401, msg)
             try:
                 toolkit.get_action('issue_comment_report')(
@@ -548,6 +546,7 @@ def _search_issues(dataset_id=None,
                    status=issuemodel.ISSUE_STATUS.open,
                    sort='newest',
                    visibility=None,
+                   abuse_status=None,
                    q='',
                    page=1,
                    per_page=get_issues_per_page()[0],

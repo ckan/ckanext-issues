@@ -104,6 +104,15 @@ class IssuesPlugin(p.SingletonPlugin):
                       '/organization/:org_id/issues',
                       action='issues_for_organization')
 
+        moderation = 'ckanext.issues.controller:ModerationController'
+        with SubMapper(map, controller=moderation) as m:
+            m.connect('issues_moderate_reported_issues',
+                      '/organization/:organization_id/issues/reported',
+                      action='all_reported_issues')
+            m.connect('issues_moderate',
+                      '/organization/:organization_id/issues/moderate',
+                      action='moderate')
+
         return map
 
     # IActions
@@ -117,6 +126,7 @@ class IssuesPlugin(p.SingletonPlugin):
 
     def get_auth_functions(self):
         return {
+            'issue_admin': auth.issue_admin,
             'issue_search': auth.issue_search,
             'issue_show': auth.issue_show,
             'issue_create': auth.issue_create,
