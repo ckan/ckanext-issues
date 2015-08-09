@@ -9,6 +9,7 @@ from action import (
     issue_report_clear,
     issue_comment_report,
     issue_comment_report_clear,
+    issue_comment_search,
     issue_update,
     organization_users_autocomplete,
 )

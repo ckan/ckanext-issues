@@ -113,6 +113,15 @@ class IssuesPlugin(p.SingletonPlugin):
                       '/organization/:organization_id/issues/moderate',
                       action='moderate')
 
+        moderation = 'ckanext.issues.controller:CommentModerationController'
+        with SubMapper(map, controller=moderation) as m:
+            m.connect('issues_moderate_reported_comments',
+                      '/organization/:organization_id/issues/reported_comments',
+                      action='reported_comments')
+            m.connect('issues_moderate_comment',
+                      '/organization/:organization_id/issues/moderate_comment',
+                      action='moderate')
+
         return map
 
     # IActions
@@ -135,4 +144,5 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_delete': auth.issue_delete,
             'issue_report': auth.issue_report,
             'issue_report_clear': auth.issue_report_clear,
+            'issue_comment_search': auth.issue_comment_search,
         }

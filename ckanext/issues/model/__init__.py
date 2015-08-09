@@ -262,10 +262,8 @@ class Issue(domain_object.DomainObject):
         if limit:
             query = query.limit(limit)
 
-
         if include_reports:
             query = query.options(subqueryload('abuse_reports'))
-
 
         return query
 
@@ -379,6 +377,15 @@ class IssueComment(domain_object.DomainObject):
         return model.Session.query(cls).\
             filter(cls.issue_id == issue.id).count()
 
+    @classmethod
+    def reported_comments(cls, session, organization_id):
+        return session.query(IssueComment, Issue) \
+            .join(Issue) \
+            .join(model.Package) \
+            .filter(cls.visibility == u'hidden') \
+            .filter(cls.abuse_status == AbuseStatus.unmoderated.value) \
+            .filter(model.Package.owner_org == organization_id)
+
     def as_dict(self):
         out = super(IssueComment, self).as_dict()
         out['user'] = _user_dict(self.user)
@@ -410,16 +417,6 @@ class IssueComment(domain_object.DomainObject):
             session.delete(r)
         session.flush()
         return self
-
-#    def get_all_reported(self, session, organization,
-#                         include_sub_organizations=False):
-#        session.query(cls)\
-#            .join(Issue)\
-#            .join(model.Package)
-#            .filter(cls.issue_id == Issue.id).\
-#            .filter(cls.visibility == u'hidden').\
-#            .filter(cls.abuse_status == AbuseStatus.unmoderated.value).\
-#
 
 
 def define_issue_tables():

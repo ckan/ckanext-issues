@@ -6,7 +6,7 @@ except ImportError:
 from ckan.plugins import toolkit
 
 from ckanext.issues.tests import factories as issue_factories
-from ckanext.issues.model import Issue
+from ckanext.issues.model import Issue, IssueComment, AbuseStatus
 
 from nose.tools import assert_equals, assert_raises
 
@@ -620,3 +620,33 @@ class TestOrganizationUsersAutocomplete(object):
             set(['test_owner', 'test_editor', 'test_admin']),
             set([i['name'] for i in result])
         )
+
+
+class TestCommentSearch(object):
+    def teardown(self):
+        helpers.reset_db()
+        search.clear()
+
+    def test_search(self):
+        organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=organization['id'])
+        issue = issue_factories.Issue(dataset_id=dataset['id'])
+        comment = issue_factories.IssueComment(
+            issue_number=issue['number'],
+            dataset_id=issue['dataset_id'],
+        )
+
+        issue_factories.IssueComment(# unreported comment
+            issue_number=issue['number'],
+            dataset_id=issue['dataset_id'],
+        )
+
+        comment_object = IssueComment.get(comment['id'])
+        comment_object.visibility = u'hidden'
+        comment_object.abuse_status = AbuseStatus.unmoderated.value
+        comment_object.save()
+
+        result = helpers.call_action('issue_comment_search',
+                                     organization_id=organization['id'])
+
+        assert_equals([comment['id']], [c['id'] for c in result])

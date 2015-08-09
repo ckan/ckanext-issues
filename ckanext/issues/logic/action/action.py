@@ -588,7 +588,7 @@ def issue_comment_report(context, data_dict):
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
         if max_strikes:
-            if len(comment.abuse_reports) > p.toolkit.asint(max_strikes):
+            if len(comment.abuse_reports) >= p.toolkit.asint(max_strikes):
                 comment.change_visibility(session, u'hidden')
     finally:
         session.commit()
@@ -633,3 +633,26 @@ def issue_comment_report_clear(context, data_dict):
     finally:
         session.commit()
     return True
+
+
+def issue_comment_search(context, data_dict):
+    p.toolkit.check_access('issue_comment_search', context, data_dict)
+    session = context['session']
+
+    organization_id = data_dict['organization_id']
+
+    reported_comments = issuemodel.IssueComment.reported_comments(
+        session,
+        organization_id=organization_id
+    )
+
+    comments = []
+    for comment, issue in reported_comments.all():
+        comment_dict = comment.as_dict()
+        comment_dict.update({
+            'dataset_id': issue.dataset_id,
+            'issue_number': issue.number,
+        })
+        comments.append(comment_dict)
+
+    return comments

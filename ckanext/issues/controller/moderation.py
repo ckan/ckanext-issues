@@ -55,4 +55,42 @@ def all_reported_issues(organization_id, include_sub_organizations=False):
 
 
 class CommentModerationController(toolkit.BaseController):
-    pass
+    def reported_comments(self, organization_id):
+        try:
+            organization = toolkit.get_action('organization_show')(data_dict={
+                'id': organization_id,
+            })
+            comments = toolkit.get_action('issue_comment_search')(data_dict={
+                'organization_id': organization['id'],
+            })
+
+            return toolkit.render(
+                'issues/comment_moderation.html',
+                extra_vars={
+                    'comments': comments,
+                    'organization': organization,
+                }
+            )
+        except toolkit.ObjectNotFound:
+            toolkit.abort(404, toolkit._('Organization not found'))
+
+    def moderate(self, organization_id):
+        if toolkit.request.method == 'POST':
+            if not toolkit.c.user:
+                msg = toolkit._('You must be logged in to moderate comment')
+                toolkit.abort(401, msg)
+
+            data_dict = toolkit.request.POST.mixed()
+            try:
+                if data_dict.get('abuse_status') == 'abuse':
+                    toolkit.get_action('issue_comment_report')(data_dict=data_dict)
+                    h.flash_success(toolkit._('Comment permanently hidden'))
+                elif data_dict.get('abuse_status') == 'not_abuse':
+                    toolkit.get_action('issue_comment_report_clear')(
+                        data_dict=data_dict)
+                    h.flash_success(toolkit._('All comment reports cleared'))
+            except toolkit.ValidationError:
+                toolkit.abort(404)
+
+        h.redirect_to('issues_moderate_reported_comments',
+                      organization_id=organization_id)
