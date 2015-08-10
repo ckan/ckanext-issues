@@ -8,6 +8,7 @@ from pylons import request, config, tmpl_context as c
 
 from ckan.lib.base import BaseController, render, abort, redirect
 import ckan.lib.helpers as h
+from ckan.lib import mailer
 import ckan.model as model
 import ckan.logic as logic
 import ckan.plugins as p
@@ -18,70 +19,14 @@ from ckanext.issues.controller import show
 from ckanext.issues.exception import ReportAlreadyExists
 from ckanext.issues.lib import helpers as issues_helpers
 from ckanext.issues.logic import schema
-from ckanext.issues.lib.helpers import Pagination, get_issues_per_page
+from ckanext.issues.lib.helpers import (Pagination, get_issues_per_page,
+                                        get_issue_subject)
 
 log = getLogger(__name__)
 
 AUTOCOMPLETE_LIMIT = 10
 VALID_CATEGORY = re.compile(r"[0-9a-z\-\._]+")
 ISSUES_PER_PAGE = (15, 30, 50)
-
-
-def _notify(issue):
-    # Depending on configuration, and availability of data we
-    # should email the admin and the organization
-    notify_admin = config.get("ckanext.issues.notify_admin", False)
-    notify_owner = config.get("ckanext.issues.notify_owner", False)
-    if not notify_admin and not notify_owner:
-        return
-
-    from ckan.lib.mailer import mail_recipient
-    from genshi.template.text import NewTextTemplate
-
-    admin_address = config.get('email_to')
-    # from_address = config.get('ckanext.issues.from_address',
-    #  'admin@localhost.local')
-
-    org = issue.package.owner_org
-    if 'contact-address' in issue.package.extras:
-        contact_name = issue.package.extras.get('contact-name')
-        contact_address = issue.package.extras.get('contact-email')
-    else:
-        contact_name = org.extras.get('contact-name', 'Publisher')
-        contact_address = org.extras.get('contact-email')
-
-    # Send to admin if no contact address, and only cc admin if
-    # they are not also in the TO field.
-    to_address = contact_address or admin_address
-    cc_address = admin_address if contact_address else None
-
-    extra_vars = {
-        'issue': issue,
-        'username': issue.reporter.fullname or issue.reporter.name,
-        'site_url': h.url_for(
-            controller='ckanext.issues.controller:IssueController',
-            action='issue_page',
-            dataset_id=issue.package.name,
-            qualified=True
-        )
-    }
-
-    email_msg = render("issues/email/new_issue.txt", extra_vars=extra_vars,
-                       loader_class=NewTextTemplate)
-
-    headers = {}
-    if cc_address:
-        headers['CC'] = cc_address
-
-    try:
-        if not contact_name:
-            contact_name = org.title
-
-        mail_recipient(contact_name, to_address,
-                       "Dataset issue",
-                       email_msg, headers=headers)
-    except Exception:
-        log.error('Failed to send an email message for issue notification')
 
 
 class IssueController(BaseController):
@@ -313,13 +258,29 @@ class IssueController(BaseController):
                                              dataset_id=dataset_id)
 
             try:
-                toolkit.get_action('issue_update')(
+                issue = toolkit.get_action('issue_update')(
                     data_dict={
                         'issue_number': issue_number,
                         'assignee_id': assignee['id'],
                         'dataset_id': dataset_id
                     }
                 )
+
+                notifications = p.toolkit.asbool(
+                    config.get('ckanext.issues.send_email_notifications')
+                )
+
+                if notifications:
+                    subject = get_issue_subject(issue)
+                    body = toolkit._('Assigned to {user}'.format(
+                        user=assignee['display_name']))
+
+                    user_obj = model.User.get(assignee_id)
+                    try:
+                        mailer.mail_user(user_obj, subject, body)
+                    except mailer.MailerException, e:
+                        log.debug(e.message)
+
             except toolkit.NotAuthorized:
                 msg = _('Unauthorized to assign users to issue'.format(
                     issue_number))

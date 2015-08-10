@@ -4,10 +4,12 @@ from datetime import datetime
 import ckan.logic as logic
 import ckan.plugins as p
 import ckan.model as model
+from ckan.lib import mailer
 from ckan.logic import validate
 import ckanext.issues.model as issuemodel
 from ckanext.issues.logic import schema
 from ckanext.issues.exception import ReportAlreadyExists
+from ckanext.issues.lib.helpers import get_issue_subject
 try:
     import ckan.authz as authz
 except ImportError:
@@ -96,6 +98,37 @@ def _get_next_issue_number(session, dataset_id):
     return q.number + 1
 
 
+def _get_recipients(context, dataset):
+    organization = dataset.owner_org
+    if organization:
+        roles = authz.get_roles_with_permission('update_dataset')
+        recipients = []
+        for role in roles:
+            recipients += p.toolkit.get_action('member_list')(
+                context,
+                data_dict={
+                    'id': organization,
+                    'object_type': 'user',
+                    'capacity': role,
+                }
+            )
+        return [recipient[0] for recipient in recipients]
+    else:
+        return []
+
+
+def _get_issue_body(issue):
+    url = p.toolkit.url_for('issues_show',
+                            dataset_id=issue.dataset_id,
+                            issue_number=issue.number)
+    return p.toolkit._(
+        '{description}\n You can view this issue at {url}'.format(
+            description=issue.description,
+            url=url
+        )
+    )
+
+
 @validate(schema.issue_create_schema)
 def issue_create(context, data_dict):
     '''Add a new issue.
@@ -129,6 +162,23 @@ def issue_create(context, data_dict):
 
     session.add(issue)
     session.commit()
+
+    notifications = p.toolkit.asbool(
+        config.get('ckanext.issues.send_email_notifications')
+    )
+
+    if notifications:
+        recipients = _get_recipients(context, dataset)
+        subject = get_issue_subject(issue.as_dict())
+        body = _get_issue_body(issue)
+
+        for recipient in recipients:
+            user_obj = model.User.get(recipient)
+            try:
+                mailer.mail_user(user_obj, subject, body)
+            except (mailer.MailerException, TypeError), e:
+                # TypeError occurs when we're running command from ckanapi
+                log.debug(e.message)
 
     log.debug('Created issue %s (%s)' % (issue.title, issue.id))
     return issue.as_dict()
@@ -338,6 +388,19 @@ def _filter_reports_for_user(user_id, results):
     return results
 
 
+def _get_comment_body(comment):
+    issue = comment.issue
+    url = p.toolkit.url_for('issues_show',
+                            dataset_id=issue.dataset_id,
+                            issue_number=issue.number)
+    return p.toolkit._(
+        '{description}\n You can view this comment at {url}'.format(
+            description=comment.comment,
+            url=url
+        )
+    )
+
+
 @validate(schema.issue_comment_schema)
 def issue_comment_create(context, data_dict):
     '''Add a new issue comment.
@@ -374,6 +437,24 @@ def issue_comment_create(context, data_dict):
     issue_comment = issuemodel.IssueComment(**comment_dict)
     model.Session.add(issue_comment)
     model.Session.commit()
+
+    notifications = p.toolkit.asbool(
+        config.get('ckanext.issues.send_email_notifications')
+    )
+
+    if notifications:
+        dataset = model.Package.get(data_dict['dataset_id'])
+        recipients = _get_recipients(context, dataset)
+        subject = get_issue_subject(issue.as_dict())
+        body = _get_comment_body(issue_comment)
+
+        for recipient in recipients:
+            user_obj = model.User.get(recipient)
+            try:
+                mailer.mail_user(user_obj, subject, body)
+            except (mailer.MailerException, TypeError), e:
+                # TypeError occurs when we're running command from ckanapi
+                log.debug(e.message)
 
     log.debug('Created issue comment %s' % (issue.id))
     return issue_comment.as_dict()

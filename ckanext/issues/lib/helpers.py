@@ -131,3 +131,14 @@ def issues_user_has_reported_issue(user, abuse_reports):
         return user_obj.id in abuse_reports
     else:
         return False
+
+
+def get_issue_subject(issue):
+    dataset = model.Package.get(issue['dataset_id'])
+    return toolkit._(
+        '[{dataset}] {issue_title} #{issue_number}'.format(
+            dataset=dataset.title,
+            issue_title=issue['title'],
+            issue_number=issue['number'],
+        )
+    )
