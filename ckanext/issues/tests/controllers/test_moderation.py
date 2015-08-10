@@ -60,8 +60,7 @@ class TestCommentModeration(helpers.FunctionalTestBase):
         self.organization = factories.Organization(user=self.user)
 
         self.dataset = factories.Dataset(user=self.user,
-                                         owner_org=self.organization['name'],
-                                         private=True)
+                                         owner_org=self.organization['name'])
 
         self.issue = issue_factories.Issue(user=self.user,
                                            user_id=self.user['id'],
@@ -76,7 +75,7 @@ class TestCommentModeration(helpers.FunctionalTestBase):
         app = self._get_test_app()
         env = {'REMOTE_USER': self.user['name'].encode('ascii')}
 
-        comment = model.Issue.get(self.issue['id'])
+        comment = model.IssueComment.get(self.comment['id'])
         comment.visibility = 'hidden'
         comment.save()
 
