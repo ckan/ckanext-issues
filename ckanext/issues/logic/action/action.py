@@ -116,17 +116,10 @@ def _get_recipients(context, dataset):
     else:
         return []
 
-
 def _get_issue_body(issue):
-    url = p.toolkit.url_for('issues_show',
-                            dataset_id=issue.dataset_id,
-                            issue_number=issue.number)
-    return p.toolkit._(
-        '{description}\n You can view this issue at {url}'.format(
-            description=issue.description,
-            url=url
-        )
-    )
+    p.toolkit.c.issue = issue
+    p.toolkit.c.package = model.Package.get(issue.dataset_id)
+    return p.toolkit.render("issues/email/new_issue.html")
 
 
 @validate(schema.issue_create_schema)
@@ -389,16 +382,12 @@ def _filter_reports_for_user(user_id, results):
 
 
 def _get_comment_body(comment):
-    issue = comment.issue
-    url = p.toolkit.url_for('issues_show',
-                            dataset_id=issue.dataset_id,
-                            issue_number=issue.number)
-    return p.toolkit._(
-        '{description}\n You can view this comment at {url}'.format(
-            description=comment.comment,
-            url=url
-        )
-    )
+    p.toolkit.c.issue = comment.issue
+    p.toolkit.c.comment = comment
+    p.toolkit.c.package = model.Package.get(comment.issue.dataset_id)
+    # The template has to be .html (even though it is .txt) so that
+    # it is rendered with jinja
+    return p.toolkit.render("issues/email/new_comment.html")
 
 
 @validate(schema.issue_comment_schema)
