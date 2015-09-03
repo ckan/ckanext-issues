@@ -493,7 +493,6 @@ def issues_for_org(org_id, get_query_dict):
     if errors:
         raise toolkit.ValidationError(errors).error_summary
     query.pop('__extras', None)
-
     template_params = _search_issues(organization_id=org_id,
                                      include_datasets=True,
                                      **query)

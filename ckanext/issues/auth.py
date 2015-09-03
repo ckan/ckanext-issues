@@ -73,12 +73,15 @@ def issue_update(context, data_dict):
         dataset_id=data_dict['dataset_id'],
     )
     user = context['user']
-    user_obj = model.User.get(user)
-    if ((issue.user_id == user_obj.id)  # we're the creator
-       and  # we are not trying to change status
-       not (data_dict.get('status')
-       and (issue.status != data_dict['status']))):
-        return {'success': True}
+    if not issue:
+        return {'success': False}
+    else:
+        user_obj = model.User.get(user)
+        if ((issue.user_id == user_obj.id)  # we're the creator
+           and  # we are not trying to change status
+           not (data_dict.get('status')
+           and (issue.status != data_dict['status']))):
+            return {'success': True}
     # all other cases not allowed
     return {
         'success': False,
