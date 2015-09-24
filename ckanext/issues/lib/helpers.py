@@ -13,6 +13,12 @@ ISSUES_PER_PAGE = (15, 30, 50)
 log = __import__('logging').getLogger(__name__)
 
 
+def enabled_for_organization(organization):
+    allowed_orgs = config.get("ckanext.issues.enabled_publishers")
+    if not allowed_orgs:
+        return True
+    return organization in allowed_orgs.split(' ')
+
 def replace_url_param(new_params, alternative_url=None, controller=None,
                       action=None, extras=None):
     '''

@@ -38,6 +38,7 @@ class IssuesPlugin(p.SingletonPlugin):
             'issues_installed': lambda: True,
             'issue_count': util.issue_count,
             'issue_comment_count': util.issue_comment_count,
+            'enabled_for_organization': helpers.enabled_for_organization,
             'replace_url_param': helpers.replace_url_param,
             'get_issue_filter_types': helpers.get_issue_filter_types,
             'get_issues_per_page': helpers.get_issues_per_page,
