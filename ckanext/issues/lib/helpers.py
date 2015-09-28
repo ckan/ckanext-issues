@@ -13,12 +13,6 @@ ISSUES_PER_PAGE = (15, 30, 50)
 log = __import__('logging').getLogger(__name__)
 
 
-def enabled_for_organization(organization):
-    allowed_orgs = config.get("ckanext.issues.enabled_publishers")
-    if not allowed_orgs:
-        return True
-    return organization in allowed_orgs.split(' ')
-
 def replace_url_param(new_params, alternative_url=None, controller=None,
                       action=None, extras=None):
     '''
@@ -92,14 +86,24 @@ def get_issues_per_page():
 
 
 def issues_enabled(dataset):
+    '''Returns whether issues are enabled for the given dataset (dict)'''
+    # config options allow you to only enable issues for particular datasets or
+    # organizations
     datasets_with_issues_enabled = set(toolkit.aslist(
         config.get('ckanext.issues.enabled_for_datasets')
     ))
-    # if the config option 'ckanext.issues.enabled_for_dataset' is
-    # set with a list of datasets, only enabled for the listed datasets
-    if datasets_with_issues_enabled:
-        if dataset['name'] in datasets_with_issues_enabled:
+    organizations_with_issues_enabled = set(toolkit.aslist(
+        config.get('ckanext.issues.enabled_for_organizations')
+    ))
+    if datasets_with_issues_enabled or organizations_with_issues_enabled:
+        if datasets_with_issues_enabled and \
+                dataset['name'] in datasets_with_issues_enabled:
             return True
+        elif organizations_with_issues_enabled and \
+                (dataset.get('organization') or {}).get('name') in \
+                organizations_with_issues_enabled:
+            return True
+        return False
     else:
         extras = dataset.get('extras', [])
         for extra in extras:
@@ -107,7 +111,7 @@ def issues_enabled(dataset):
                 return toolkit.asbool(extra.get('value'))
         else:
             return toolkit.asbool(
-                config.get('ckanext.issues.enabled_per_dataset_default', True)
+                config.get('ckanext.issues.enabled_without_extra', True)
             )
 
 
