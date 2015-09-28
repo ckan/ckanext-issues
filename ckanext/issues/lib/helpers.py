@@ -114,6 +114,15 @@ def issues_enabled(dataset):
                 config.get('ckanext.issues.enabled_without_extra', True)
             )
 
+def issues_enabled_for_organization(organization):
+    '''Returns whether issues are enabled for the given organization (dict)'''
+    organizations_with_issues_enabled = set(toolkit.aslist(
+        config.get('ckanext.issues.enabled_for_organizations')
+    ))
+    if organizations_with_issues_enabled:
+        return organization and \
+            organization.get('name') in organizations_with_issues_enabled
+    return True
 
 def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
     '''

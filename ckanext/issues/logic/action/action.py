@@ -37,11 +37,12 @@ def _add_reports(obj, can_edit, current_user):
             return []
 
 
+@p.toolkit.side_effect_free
 @validate(schema.issue_show_schema)
 def issue_show(context, data_dict):
     '''Return a single issue.
 
-    :param dataset_id: the dataset id of the issue to show
+    :param dataset_id: the dataset name or id of the issue to show
     :type dataset_id: string
     :param issue_number: the issue number
     :type issue_number: string
@@ -53,7 +54,8 @@ def issue_show(context, data_dict):
     session = context['session']
     dataset_id = data_dict['dataset_id']
     issue_number = data_dict['issue_number']
-    issue = issuemodel.Issue.get_by_number(dataset_id, issue_number, session)
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
+        dataset_id, issue_number, session)
     if not issue:
         raise p.toolkit.NotFound(p.toolkit._('Issue does not exist'))
 
@@ -199,7 +201,7 @@ def issue_update(context, data_dict):
     p.toolkit.check_access('issue_update', context, data_dict)
     session = context['session']
 
-    issue = issuemodel.Issue.get_by_number(
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
         dataset_id=data_dict['dataset_id'],
         issue_number=data_dict['issue_number'],
         session=session
@@ -245,7 +247,7 @@ def issue_delete(context, data_dict):
     dataset_id = data_dict['dataset_id']
     issue_number = data_dict['issue_number']
 
-    issue = issuemodel.Issue.get_by_number(
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
         dataset_id=dataset_id,
         issue_number=issue_number,
         session=session
@@ -400,7 +402,7 @@ def issue_comment_create(context, data_dict):
     :type comment: string
     :param issue_number: the number of the issue the comment belongs to
     :type issue_number: integer
-    :param dataset_id: the dataset id of the issue the comment belongs to
+    :param dataset_id: the dataset name or id of the issue the comment belongs to
     :type dataset_id: unicode
 
     :returns: the newly created issue comment
@@ -410,7 +412,7 @@ def issue_comment_create(context, data_dict):
     user = context['user']
     user_obj = model.User.get(user)
 
-    issue = issuemodel.Issue.get_by_number(
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
         dataset_id=data_dict['dataset_id'],
         issue_number=data_dict['issue_number'],
     )
@@ -492,7 +494,7 @@ def issue_report(context, data_dict):
     p.toolkit.check_access('issue_report', context, data_dict)
     session = context['session']
 
-    issue = issuemodel.Issue.get_by_number(
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
         issue_number=data_dict['issue_number'],
         dataset_id=data_dict['dataset_id'],
         session=session,
@@ -527,6 +529,7 @@ def issue_report(context, data_dict):
     session.commit()
 
 
+@p.toolkit.side_effect_free
 @validate(schema.issue_report_schema)
 def issue_report_show(context, data_dict):
     '''Fetch the abuse reports for an issue
@@ -550,7 +553,8 @@ def issue_report_show(context, data_dict):
 
     dataset_id = data_dict['dataset_id']
     issue_number = data_dict['issue_number']
-    issue = issuemodel.Issue.get_by_number(dataset_id, issue_number, session)
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
+        dataset_id, issue_number, session)
 
     try:
         package_context = {
@@ -587,7 +591,7 @@ def issue_report_clear(context, data_dict):
 
     issue_number = data_dict['issue_number']
     dataset_id = data_dict['dataset_id']
-    issue = issuemodel.Issue.get_by_number(
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
         session=session,
         dataset_id=dataset_id,
         issue_number=issue_number
@@ -705,6 +709,7 @@ def issue_comment_report_clear(context, data_dict):
     return True
 
 
+@p.toolkit.side_effect_free
 def issue_comment_search(context, data_dict):
     p.toolkit.check_access('issue_comment_search', context, data_dict)
     session = context['session']

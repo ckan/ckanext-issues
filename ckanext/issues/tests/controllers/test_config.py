@@ -48,9 +48,10 @@ class TestEnabledForOrganizations(helpers.FunctionalTestBase):
     def setup(self):
         super(TestEnabledForOrganizations, self).setup()
         self.dataset = factories.Dataset()
-        self.org = factories.Organization(name='my-org')
-        self.dataset_enabled = factories.Dataset(name='dataset-enabled',
-                                                 owner_org=self.org['id'])
+        self.org = factories.Organization(name='org')
+        self.enabled_org = factories.Organization(name='enabled-org')
+        self.dataset_enabled = factories.Dataset(
+            name='dataset-enabled', owner_org=self.enabled_org['id'])
         self.dataset_misleading_extra = \
             factories.Dataset(
                 extras=[{
@@ -62,7 +63,7 @@ class TestEnabledForOrganizations(helpers.FunctionalTestBase):
 
     @classmethod
     def _apply_config_changes(cls, config):
-        config['ckanext.issues.enabled_for_organizations'] = 'my-org'
+        config['ckanext.issues.enabled_for_organizations'] = 'enabled-org'
         # try and confuse it with also enabling another dataset
         config['ckanext.issues.enabled_for_datasets'] = 'random-dataset'
 
@@ -76,7 +77,17 @@ class TestEnabledForOrganizations(helpers.FunctionalTestBase):
                                      dataset_id=self.dataset['id']),
                      status=404)
 
-    def test_cant_enable_with_extra_with_this_config(self):
+    def test_org_enabled_by_config(self):
+        self.app.get(toolkit.url_for('issues_for_organization',
+                                     org_id=self.enabled_org['id']),
+                     status=200)
+
+    def test_other_orgs_disabled(self):
+        self.app.get(toolkit.url_for('issues_for_organization',
+                                     org_id=self.org['id']),
+                     status=404)
+
+    def test_cant_enable_dataset_with_extra_with_this_config(self):
         '''test that issues are disabled even with the extra issues_enabled
         set'''
         self.app.get(toolkit.url_for(
