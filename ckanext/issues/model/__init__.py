@@ -112,7 +112,7 @@ class IssueCategory(object):
 
 # make a nice user dict object
 def _user_dict(user):
-    out = model_dictize.user_dictize(user, {})
+    out = model_dictize.user_dictize(user, context={'model': model})
     out['ckan_url'] = h.url_for('user_datasets', id=user.name)
     out['gravatar'] = h.gravatar(user.email_hash, size=48)
     out['gravatar_url'] = '''//gravatar.com/avatar/%s?s=%d''' % (user.email_hash, 48)
