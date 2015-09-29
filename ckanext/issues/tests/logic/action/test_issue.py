@@ -8,7 +8,7 @@ from ckanext.issues.tests import factories as issue_factories
 from ckanext.issues.model import Issue, IssueComment, AbuseStatus
 from ckanext.issues.tests.helpers import ClearOnTearDownMixin
 
-from nose.tools import assert_equals, assert_raises
+from nose.tools import assert_equals, assert_raises, assert_not_in
 
 
 class TestIssueShow(ClearOnTearDownMixin):
@@ -23,6 +23,16 @@ class TestIssueShow(ClearOnTearDownMixin):
         )
         assert_equals('Test Issue', issue['title'])
         assert_equals('Some description', issue['description'])
+
+    def test_issue_user_dictization(self):
+        issue = helpers.call_action(
+            'issue_show',
+            dataset_id=self.issue['dataset_id'],
+            issue_number=self.issue['number'],
+        )
+        assert_not_in('apikey', issue.keys())
+        assert_not_in('reset_key', issue.keys())
+        assert_not_in('password', issue.keys())
 
 
 class TestIssueNew(ClearOnTearDownMixin):
