@@ -1,24 +1,18 @@
 from ckan import model
-from ckan.lib import search
 from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
 
 from ckanext.issues.tests import factories as issue_factories
+from ckanext.issues.tests.helpers import (
+    ClearOnTearDownMixin,
+    ClearOnSetupClassMixin
+)
 
 from nose.tools import assert_true, assert_raises
 
 
-class TestIssueUpdate(object):
-    @classmethod
-    def setupClass(self):
-        helpers.reset_db()
-        search.clear()
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestIssueUpdate(ClearOnTearDownMixin, ClearOnSetupClassMixin):
     def test_org_editor_can_update_an_issue(self):
         org_editor = factories.User()
         org = factories.Organization(
@@ -137,11 +131,7 @@ class TestIssueUpdate(object):
         )
 
 
-class TestIssueDelete(object):
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestIssueDelete(ClearOnTearDownMixin):
     def test_dataset_owner_can_delete_issue(self):
         user = factories.User()
         org = factories.Organization(user=user)

@@ -1,13 +1,13 @@
 from cStringIO import StringIO
 
 from ckan import model
-from ckan.lib import search
 from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
 
 from ckanext.issues.model import Issue, IssueComment
 from ckanext.issues.tests import factories as issue_factories
+from ckanext.issues.tests.helpers import ClearOnTearDownMixin
 
 from lxml import etree
 from nose.tools import assert_equals, assert_in
@@ -114,10 +114,6 @@ class TestReport(helpers.FunctionalTestBase):
                                            dataset_id=self.dataset['id'])
         self.app = self._get_test_app()
 
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
     def test_report(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
@@ -205,10 +201,6 @@ class TestCommentAbuseReports(helpers.FunctionalTestBase):
             issue_number=self.issue['number']
         )
         self.app = self._get_test_app()
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
 
     def test_report(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}

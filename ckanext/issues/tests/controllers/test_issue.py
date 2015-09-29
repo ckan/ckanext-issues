@@ -1,4 +1,3 @@
-from ckan.lib import search
 from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
@@ -66,10 +65,6 @@ class TestShow(helpers.FunctionalTestBase):
                                          owner_org=self.org['name'])
         self.app = self._get_test_app()
 
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
     def test_not_found_issue_raises_404(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.get(
@@ -104,10 +99,6 @@ class TestDelete(helpers.FunctionalTestBase):
                                            user_id=self.owner['id'],
                                            dataset_id=self.dataset['id'])
         self.app = self._get_test_app()
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
 
     def test_delete(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
@@ -215,10 +206,6 @@ class TestOrganization(helpers.FunctionalTestBase):
                                            user_id=self.owner['id'],
                                            dataset_id=self.dataset['id'])
         self.app = self._get_test_app()
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
 
     def test_basic(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
