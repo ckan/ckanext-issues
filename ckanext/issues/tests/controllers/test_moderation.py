@@ -1,4 +1,3 @@
-from ckan.lib import search
 from ckan.plugins import toolkit
 try:
     from ckan.tests import helpers
@@ -13,13 +12,9 @@ from ckanext.issues import model
 
 
 class TestModeration(helpers.FunctionalTestBase):
-    @classmethod
-    def setup_class(cls):
-        super(TestModeration, cls).setup_class()
-        helpers.reset_db()
-        search.clear()
 
     def setup(self):
+        super(TestModeration, self).setup()
         self.user = factories.User()
         self.organization = factories.Organization(user=self.user)
 
@@ -49,13 +44,8 @@ class TestModeration(helpers.FunctionalTestBase):
 
 
 class TestCommentModeration(helpers.FunctionalTestBase):
-    @classmethod
-    def setup_class(cls):
-        super(TestCommentModeration, cls).setup_class()
-        helpers.reset_db()
-        search.clear()
-
     def setup(self):
+        super(TestCommentModeration, self).setup()
         self.user = factories.User()
         self.organization = factories.Organization(user=self.user)
 
