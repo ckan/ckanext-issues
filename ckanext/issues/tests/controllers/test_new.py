@@ -4,11 +4,12 @@ import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
 
 from ckanext.issues.tests import factories as issue_factories
+from ckanext.issues.tests.helpers import ClearOnTearDownMixin
 
 from nose.tools import assert_equals, assert_in
 
 
-class TestCreateNewIssue(helpers.FunctionalTestBase):
+class TestCreateNewIssue(helpers.FunctionalTestBase, ClearOnTearDownMixin):
     def setup(self):
         super(TestCreateNewIssue, self).setup()
         self.owner = factories.User()
@@ -39,12 +40,9 @@ class TestCreateNewIssue(helpers.FunctionalTestBase):
         assert_equals('new issue', issues['results'][0]['title'])
         assert_equals('test_description', issues['results'][0]['description'])
 
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
 
-
-class TestCreateNewIssueComment(helpers.FunctionalTestBase):
+class TestCreateNewIssueComment(helpers.FunctionalTestBase,
+                                ClearOnTearDownMixin):
     def setup(self):
         super(TestCreateNewIssueComment, self).setup()
         self.owner = factories.User()
@@ -74,7 +72,3 @@ class TestCreateNewIssueComment(helpers.FunctionalTestBase):
             }
         )
         assert_equals('Comment', issue_dict['comments'][0]['comment'])
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()

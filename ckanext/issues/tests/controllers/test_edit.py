@@ -1,16 +1,19 @@
-from ckan.lib import search
 from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
 
 from ckanext.issues.tests import factories as issue_factories
+from ckanext.issues.tests.helpers import (
+    ClearOnTearDownMixin,
+)
 
 import bs4
 from nose.tools import (assert_equals, assert_in, assert_is_not_none,
                         assert_is_none)
 
 
-class TestIssueEdit(helpers.FunctionalTestBase):
+class TestIssueEdit(helpers.FunctionalTestBase,
+                    ClearOnTearDownMixin):
     def setup(self):
         super(TestIssueEdit, self).setup()
         self.owner = factories.User()
@@ -49,12 +52,9 @@ class TestIssueEdit(helpers.FunctionalTestBase):
         assert_equals(u'edited title', result['title'])
         assert_equals(u'edited description', result['description'])
 
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
 
-
-class TestEditButton(helpers.FunctionalTestBase):
+class TestEditButton(helpers.FunctionalTestBase,
+                     ClearOnTearDownMixin):
     def setup(self):
         super(TestEditButton, self).setup()
         # create a test issue, owned by a user/org
