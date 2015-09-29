@@ -30,9 +30,11 @@ class TestIssueShow(ClearOnTearDownMixin):
             dataset_id=self.issue['dataset_id'],
             issue_number=self.issue['number'],
         )
-        assert_not_in('apikey', issue.keys())
-        assert_not_in('reset_key', issue.keys())
-        assert_not_in('password', issue.keys())
+        user = issue['user']
+        assert_equals('test.ckan.net', user['name'])
+        assert_not_in('apikey', user.keys())
+        assert_not_in('reset_key', user.keys())
+        assert_not_in('password', user.keys())
 
 
 class TestIssueNew(ClearOnTearDownMixin):
