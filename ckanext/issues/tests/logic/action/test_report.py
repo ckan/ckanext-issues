@@ -73,43 +73,42 @@ class TestReportAnIssue(object):
         )
         assert_equals('hidden', result['visibility'])
 
-    @mock.patch('ckanext.issues.logic.action.action.config')
-    def test_max_strikes_hides_issues(self, mock):
-        # mock out the config value of max_strikes
-        mock.get.return_value = '1'
-        owner = factories.User()
-        org = factories.Organization(user=owner)
-        dataset = factories.Dataset(owner_org=org['name'])
-        issue = issue_factories.Issue(user_id=owner['id'],
-                                      dataset_id=dataset['id'])
+    @mock.patch.dict('ckanext.issues.logic.action.action.config',
+                     {'ckanext.issues.max_strikes': '0'})
+    def test_max_strikes_hides_issues(self):
+            owner = factories.User()
+            org = factories.Organization(user=owner)
+            dataset = factories.Dataset(owner_org=org['name'])
+            issue = issue_factories.Issue(user_id=owner['id'],
+                                        dataset_id=dataset['id'])
 
-        user_0 = factories.User()
-        context = {
-            'user': user_0['name'],
-            'model': model,
-        }
-        helpers.call_action(
-            'issue_report',
-            context=context,
-            dataset_id=dataset['id'],
-            issue_number=issue['number']
-        )
+            user_0 = factories.User()
+            context = {
+                'user': user_0['name'],
+                'model': model,
+            }
+            helpers.call_action(
+                'issue_report',
+                context=context,
+                dataset_id=dataset['id'],
+                issue_number=issue['number']
+            )
 
-        user_1 = factories.User()
-        context = {
-            'user': user_1['name'],
-            'model': model,
-        }
-        helpers.call_action(
-            'issue_report',
-            context=context,
-            dataset_id=dataset['id'],
-            issue_number=issue['number']
-        )
+            user_1 = factories.User()
+            context = {
+                'user': user_1['name'],
+                'model': model,
+            }
+            helpers.call_action(
+                'issue_report',
+                context=context,
+                dataset_id=dataset['id'],
+                issue_number=issue['number']
+            )
 
-        issue_obj = Issue.get(issue['id'])
-        assert_equals(len(issue_obj.abuse_reports), 2)
-        assert_equals('hidden', issue_obj.visibility)
+            issue_obj = Issue.get(issue['id'])
+            assert_equals(len(issue_obj.abuse_reports), 2)
+            assert_equals('hidden', issue_obj.visibility)
 
 
 #class TestReportAnIssueTwice(object):
@@ -344,11 +343,9 @@ class TestReportComment(object):
                                      dataset_id=dataset['id'])
         assert_equals('hidden', result['comments'][0]['visibility'])
 
-    @mock.patch('ckanext.issues.logic.action.action.config')
-    def test_max_strikes_hides_comment(self, mock):
-        # mock out the config value of max_strikes
-        mock.get.return_value = '0'
-
+    @mock.patch.dict('ckanext.issues.logic.action.action.config',
+                     {'ckanext.issues.max_strikes': '0'})
+    def test_max_strikes_hides_comment(self):
         owner = factories.User()
         org = factories.Organization(user=owner)
         dataset = factories.Dataset(owner_org=org['name'])

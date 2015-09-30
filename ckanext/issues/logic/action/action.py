@@ -5,7 +5,9 @@ import ckan.logic as logic
 import ckan.plugins as p
 import ckan.model as model
 from ckan.lib import mailer
+from ckan.lib.base import render_jinja2
 from ckan.logic import validate
+import ckan.lib.helpers as h
 import ckanext.issues.model as issuemodel
 from ckanext.issues.logic import schema
 from ckanext.issues.exception import ReportAlreadyExists
@@ -55,7 +57,9 @@ def issue_show(context, data_dict):
     dataset_id = data_dict['dataset_id']
     issue_number = data_dict['issue_number']
     issue = issuemodel.Issue.get_by_name_or_id_and_number(
-        dataset_id, issue_number, session)
+        dataset_name_or_id=dataset_id,
+        issue_number=issue_number,
+        session=session)
     if not issue:
         raise p.toolkit.NotFound(p.toolkit._('Issue does not exist'))
 
@@ -118,10 +122,35 @@ def _get_recipients(context, dataset):
     else:
         return []
 
-def _get_issue_body(issue):
-    p.toolkit.c.issue = issue
-    p.toolkit.c.package = model.Package.get(issue.dataset_id)
-    return p.toolkit.render("issues/email/new_issue.html")
+def _get_issue_vars(issue, issue_subject, user_obj):
+    try:
+        # from ckan 2.4
+        from ckan.model.system_info import get_system_info
+        site_title = get_system_info('ckan.site_title')
+    except ImportError:
+        # older ckans
+        site_title = config['ckan.site_title']
+    return {'issue': issue,
+            'issue_subject': issue_subject,
+            'dataset': model.Package.get(issue.dataset_id),
+            'user': user_obj,
+            'site_title': site_title,
+            'h': h}
+
+
+def _get_issue_email_body(issue, issue_subject, user_obj):
+    extra_vars = _get_issue_vars(issue, issue_subject, user_obj)
+    # Would use p.toolkit.render, but it mucks with response and other things,
+    # which is unnecessary, and p.toolkit.render_text uses genshi...
+    return render_jinja2('issues/email/new_issue.html', extra_vars=extra_vars)
+
+
+def _get_comment_email_body(comment, issue_subject, user_obj):
+    extra_vars = _get_issue_vars(comment.issue, issue_subject, user_obj)
+    # The template has to be .html (even though it is .txt) so that
+    # it is rendered with jinja
+    return p.toolkit.render('issues/email/new_comment.html',
+                            extra_vars=extra_vars)
 
 
 @validate(schema.issue_create_schema)
@@ -165,7 +194,7 @@ def issue_create(context, data_dict):
     if notifications:
         recipients = _get_recipients(context, dataset)
         subject = get_issue_subject(issue.as_dict())
-        body = _get_issue_body(issue)
+        body = _get_issue_email_body(issue, subject, user_obj)
 
         for recipient in recipients:
             user_obj = model.User.get(recipient)
@@ -202,7 +231,7 @@ def issue_update(context, data_dict):
     session = context['session']
 
     issue = issuemodel.Issue.get_by_name_or_id_and_number(
-        dataset_id=data_dict['dataset_id'],
+        dataset_name_or_id=data_dict['dataset_id'],
         issue_number=data_dict['issue_number'],
         session=session
     )
@@ -248,7 +277,7 @@ def issue_delete(context, data_dict):
     issue_number = data_dict['issue_number']
 
     issue = issuemodel.Issue.get_by_name_or_id_and_number(
-        dataset_id=dataset_id,
+        dataset_name_or_id=dataset_id,
         issue_number=issue_number,
         session=session
     )
@@ -383,15 +412,6 @@ def _filter_reports_for_user(user_id, results):
     return results
 
 
-def _get_comment_body(comment):
-    p.toolkit.c.issue = comment.issue
-    p.toolkit.c.comment = comment
-    p.toolkit.c.package = model.Package.get(comment.issue.dataset_id)
-    # The template has to be .html (even though it is .txt) so that
-    # it is rendered with jinja
-    return p.toolkit.render("issues/email/new_comment.html")
-
-
 @validate(schema.issue_comment_schema)
 def issue_comment_create(context, data_dict):
     '''Add a new issue comment.
@@ -413,8 +433,9 @@ def issue_comment_create(context, data_dict):
     user_obj = model.User.get(user)
 
     issue = issuemodel.Issue.get_by_name_or_id_and_number(
-        dataset_id=data_dict['dataset_id'],
+        dataset_name_or_id=data_dict['dataset_id'],
         issue_number=data_dict['issue_number'],
+        session=context['session']
     )
 
     comment_dict = data_dict.copy()
@@ -437,7 +458,7 @@ def issue_comment_create(context, data_dict):
         dataset = model.Package.get(data_dict['dataset_id'])
         recipients = _get_recipients(context, dataset)
         subject = get_issue_subject(issue.as_dict())
-        body = _get_comment_body(issue_comment)
+        body = _get_comment_email_body(issue_comment, subject, user_obj)
 
         for recipient in recipients:
             user_obj = model.User.get(recipient)
@@ -496,7 +517,7 @@ def issue_report(context, data_dict):
 
     issue = issuemodel.Issue.get_by_name_or_id_and_number(
         issue_number=data_dict['issue_number'],
-        dataset_id=data_dict['dataset_id'],
+        dataset_name_or_id=data_dict['dataset_id'],
         session=session,
     )
     user_obj = model.User.get(context['user'])
@@ -554,7 +575,9 @@ def issue_report_show(context, data_dict):
     dataset_id = data_dict['dataset_id']
     issue_number = data_dict['issue_number']
     issue = issuemodel.Issue.get_by_name_or_id_and_number(
-        dataset_id, issue_number, session)
+        dataset_name_or_id=dataset_id,
+        issue_number=issue_number,
+        session=session)
 
     try:
         package_context = {
@@ -593,7 +616,7 @@ def issue_report_clear(context, data_dict):
     dataset_id = data_dict['dataset_id']
     issue = issuemodel.Issue.get_by_name_or_id_and_number(
         session=session,
-        dataset_id=dataset_id,
+        dataset_name_or_id=dataset_id,
         issue_number=issue_number
     )
 
