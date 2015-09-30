@@ -1,4 +1,3 @@
-from ckan.lib import search
 try:
     from ckan.tests import factories, helpers
 except ImportError:
@@ -7,17 +6,14 @@ from ckan.plugins import toolkit
 
 from ckanext.issues.tests import factories as issue_factories
 from ckanext.issues.model import Issue, IssueComment, AbuseStatus
+from ckanext.issues.tests.helpers import ClearOnTearDownMixin
 
-from nose.tools import assert_equals, assert_raises
+from nose.tools import assert_equals, assert_raises, assert_not_in
 
 
-class TestIssueShow(object):
+class TestIssueShow(ClearOnTearDownMixin):
     def setup(self):
         self.issue = issue_factories.Issue(title='Test Issue')
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
 
     def test_issue_show(self):
         issue = helpers.call_action(
@@ -28,15 +24,23 @@ class TestIssueShow(object):
         assert_equals('Test Issue', issue['title'])
         assert_equals('Some description', issue['description'])
 
+    def test_issue_user_dictization(self):
+        issue = helpers.call_action(
+            'issue_show',
+            dataset_id=self.issue['dataset_id'],
+            issue_number=self.issue['number'],
+        )
+        user = issue['user']
+        assert_equals('test.ckan.net', user['name'])
+        assert_not_in('apikey', user.keys())
+        assert_not_in('reset_key', user.keys())
+        assert_not_in('password', user.keys())
 
-class TestIssueNew(object):
+
+class TestIssueNew(ClearOnTearDownMixin):
     def setup(self):
         self.user = factories.User()
         self.dataset = factories.Dataset()
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
 
     def test_issue_create(self):
         issue_create_result = toolkit.get_action('issue_create')(
@@ -153,11 +157,7 @@ class TestIssueNew(object):
         assert_equals('visible', issue_object.visibility)
 
 
-class TestIssueComment(object):
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestIssueComment(ClearOnTearDownMixin):
     def test_create_comment_on_issue(self):
         user = factories.User()
         dataset = factories.Dataset()
@@ -237,11 +237,7 @@ class TestIssueComment(object):
         )
 
 
-class TestIssueSearch(object):
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestIssueSearch(ClearOnTearDownMixin):
     def test_list_all_issues_for_dataset(self):
         user = factories.User()
         dataset = factories.Dataset()
@@ -437,11 +433,7 @@ class TestIssueSearch(object):
                       set([i['id'] for i in filtered_issues]))
 
 
-class TestIssueUpdate(object):
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestIssueUpdate(ClearOnTearDownMixin):
     def test_update_an_issue(self):
         user = factories.User()
         dataset = factories.Dataset()
@@ -553,11 +545,7 @@ class TestIssueUpdate(object):
         )
 
 
-class TestIssueDelete(object):
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestIssueDelete(ClearOnTearDownMixin):
     def test_deletion(self):
         user = factories.User()
         dataset = factories.Dataset()
@@ -597,11 +585,7 @@ class TestIssueDelete(object):
                       issue_number='huh')
 
 
-class TestOrganizationUsersAutocomplete(object):
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestOrganizationUsersAutocomplete(ClearOnTearDownMixin):
     def test_fetch_org_editors(self):
         owner = factories.User(name='test_owner')
         editor = factories.User(name='test_editor')
@@ -622,11 +606,7 @@ class TestOrganizationUsersAutocomplete(object):
         )
 
 
-class TestCommentSearch(object):
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestCommentSearch(ClearOnTearDownMixin):
     def test_search(self):
         organization = factories.Organization()
         dataset = factories.Dataset(owner_org=organization['id'])
@@ -636,7 +616,7 @@ class TestCommentSearch(object):
             dataset_id=issue['dataset_id'],
         )
 
-        issue_factories.IssueComment(# unreported comment
+        issue_factories.IssueComment(  # unreported comment
             issue_number=issue['number'],
             dataset_id=issue['dataset_id'],
         )

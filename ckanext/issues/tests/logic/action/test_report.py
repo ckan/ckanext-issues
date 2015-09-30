@@ -11,19 +11,16 @@ from ckanext.issues.model import (
     IssueComment,
 )
 from ckanext.issues.exception import ReportAlreadyExists
+from ckanext.issues.tests.helpers import (
+    ClearOnTearDownMixin,
+    ClearOnSetupClassMixin,
+)
 
 from nose.tools import assert_equals, assert_raises
 import mock
 
 
-class TestReportAnIssue(object):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestReportAnIssue(ClearOnTearDownMixin):
     def test_report_an_issue(self):
         owner = factories.User()
         org = factories.Organization(user=owner)
@@ -148,11 +145,7 @@ class TestReportAnIssue(object):
 #        )
 
 
-class TestIssueReportClear(object):
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestIssueReportClear(ClearOnTearDownMixin):
     def test_clear_as_publisher(self):
         owner = factories.User()
         org = factories.Organization(user=owner)
@@ -209,12 +202,7 @@ class TestIssueReportClear(object):
         assert_equals(len(issue_obj.abuse_reports), 0)
 
 
-class TestIssueReportShow(object):
-    @classmethod
-    def setupClass(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestIssueReportShow(ClearOnTearDownMixin, ClearOnSetupClassMixin):
     def setup(self):
         self.owner = factories.User()
         self.org = factories.Organization(user=self.owner)
@@ -239,10 +227,6 @@ class TestIssueReportShow(object):
         helpers.call_action('issue_report', context=context,
                             dataset_id=self.dataset['id'],
                             issue_number=self.issue['number'])
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
 
     def test_issue_report_show_for_publisher(self):
         context = {
@@ -284,14 +268,7 @@ class TestIssueReportShow(object):
         assert_equals([], result)
 
 
-class TestReportComment(object):
-    def setup(self):
-        helpers.reset_db()
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestReportComment(ClearOnSetupClassMixin, ClearOnTearDownMixin):
     def test_report_comment(self):
         owner = factories.User()
         org = factories.Organization(user=owner)
@@ -414,15 +391,8 @@ class TestReportComment(object):
 #        )
 
 
-class TestCommentReportClearAsPublisher(object):
-    @classmethod
-    def setup_class(self):
-        helpers.reset_db()
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestCommentReportClearAsPublisher(ClearOnTearDownMixin,
+                                        ClearOnSetupClassMixin):
     def test_clear_as_publisher(self):
         owner = factories.User()
         org = factories.Organization(user=owner)
@@ -453,16 +423,8 @@ class TestCommentReportClearAsPublisher(object):
         assert_equals(len(comment_obj.abuse_reports), 0)
 
 
-class TestCommentReportClearAsUser(object):
-    @classmethod
-    def setup_class(self):
-        helpers.reset_db()
-
-    # only allow one test here,
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
-
+class TestCommentReportClearAsUser(ClearOnSetupClassMixin,
+                                   ClearOnTearDownMixin):
     def test_clear_as_user(self):
         owner = factories.User()
         org = factories.Organization(user=owner)

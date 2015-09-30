@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 from nose.tools import assert_equals, assert_in
 
-from ckan.lib import search
 from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
@@ -20,10 +19,6 @@ class TestAssign(helpers.FunctionalTestBase):
                                            user_id=self.owner['id'],
                                            dataset_id=self.dataset['id'])
         self.app = self._get_test_app()
-
-    def teardown(self):
-        helpers.reset_db()
-        search.clear()
 
     def test_user_self_assign(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}

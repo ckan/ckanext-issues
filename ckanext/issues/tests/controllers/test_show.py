@@ -1,4 +1,3 @@
-from ckan.lib import search
 from ckan.plugins import toolkit
 try:
     from ckan.tests import helpers
@@ -10,15 +9,13 @@ except ImportError:
     from ckan.new_tests.helpers import assert_in
 
 from ckanext.issues.tests import factories as issue_factories
+from ckanext.issues.tests.helpers import (
+    ClearOnSetupClassMixin,
+)
 
 
-class TestIssuesShowController(helpers.FunctionalTestBase):
-    @classmethod
-    def setup_class(cls):
-        super(TestIssuesShowController, cls).setup_class()
-        helpers.reset_db()
-        search.clear()
-
+class TestIssuesShowController(helpers.FunctionalTestBase,
+                               ClearOnSetupClassMixin):
     def setup(self):
         self.user = factories.User()
         self.organization = factories.Organization(user=self.user)
