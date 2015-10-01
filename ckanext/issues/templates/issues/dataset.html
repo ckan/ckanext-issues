@@ -80,7 +80,7 @@
     {% endif %}
     {% if pagination.has_next %}
       <li>
-      {% set href = h.replace_url_param(new_params={'page': pagination.page + 1}, extras={'dataset_id':pkg['id']}) %}
+      {% set href = h.replace_url_param(new_params={'page': pagination.page + 1, 'sort': sort, 'per_page': pagination.per_page }, extras={'dataset_id':pkg['id']}) %}
       <a id="pagination-next-link" href="{{ href }}">»</a>
       </li>
     {% endif %}
@@ -90,7 +90,7 @@
     <ul>
       {% for per_page_option in issues_per_page %}
         <li{% if per_page_option==pagination.per_page %} class="active"{% endif %}>
-        {% set href = h.replace_url_param(new_params={'per_page': per_page_option, 'page': 1}, extras={'dataset_id':pkg['id']}) %}
+        {% set href = h.replace_url_param(new_params={'per_page': per_page_option, 'page': 1, 'sort': sort }, extras={'dataset_id':pkg['id']}) %}
         <a id="per-page-{{ per_page_option }}-link" href="{{ href }}">{{ per_page_option }}</a>
         </li>
       {% endfor %}
