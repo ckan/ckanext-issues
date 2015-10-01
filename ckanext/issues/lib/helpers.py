@@ -25,7 +25,6 @@ def replace_url_param(new_params, alternative_url=None, controller=None,
     This can be overriden providing an alternative_url, which will be used
     instead.
     '''
-    from urllib import urlencode
     params_cleaned = [(k, v) for k, v in toolkit.request.params.items()
                       if k not in new_params.keys()]
     params = set(params_cleaned)
@@ -34,7 +33,7 @@ def replace_url_param(new_params, alternative_url=None, controller=None,
     if alternative_url:
         return helpers._url_with_params(alternative_url, params)
 
-    return u"{}?{}".format(toolkit.request.path, urlencode(new_params))
+    return helpers._url_with_params(toolkit.request.path, params)
 
 
 class Pagination(object):
