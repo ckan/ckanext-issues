@@ -501,7 +501,6 @@ def issues_for_dataset(dataset_id, get_query_dict):
     if errors:
         raise toolkit.ValidationError(errors).error_summary
     query.pop('__extras', None)
-
     return _search_issues(dataset_id=dataset_id, **query)
 
 

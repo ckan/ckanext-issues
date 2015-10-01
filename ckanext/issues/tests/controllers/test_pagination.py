@@ -35,12 +35,14 @@ class TestPagination(helpers.FunctionalTestBase):
                 sort='oldest',
             ),
         )
+
         for per_page in ISSUES_PER_PAGE:
             response = response.click(linkid='per-page-{0}'.format(per_page))
+
             for i in self.issues[:per_page]:
-                assert_in(i['title'], response)
+                assert_in(i['title'], response.body.decode('utf8'))
             for i in self.issues[per_page:]:
-                assert_not_in(i['title'], response)
+                assert_not_in(i['title'], response.body.decode('utf8'))
 
     def test_next_button(self):
         for per_page in ISSUES_PER_PAGE:
@@ -60,13 +62,13 @@ class TestPagination(helpers.FunctionalTestBase):
 
         for page, x in enumerate(range(0, num_issues, step)):
             for i in self.issues[x:x+step]:
-                assert_in(i['title'], response)
+                assert_in(i['title'], response.body.decode('utf8'))
 
             for i in self.issues[:x]:
-                assert_not_in(i['title'], response)
+                assert_not_in(i['title'], response.body.decode('utf8'))
 
             for i in self.issues[x+step:]:
-                assert_not_in(i['title'], response)
+                assert_not_in(i['title'], response.body.decode('utf8'))
 
             if page != pages:
                 # we're on the last page, so there is no link to click
