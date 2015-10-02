@@ -81,7 +81,7 @@ and you can set the default for all the other datasets (without that extra field
 
     ckanext.issues.enabled_without_extra = false
 
-For the extra field to workm you must not set `enabled_per_dataset` or `enabled_for_organizations` options.
+For the extra field to work you must not set `enabled_per_dataset` or `enabled_for_organizations` options.
 
 ## Feedback
 
