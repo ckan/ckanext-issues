@@ -5,7 +5,9 @@ import ckan.logic as logic
 import ckan.plugins as p
 import ckan.model as model
 from ckan.lib import mailer
+from ckan.lib.base import render_jinja2
 from ckan.logic import validate
+import ckan.lib.helpers as h
 import ckanext.issues.model as issuemodel
 from ckanext.issues.logic import schema
 from ckanext.issues.exception import ReportAlreadyExists
@@ -37,11 +39,12 @@ def _add_reports(obj, can_edit, current_user):
             return []
 
 
+@p.toolkit.side_effect_free
 @validate(schema.issue_show_schema)
 def issue_show(context, data_dict):
     '''Return a single issue.
 
-    :param dataset_id: the dataset id of the issue to show
+    :param dataset_id: the dataset name or id of the issue to show
     :type dataset_id: string
     :param issue_number: the issue number
     :type issue_number: string
@@ -53,7 +56,10 @@ def issue_show(context, data_dict):
     session = context['session']
     dataset_id = data_dict['dataset_id']
     issue_number = data_dict['issue_number']
-    issue = issuemodel.Issue.get_by_number(dataset_id, issue_number, session)
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
+        dataset_name_or_id=dataset_id,
+        issue_number=issue_number,
+        session=session)
     if not issue:
         raise p.toolkit.NotFound(p.toolkit._('Issue does not exist'))
 
@@ -116,17 +122,35 @@ def _get_recipients(context, dataset):
     else:
         return []
 
+def _get_issue_vars(issue, issue_subject, user_obj):
+    try:
+        # from ckan 2.4
+        from ckan.model.system_info import get_system_info
+        site_title = get_system_info('ckan.site_title')
+    except ImportError:
+        # older ckans
+        site_title = config['ckan.site_title']
+    return {'issue': issue,
+            'issue_subject': issue_subject,
+            'dataset': model.Package.get(issue.dataset_id),
+            'user': user_obj,
+            'site_title': site_title,
+            'h': h}
 
-def _get_issue_body(issue):
-    url = p.toolkit.url_for('issues_show',
-                            dataset_id=issue.dataset_id,
-                            issue_number=issue.number)
-    return p.toolkit._(
-        '{description}\n You can view this issue at {url}'.format(
-            description=issue.description,
-            url=url
-        )
-    )
+
+def _get_issue_email_body(issue, issue_subject, user_obj):
+    extra_vars = _get_issue_vars(issue, issue_subject, user_obj)
+    # Would use p.toolkit.render, but it mucks with response and other things,
+    # which is unnecessary, and p.toolkit.render_text uses genshi...
+    return render_jinja2('issues/email/new_issue.html', extra_vars=extra_vars)
+
+
+def _get_comment_email_body(comment, issue_subject, user_obj):
+    extra_vars = _get_issue_vars(comment.issue, issue_subject, user_obj)
+    # The template has to be .html (even though it is .txt) so that
+    # it is rendered with jinja
+    return p.toolkit.render('issues/email/new_comment.html',
+                            extra_vars=extra_vars)
 
 
 @validate(schema.issue_create_schema)
@@ -170,7 +194,7 @@ def issue_create(context, data_dict):
     if notifications:
         recipients = _get_recipients(context, dataset)
         subject = get_issue_subject(issue.as_dict())
-        body = _get_issue_body(issue)
+        body = _get_issue_email_body(issue, subject, user_obj)
 
         for recipient in recipients:
             user_obj = model.User.get(recipient)
@@ -206,8 +230,8 @@ def issue_update(context, data_dict):
     p.toolkit.check_access('issue_update', context, data_dict)
     session = context['session']
 
-    issue = issuemodel.Issue.get_by_number(
-        dataset_id=data_dict['dataset_id'],
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
+        dataset_name_or_id=data_dict['dataset_id'],
         issue_number=data_dict['issue_number'],
         session=session
     )
@@ -252,8 +276,8 @@ def issue_delete(context, data_dict):
     dataset_id = data_dict['dataset_id']
     issue_number = data_dict['issue_number']
 
-    issue = issuemodel.Issue.get_by_number(
-        dataset_id=dataset_id,
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
+        dataset_name_or_id=dataset_id,
         issue_number=issue_number,
         session=session
     )
@@ -388,19 +412,6 @@ def _filter_reports_for_user(user_id, results):
     return results
 
 
-def _get_comment_body(comment):
-    issue = comment.issue
-    url = p.toolkit.url_for('issues_show',
-                            dataset_id=issue.dataset_id,
-                            issue_number=issue.number)
-    return p.toolkit._(
-        '{description}\n You can view this comment at {url}'.format(
-            description=comment.comment,
-            url=url
-        )
-    )
-
-
 @validate(schema.issue_comment_schema)
 def issue_comment_create(context, data_dict):
     '''Add a new issue comment.
@@ -411,7 +422,7 @@ def issue_comment_create(context, data_dict):
     :type comment: string
     :param issue_number: the number of the issue the comment belongs to
     :type issue_number: integer
-    :param dataset_id: the dataset id of the issue the comment belongs to
+    :param dataset_id: the dataset name or id of the issue the comment belongs to
     :type dataset_id: unicode
 
     :returns: the newly created issue comment
@@ -421,9 +432,10 @@ def issue_comment_create(context, data_dict):
     user = context['user']
     user_obj = model.User.get(user)
 
-    issue = issuemodel.Issue.get_by_number(
-        dataset_id=data_dict['dataset_id'],
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
+        dataset_name_or_id=data_dict['dataset_id'],
         issue_number=data_dict['issue_number'],
+        session=context['session']
     )
 
     comment_dict = data_dict.copy()
@@ -446,7 +458,7 @@ def issue_comment_create(context, data_dict):
         dataset = model.Package.get(data_dict['dataset_id'])
         recipients = _get_recipients(context, dataset)
         subject = get_issue_subject(issue.as_dict())
-        body = _get_comment_body(issue_comment)
+        body = _get_comment_email_body(issue_comment, subject, user_obj)
 
         for recipient in recipients:
             user_obj = model.User.get(recipient)
@@ -488,56 +500,98 @@ def organization_users_autocomplete(context, data_dict):
 
 @validate(schema.issue_report_schema)
 def issue_report(context, data_dict):
-    '''Report an issue
+    '''Report that an issue is abuse/spam
 
-    If you are a org admin/editor, this marks the comment as abuse; if you are
-    any other user, if the number of reports exceeds ckanext.issues.max_strikes
-    the issues will be hidden
+    If you are a org admin/editor, it records that it is abuse and hides the
+    issue straight away.
+    If you are any other user, it records the user's report against the issue
+    and if the number of those reaches ckanext.issues.max_strikes then issue
+    will be marked as abuse and hidden.
 
     :param dataset_id: the name or id of the dataset that the issue item
         belongs to
     :type dataset_id: string
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
+
+    :returns: info about the reports on this issue IF the user is an
+              admin/editor, otherwise an empty dict
+    :rtype: dict
     '''
     p.toolkit.check_access('issue_report', context, data_dict)
     session = context['session']
 
-    issue = issuemodel.Issue.get_by_number(
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
         issue_number=data_dict['issue_number'],
-        dataset_id=data_dict['dataset_id'],
+        dataset_name_or_id=data_dict['dataset_id'],
         session=session,
     )
-    user_obj = model.User.get(context['user'])
+    return _comment_or_issue_report(issue, context['user'],
+                                    data_dict['dataset_id'], session)
+
+
+def _comment_or_issue_report(issue_or_comment, user_ref, dataset_id, session):
+    user_obj = model.User.get(user_ref)
     try:
-        issue.report_abuse(session, user_obj.id)
+        issue_or_comment.report_abuse(session, user_obj.id)
     except IntegrityError:
         session.rollback()
         raise ReportAlreadyExists(
             p.toolkit._('Issue has already been reported by this user')
         )
     try:
-        # if you're an org admin/editor (can edit the dataset, it gets marked
+        # if you're an org admin/editor (can edit the dataset), it gets marked
         # as abuse immediately
-        dataset_id = data_dict['dataset_id']
         context = {
-            'user': context['user'],
+            'user': user_ref,
             'session': session,
             'model': model,
         }
         p.toolkit.check_access('package_update', context,
                                data_dict={'id': dataset_id})
 
-        issue.change_visibility(session, u'hidden')
-        issue.abuse_status = issuemodel.AbuseStatus.abuse.value
+        issue_or_comment.change_visibility(session, u'hidden')
+        issue_or_comment.abuse_status = issuemodel.AbuseStatus.abuse.value
+        return {'visibility': issue_or_comment.visibility,
+                'abuse_reports': issue_or_comment.abuse_reports,
+                'abuse_status': issuemodel.AbuseStatus.abuse.name}
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
         if (max_strikes
-           and len(issue.abuse_reports) >= p.toolkit.asint(max_strikes)):
-            issue.change_visibility(session, u'hidden')
-    session.commit()
+           and len(issue_or_comment.abuse_reports) >=
+           p.toolkit.asint(max_strikes)):
+                issue_or_comment.change_visibility(session, u'hidden')
+    finally:
+        session.commit()
 
 
+@validate(schema.issue_comment_report_schema)
+def issue_comment_report(context, data_dict):
+    '''Report that a comment is abuse/spam
+
+    If you are a org admin/editor, it records that it is abuse and hides the
+    comment straight away.
+    If you are any other user, it records the user's report against the comment
+    and if the number of those reaches ckanext.issues.max_strikes then comment
+    will be marked as abuse and hidden.
+
+    :param comment_id: the id of the comment
+    :type comment_id: string
+
+    :returns: info about the reports on this comment IF the user is an
+              admin/editor, otherwise an empty dict
+    :rtype: dict
+    '''
+    p.toolkit.check_access('issue_report', context, data_dict)
+    session = context['session']
+
+    comment_id = data_dict['comment_id']
+    comment = issuemodel.IssueComment.get(comment_id, session=session)
+    return _comment_or_issue_report(comment, context['user'],
+                                    comment.issue.dataset_id, session)
+
+
+@p.toolkit.side_effect_free
 @validate(schema.issue_report_schema)
 def issue_report_show(context, data_dict):
     '''Fetch the abuse reports for an issue
@@ -561,7 +615,10 @@ def issue_report_show(context, data_dict):
 
     dataset_id = data_dict['dataset_id']
     issue_number = data_dict['issue_number']
-    issue = issuemodel.Issue.get_by_number(dataset_id, issue_number, session)
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
+        dataset_name_or_id=dataset_id,
+        issue_number=issue_number,
+        session=session)
 
     try:
         package_context = {
@@ -598,9 +655,9 @@ def issue_report_clear(context, data_dict):
 
     issue_number = data_dict['issue_number']
     dataset_id = data_dict['dataset_id']
-    issue = issuemodel.Issue.get_by_number(
+    issue = issuemodel.Issue.get_by_name_or_id_and_number(
         session=session,
-        dataset_id=dataset_id,
+        dataset_name_or_id=dataset_id,
         issue_number=issue_number
     )
 
@@ -627,52 +684,6 @@ def issue_report_clear(context, data_dict):
     finally:
         session.commit()
     return True
-
-
-@validate(schema.issue_comment_report_schema)
-def issue_comment_report(context, data_dict):
-    '''Report a comment made on an issue.
-
-    If you are a org admin/editor, this marks the comment as abuse; if you are
-    any other user, if the number of abuse reports exceeds
-    ckanext.issues.max_strikes then the issue will be hidden.
-
-    :param comment_id: the id of the issue the comment belongs to
-    :type comment_id: integer
-    '''
-    p.toolkit.check_access('issue_report', context, data_dict)
-    session = context['session']
-
-    comment_id = data_dict['comment_id']
-    comment = issuemodel.IssueComment.get(comment_id, session=session)
-    user_obj = model.User.get(context['user'])
-    try:
-        comment.report_abuse(session, user_obj.id)
-    except IntegrityError:
-        session.rollback()
-        raise ReportAlreadyExists(
-            p.toolkit._('Comment has already been reported by this user')
-        )
-    try:
-        # if you're an org admin/editor (can edit the dataset, it gets marked
-        # as abuse immediately
-        dataset_id = comment.issue.dataset_id
-        package_context = {
-            'user': context['user'],
-            'session': session,
-            'model': model,
-        }
-        p.toolkit.check_access('package_update', package_context,
-                               data_dict={'id': dataset_id})
-        comment.change_visibility(session, u'hidden')
-        comment.abuse_status = issuemodel.AbuseStatus.abuse.value
-    except p.toolkit.NotAuthorized:
-        max_strikes = config.get('ckanext.issues.max_strikes')
-        if max_strikes:
-            if len(comment.abuse_reports) >= p.toolkit.asint(max_strikes):
-                comment.change_visibility(session, u'hidden')
-    finally:
-        session.commit()
 
 
 @validate(schema.issue_comment_report_schema)
@@ -716,6 +727,7 @@ def issue_comment_report_clear(context, data_dict):
     return True
 
 
+@p.toolkit.side_effect_free
 def issue_comment_search(context, data_dict):
     p.toolkit.check_access('issue_comment_search', context, data_dict)
     session = context['session']

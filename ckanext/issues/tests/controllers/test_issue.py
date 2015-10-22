@@ -214,8 +214,10 @@ class TestOrganization(helpers.FunctionalTestBase):
                                 org_id=self.org['id']),
             extra_environ=env
         )
-        body = response.body.decode('utf8')
-        assert '1 issue found' in body
-        assert self.dataset['title'] in body
-        assert self.issue['title'] in body
-        assert self.issue['description'] not in body
+        soup = bs4.BeautifulSoup(response.body)
+        issues = soup.find('section', {'class': 'issues-home'}).text
+        assert '1 issue found' in issues
+        issue_page = soup.find('div', {'id': 'issue-page'}).text
+        assert self.dataset['title'] in issue_page
+        assert self.issue['title'] in issue_page
+        assert self.issue['description'] not in issue_page

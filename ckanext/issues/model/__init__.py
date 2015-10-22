@@ -177,6 +177,16 @@ class Issue(domain_object.DomainObject):
             .first()
 
     @classmethod
+    def get_by_name_or_id_and_number(cls, dataset_name_or_id, issue_number,
+                                     session=Session):
+        return session.query(cls)\
+            .join(model.Package)\
+            .filter(or_(cls.dataset_id == dataset_name_or_id,
+                        model.Package.name == dataset_name_or_id))\
+            .filter(cls.number == issue_number)\
+            .first()
+
+    @classmethod
     def apply_filters_to_an_issue_query(cls,
                                         query,
                                         organization_id=None,

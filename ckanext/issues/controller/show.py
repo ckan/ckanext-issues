@@ -64,3 +64,5 @@ def _get_assigned_user(assignee_id, session):
         return toolkit.get_action('user_show')(context, data_dict)
     except toolkit.ObjectNotFound:
         return None
+    except toolkit.NotAuthorized:
+        return None

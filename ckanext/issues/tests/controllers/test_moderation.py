@@ -2,10 +2,11 @@ from ckan.plugins import toolkit
 try:
     from ckan.tests import helpers
     from ckan.tests import factories
+    from ckan.tests.helpers import assert_in
 except ImportError:
     from ckan.new_tests import helpers
     from ckan.new_tests import factories
-from ckan.tests.helpers import assert_in
+    from ckan.new_tests.helpers import assert_in
 
 from ckanext.issues.tests import factories as issue_factories
 from ckanext.issues import model

@@ -30,7 +30,8 @@ ISSUES_PER_PAGE = (15, 30, 50)
 
 
 class IssueController(BaseController):
-    def _before(self, dataset_id):
+    def _before_dataset(self, dataset_id):
+        '''Returns the dataset dict and checks issues are enabled for it.'''
         self.context = {'for_view': True}
         try:
             pkg = logic.get_action('package_show')(self.context,
@@ -52,8 +53,26 @@ class IssueController(BaseController):
             p.toolkit.abort(401,
                             _('Unauthorized to view issues for this dataset'))
 
+    def _before_org(self, org_id):
+        '''Returns the organization dict and checks issues are enabled for it.'''
+        self.context = {'for_view': True}
+        try:
+            org = logic.get_action('organization_show')(self.context,
+                                                        {'id': org_id})
+
+            # we should pass org to the template as an extra_var
+            # directly that's returned from this function
+            if not issues_helpers.issues_enabled_for_organization(org):
+                abort(404, _('Issues have not been enabled for this organization'))
+            return org
+        except logic.NotFound:
+            abort(404, _('Dataset not found'))
+        except p.toolkit.NotAuthorized:
+            p.toolkit.abort(401,
+                            _('Unauthorized to view issues for this organization'))
+
     def new(self, dataset_id, resource_id=None):
-        dataset_dict = self._before(dataset_id)
+        dataset_dict = self._before_dataset(dataset_id)
         if not c.user:
             abort(401, _('Please login to add a new issue'))
 
@@ -101,7 +120,7 @@ class IssueController(BaseController):
         return render("issues/add.html")
 
     def show(self, issue_number, dataset_id):
-        dataset = self._before(dataset_id)
+        dataset = self._before_dataset(dataset_id)
         try:
             extra_vars = show.show(issue_number,
                                    dataset_id,
@@ -113,7 +132,7 @@ class IssueController(BaseController):
         return p.toolkit.render('issues/show.html', extra_vars=extra_vars)
 
     def edit(self, dataset_id, issue_number):
-        self._before(dataset_id)
+        self._before_dataset(dataset_id)
         issue = p.toolkit.get_action('issue_show')(
             data_dict={
                 'issue_number': issue_number,
@@ -154,7 +173,7 @@ class IssueController(BaseController):
         if request.method != 'POST':
             abort(500, _('Invalid request'))
 
-        dataset = self._before(dataset_id)
+        dataset = self._before_dataset(dataset_id)
 
         auth_dict = {
             'dataset_id': c.pkg['id'],
@@ -208,7 +227,7 @@ class IssueController(BaseController):
         Display a page containing a list of all issues items for a dataset,
         sorted by category.
         """
-        self._before(dataset_id)
+        self._before_dataset(dataset_id)
         try:
             extra_vars = issues_for_dataset(dataset_id, request.GET)
         except toolkit.ValidationError, e:
@@ -216,7 +235,7 @@ class IssueController(BaseController):
         return render("issues/dataset.html", extra_vars=extra_vars)
 
     def delete(self, dataset_id, issue_number):
-        dataset = self._before(dataset_id)
+        dataset = self._before_dataset(dataset_id)
         if 'cancel' in request.params:
             h.redirect_to('issues_show',
                           dataset_id=dataset_id,
@@ -245,7 +264,7 @@ class IssueController(BaseController):
                           })
 
     def assign(self, dataset_id, issue_number):
-        dataset = self._before(dataset_id)
+        dataset = self._before_dataset(dataset_id)
         if request.method == 'POST':
             try:
                 assignee_id = request.POST.get('assignee')
@@ -293,7 +312,7 @@ class IssueController(BaseController):
                                      dataset_id=dataset_id)
 
     def report(self, dataset_id, issue_number):
-        dataset = self._before(dataset_id)
+        dataset = self._before_dataset(dataset_id)
         if request.method == 'POST':
             if not c.user:
                 msg = _('You must be logged in to report issues')
@@ -316,7 +335,7 @@ class IssueController(BaseController):
                           issue_number=issue_number)
 
     def report_comment(self, dataset_id, issue_number, comment_id):
-        dataset = self._before(dataset_id)
+        dataset = self._before_dataset(dataset_id)
         if request.method == 'POST':
             if not c.user:
                 msg = _('You must be logged in to report comments')
@@ -343,7 +362,7 @@ class IssueController(BaseController):
                           issue_number=issue_number)
 
     def report_clear(self, dataset_id, issue_number):
-        dataset = self._before(dataset_id)
+        dataset = self._before_dataset(dataset_id)
         if request.method == 'POST':
             try:
                 toolkit.get_action('issue_report_clear')(
@@ -367,7 +386,7 @@ class IssueController(BaseController):
                 toolkit.abort(404)
 
     def comment_report_clear(self, dataset_id, issue_number, comment_id):
-        dataset = self._before(dataset_id)
+        dataset = self._before_dataset(dataset_id)
         if request.method == 'POST':
             try:
                 toolkit.get_action('issue_comment_report_clear')(
@@ -393,6 +412,7 @@ class IssueController(BaseController):
         """
         Display a page containing a list of all issues for a given organization
         """
+        self._before_org(org_id)
         try:
             template_params = issues_for_org(org_id, request.GET)
         except toolkit.ValidationError, e:
@@ -479,9 +499,8 @@ def issues_for_dataset(dataset_id, get_query_dict):
         schema.issue_dataset_controller_schema()
     )
     if errors:
-        raise toolkit.ValidationError(errors).error_summary
+        raise toolkit.ValidationError(errors)
     query.pop('__extras', None)
-
     return _search_issues(dataset_id=dataset_id, **query)
 
 
@@ -491,9 +510,8 @@ def issues_for_org(org_id, get_query_dict):
         schema.issue_dataset_controller_schema()
     )
     if errors:
-        raise toolkit.ValidationError(errors).error_summary
+        raise toolkit.ValidationError(errors)
     query.pop('__extras', None)
-
     template_params = _search_issues(organization_id=org_id,
                                      include_datasets=True,
                                      **query)

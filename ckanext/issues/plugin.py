@@ -38,6 +38,8 @@ class IssuesPlugin(p.SingletonPlugin):
             'issues_installed': lambda: True,
             'issue_count': util.issue_count,
             'issue_comment_count': util.issue_comment_count,
+            'issues_enabled_for_organization':
+                helpers.issues_enabled_for_organization,
             'replace_url_param': helpers.replace_url_param,
             'get_issue_filter_types': helpers.get_issue_filter_types,
             'get_issues_per_page': helpers.get_issues_per_page,
@@ -45,6 +47,8 @@ class IssuesPlugin(p.SingletonPlugin):
             'issues_list': helpers.issues_list,
             'issues_user_has_reported_issue':
                 helpers.issues_user_has_reported_issue,
+            'issues_user_is_owner':
+                helpers.user_is_owner,
         }
 
     # IConfigurable
