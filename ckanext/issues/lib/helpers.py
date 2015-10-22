@@ -38,6 +38,14 @@ def replace_url_param(new_params, alternative_url=None, controller=None,
 
 class Pagination(object):
     def __init__(self, page, per_page, total_count, show_left=2, show_right=2):
+        '''
+        Helper for displaying a page navigator.
+
+        e.g. << 1 ... 3 4 [5] >>
+
+        :param show_left/right: the number of pages either side of the current
+                                one should be offered
+        '''
         self.page = page
         self.per_page = per_page
         self.total_count = total_count
@@ -57,11 +65,22 @@ class Pagination(object):
         return self.page < self.pages
 
     @property
+    def show_previous_ellipsis(self):
+        return self.page > 2 + self.show_left
+
+    @property
     def show_previous(self):
         return self.page > 1 + self.show_left
 
     @property
+    def show_next_ellipsis(self):
+        '''Returns whether you should show "..." before the last page'''
+        return self.page < self.pages - self.show_right - 1
+
+    @property
     def show_next(self):
+        '''Returns whether you should show last page (in addition to the
+        iter_pages)'''
         return self.page < self.pages - self.show_right
 
     def iter_pages(self):

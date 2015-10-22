@@ -499,7 +499,7 @@ def issues_for_dataset(dataset_id, get_query_dict):
         schema.issue_dataset_controller_schema()
     )
     if errors:
-        raise toolkit.ValidationError(errors).error_summary
+        raise toolkit.ValidationError(errors)
     query.pop('__extras', None)
     return _search_issues(dataset_id=dataset_id, **query)
 
@@ -510,7 +510,7 @@ def issues_for_org(org_id, get_query_dict):
         schema.issue_dataset_controller_schema()
     )
     if errors:
-        raise toolkit.ValidationError(errors).error_summary
+        raise toolkit.ValidationError(errors)
     query.pop('__extras', None)
     template_params = _search_issues(organization_id=org_id,
                                      include_datasets=True,
