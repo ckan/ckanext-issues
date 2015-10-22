@@ -500,17 +500,23 @@ def organization_users_autocomplete(context, data_dict):
 
 @validate(schema.issue_report_schema)
 def issue_report(context, data_dict):
-    '''Report an issue
+    '''Report that an issue is abuse/spam
 
-    If you are a org admin/editor, this marks the comment as abuse; if you are
-    any other user, if the number of reports exceeds ckanext.issues.max_strikes
-    the issues will be hidden
+    If you are a org admin/editor, it records that it is abuse and hides the
+    issue straight away.
+    If you are any other user, it records the user's report against the issue
+    and if the number of those reaches ckanext.issues.max_strikes then issue
+    will be marked as abuse and hidden.
 
     :param dataset_id: the name or id of the dataset that the issue item
         belongs to
     :type dataset_id: string
     :param issue_id: the id of the issue the comment belongs to
     :type issue_id: integer
+
+    :returns: info about the reports on this issue IF the user is an
+              admin/editor, otherwise an empty dict
+    :rtype: dict
     '''
     p.toolkit.check_access('issue_report', context, data_dict)
     session = context['session']
@@ -520,34 +526,69 @@ def issue_report(context, data_dict):
         dataset_name_or_id=data_dict['dataset_id'],
         session=session,
     )
-    user_obj = model.User.get(context['user'])
+    return _comment_or_issue_report(issue, context['user'],
+                                    data_dict['dataset_id'], session)
+
+
+def _comment_or_issue_report(issue_or_comment, user_ref, dataset_id, session):
+    user_obj = model.User.get(user_ref)
     try:
-        issue.report_abuse(session, user_obj.id)
+        issue_or_comment.report_abuse(session, user_obj.id)
     except IntegrityError:
         session.rollback()
         raise ReportAlreadyExists(
             p.toolkit._('Issue has already been reported by this user')
         )
     try:
-        # if you're an org admin/editor (can edit the dataset, it gets marked
+        # if you're an org admin/editor (can edit the dataset), it gets marked
         # as abuse immediately
-        dataset_id = data_dict['dataset_id']
         context = {
-            'user': context['user'],
+            'user': user_ref,
             'session': session,
             'model': model,
         }
         p.toolkit.check_access('package_update', context,
                                data_dict={'id': dataset_id})
 
-        issue.change_visibility(session, u'hidden')
-        issue.abuse_status = issuemodel.AbuseStatus.abuse.value
+        issue_or_comment.change_visibility(session, u'hidden')
+        issue_or_comment.abuse_status = issuemodel.AbuseStatus.abuse.value
+        return {'visibility': issue_or_comment.visibility,
+                'abuse_reports': issue_or_comment.abuse_reports,
+                'abuse_status': issuemodel.AbuseStatus.abuse.name}
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
         if (max_strikes
-           and len(issue.abuse_reports) >= p.toolkit.asint(max_strikes)):
-            issue.change_visibility(session, u'hidden')
-    session.commit()
+           and len(issue_or_comment.abuse_reports) >=
+           p.toolkit.asint(max_strikes)):
+                issue_or_comment.change_visibility(session, u'hidden')
+    finally:
+        session.commit()
+
+
+@validate(schema.issue_comment_report_schema)
+def issue_comment_report(context, data_dict):
+    '''Report that a comment is abuse/spam
+
+    If you are a org admin/editor, it records that it is abuse and hides the
+    comment straight away.
+    If you are any other user, it records the user's report against the comment
+    and if the number of those reaches ckanext.issues.max_strikes then comment
+    will be marked as abuse and hidden.
+
+    :param comment_id: the id of the comment
+    :type comment_id: string
+
+    :returns: info about the reports on this comment IF the user is an
+              admin/editor, otherwise an empty dict
+    :rtype: dict
+    '''
+    p.toolkit.check_access('issue_report', context, data_dict)
+    session = context['session']
+
+    comment_id = data_dict['comment_id']
+    comment = issuemodel.IssueComment.get(comment_id, session=session)
+    return _comment_or_issue_report(comment, context['user'],
+                                    comment.issue.dataset_id, session)
 
 
 @p.toolkit.side_effect_free
@@ -643,52 +684,6 @@ def issue_report_clear(context, data_dict):
     finally:
         session.commit()
     return True
-
-
-@validate(schema.issue_comment_report_schema)
-def issue_comment_report(context, data_dict):
-    '''Report a comment made on an issue.
-
-    If you are a org admin/editor, this marks the comment as abuse; if you are
-    any other user, if the number of abuse reports exceeds
-    ckanext.issues.max_strikes then the issue will be hidden.
-
-    :param comment_id: the id of the issue the comment belongs to
-    :type comment_id: integer
-    '''
-    p.toolkit.check_access('issue_report', context, data_dict)
-    session = context['session']
-
-    comment_id = data_dict['comment_id']
-    comment = issuemodel.IssueComment.get(comment_id, session=session)
-    user_obj = model.User.get(context['user'])
-    try:
-        comment.report_abuse(session, user_obj.id)
-    except IntegrityError:
-        session.rollback()
-        raise ReportAlreadyExists(
-            p.toolkit._('Comment has already been reported by this user')
-        )
-    try:
-        # if you're an org admin/editor (can edit the dataset, it gets marked
-        # as abuse immediately
-        dataset_id = comment.issue.dataset_id
-        package_context = {
-            'user': context['user'],
-            'session': session,
-            'model': model,
-        }
-        p.toolkit.check_access('package_update', package_context,
-                               data_dict={'id': dataset_id})
-        comment.change_visibility(session, u'hidden')
-        comment.abuse_status = issuemodel.AbuseStatus.abuse.value
-    except p.toolkit.NotAuthorized:
-        max_strikes = config.get('ckanext.issues.max_strikes')
-        if max_strikes:
-            if len(comment.abuse_reports) >= p.toolkit.asint(max_strikes):
-                comment.change_visibility(session, u'hidden')
-    finally:
-        session.commit()
 
 
 @validate(schema.issue_comment_report_schema)
