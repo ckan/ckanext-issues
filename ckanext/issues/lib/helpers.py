@@ -160,3 +160,21 @@ def get_issue_subject(issue):
             issue_number=issue['number'],
         )
     )
+
+
+def user_is_owner(user, dataset_id):
+    if not user:
+        # not logged in
+        return False
+    action = 'issue_admin'
+    data_dict = {'dataset_id': dataset_id}
+    # based on ckan.lib.helpers.check_access
+    context = {'model': model,
+               'user': user['name']}
+    try:
+        toolkit.check_access(action, context, data_dict)
+        authorized = True
+    except toolkit.NotAuthorized:
+        authorized = False
+
+    return authorized

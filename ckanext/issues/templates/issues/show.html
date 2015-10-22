@@ -62,10 +62,12 @@
           {% endif %}
         {% endif %}
       </div>
-      {% if can_edit_issue %}
+      {% if h.issues_user_is_owner(user=comment.user, dataset_id=dataset.id) %}
         <div class="issue-comment-label">
            Owner 
         </div>
+      {% endif %}
+      {% if can_edit_issue %}
         {% if comment.visibility == 'hidden' %}
           <div class="issue-comment-label">
             Abuse
@@ -116,7 +118,7 @@
           </div>
         {% endif %}
       </div>
-      {% if can_edit_issue %}
+      {% if h.issues_user_is_owner(user=comment.user, dataset_id=dataset.id) %}
         <div class="issue-comment-label">
            Owner
         </div>
