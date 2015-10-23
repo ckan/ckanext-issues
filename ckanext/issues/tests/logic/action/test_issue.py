@@ -220,7 +220,7 @@ class TestIssueComment(ClearOnTearDownMixin):
         assert_equals(len(comments), 1)
         assert_equals(comments[0]['comment'], 'some comment')
 
-    def test_cannot_create_emtpy_comment(self):
+    def test_cannot_create_empty_comment(self):
         user = factories.User()
         dataset = factories.Dataset()
 

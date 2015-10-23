@@ -1,5 +1,7 @@
 from cStringIO import StringIO
 
+import bs4
+
 from ckan import model
 from ckan.plugins import toolkit
 import ckan.new_tests.helpers as helpers
@@ -102,9 +104,10 @@ def parse_issues_show(response):
         }
 
 
-class TestReport(helpers.FunctionalTestBase):
+class TestReportIssue(helpers.FunctionalTestBase):
     def setup(self):
-        super(TestReport, self).setup()
+        super(TestReportIssue, self).setup()
+        self.joe_public = factories.User()
         self.owner = factories.User()
         self.org = factories.Organization(user=self.owner)
         self.dataset = factories.Dataset(user=self.owner,
@@ -115,7 +118,7 @@ class TestReport(helpers.FunctionalTestBase):
         self.app = self._get_test_app()
 
     def test_report(self):
-        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        env = {'REMOTE_USER': self.joe_public['name'].encode('ascii')}
         response = self.app.post(
             url=toolkit.url_for('issues_report',
                                 dataset_id=self.dataset['id'],
@@ -123,7 +126,23 @@ class TestReport(helpers.FunctionalTestBase):
             extra_environ=env,
         )
         response = response.follow()
-        assert_in('Issue reported to an administrator', response.body)
+        soup = bs4.BeautifulSoup(response.body)
+        flash_messages = soup.find('div', {'class': 'flash-messages'}).text
+        assert_in('Issue reported to an administrator', flash_messages)
+
+    def test_report_as_admin(self):
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.post(
+            url=toolkit.url_for('issues_report',
+                                dataset_id=self.dataset['id'],
+                                issue_number=self.issue['number']),
+            extra_environ=env,
+        )
+        response = response.follow(extra_environ=env)
+        soup = bs4.BeautifulSoup(response.body)
+        flash_messages = soup.find('div', {'class': 'flash-messages'}).text
+        assert_in('Report acknowledged. Marked as abuse/spam. '
+                  'Issue is invisible to normal users.', flash_messages)
 
     def test_report_as_anonymous_user(self):
         response = self.app.post(
@@ -135,16 +154,16 @@ class TestReport(helpers.FunctionalTestBase):
         assert_in('You must be logged in to report issues',
                   response.body)
 
-    #def test_report_an_issue_that_does_not_exist(self):
-    #    env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
-    #    response = self.app.post(
-    #        url=toolkit.url_for('issues_report',
-    #                            dataset_id=self.dataset['id'],
-    #                            issue_id='1235455'),
-    #        extra_environ=env,
-    #        expect_errors=True
-    #    )
-    #    assert_equals(response.status_int, 404)
+    def test_report_an_issue_that_does_not_exist(self):
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.post(
+            url=toolkit.url_for('issues_report',
+                                dataset_id=self.dataset['id'],
+                                issue_number='1235455'),
+            extra_environ=env,
+            expect_errors=True
+        )
+        assert_equals(response.status_int, 404)
 
     def test_report_clear(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
@@ -185,9 +204,10 @@ class TestReport(helpers.FunctionalTestBase):
         assert_equals(response.status_int, 404)
 
 
-class TestCommentAbuseReports(helpers.FunctionalTestBase):
+class TestReportComment(helpers.FunctionalTestBase):
     def setup(self):
-        super(TestCommentAbuseReports, self).setup()
+        super(TestReportComment, self).setup()
+        self.joe_public = factories.User()
         self.owner = factories.User()
         self.org = factories.Organization(user=self.owner)
         self.dataset = factories.Dataset(user=self.owner,
@@ -203,6 +223,21 @@ class TestCommentAbuseReports(helpers.FunctionalTestBase):
         self.app = self._get_test_app()
 
     def test_report(self):
+        env = {'REMOTE_USER': self.joe_public['name'].encode('ascii')}
+        response = self.app.post(
+            url=toolkit.url_for('issues_comment_report',
+                                dataset_id=self.dataset['id'],
+                                issue_number=self.issue['number'],
+                                comment_id=self.comment['id']),
+            extra_environ=env,
+        )
+        response = response.follow()
+        soup = bs4.BeautifulSoup(response.body)
+        flash_messages = soup.find('div', {'class': 'flash-messages'}).text
+        assert_in('Comment has been reported to an administrator',
+                  flash_messages)
+
+    def test_report_as_admin(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
         response = self.app.post(
             url=toolkit.url_for('issues_comment_report',
@@ -212,8 +247,10 @@ class TestCommentAbuseReports(helpers.FunctionalTestBase):
             extra_environ=env,
         )
         response = response.follow()
-        assert_in('Comment has been reported to an administrator',
-                  response.body)
+        soup = bs4.BeautifulSoup(response.body)
+        flash_messages = soup.find('div', {'class': 'flash-messages'}).text
+        assert_in('Report acknowledged. Marked as abuse/spam. '
+                  'Comment is invisible to normal users.', flash_messages)
 
     def test_report_not_logged_in(self):
         response = self.app.post(
@@ -226,17 +263,17 @@ class TestCommentAbuseReports(helpers.FunctionalTestBase):
         assert_in('You must be logged in to report comments',
                   response.body)
 
-    #def test_report_an_issue_that_does_not_exist(self):
-    #    env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
-    #    response = self.app.post(
-    #        url=toolkit.url_for('issues_comment_report',
-    #                            dataset_id=self.dataset['id'],
-    #                            issue_id='1235455',
-    #                            comment_id=self.comment['id']),
-    #        extra_environ=env,
-    #        expect_errors=True
-    #    )
-    #    assert_equals(response.status_int, 404)
+    def test_report_an_issue_that_does_not_exist(self):
+        env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
+        response = self.app.post(
+            url=toolkit.url_for('issues_comment_report',
+                                dataset_id=self.dataset['id'],
+                                issue_number='1235455',
+                                comment_id=self.comment['id']),
+            extra_environ=env,
+            expect_errors=True
+        )
+        assert_equals(response.status_int, 404)
 
     def test_report_clear(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}

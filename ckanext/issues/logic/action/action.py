@@ -21,7 +21,6 @@ from pylons import config
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import desc
 
-NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 
 log = logging.getLogger(__name__)
@@ -61,7 +60,7 @@ def issue_show(context, data_dict):
         issue_number=issue_number,
         session=session)
     if not issue:
-        raise p.toolkit.NotFound(p.toolkit._('Issue does not exist'))
+        raise p.toolkit.ObjectNotFound(p.toolkit._('Issue does not exist'))
 
     context['issue'] = issue
     issue_dict = issue.as_dict()
@@ -78,6 +77,10 @@ def issue_show(context, data_dict):
             can_edit = False
     else:
         can_edit = False
+
+    if issue.visibility != 'visible' and not can_edit:
+        raise p.toolkit.ObjectNotFound(
+            p.toolkit._('Issue marked as spam/abuse'))
 
     include_reports = data_dict.get('include_reports')
 
@@ -282,7 +285,7 @@ def issue_delete(context, data_dict):
         session=session
     )
     if not issue:
-        raise NotFound(
+        raise toolkit.ObjectNotFound(
             '{issue_number} for dataset {dataset_id} was not found.'.format(
                 issue_number=issue_number,
                 dataset_id=dataset_id,
@@ -554,7 +557,7 @@ def _comment_or_issue_report(issue_or_comment, user_ref, dataset_id, session):
         issue_or_comment.abuse_status = issuemodel.AbuseStatus.abuse.value
         return {'visibility': issue_or_comment.visibility,
                 'abuse_reports': issue_or_comment.abuse_reports,
-                'abuse_status': issuemodel.AbuseStatus.abuse.name}
+                'abuse_status': issue_or_comment.abuse_status}
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
         if (max_strikes
@@ -562,6 +565,7 @@ def _comment_or_issue_report(issue_or_comment, user_ref, dataset_id, session):
            p.toolkit.asint(max_strikes)):
                 issue_or_comment.change_visibility(session, u'hidden')
     finally:
+        # commit the IssueReport and changes to the Issue/Comment
         session.commit()
 
 

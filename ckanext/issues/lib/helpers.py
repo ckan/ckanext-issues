@@ -163,6 +163,8 @@ def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
 
 
 def issues_user_has_reported_issue(user, abuse_reports):
+    '''Returns whether the given user is among the given list of an issue's
+    abuse_reports'''
     user_obj = model.User.get(user)
     if user_obj:
         return user_obj.id in abuse_reports

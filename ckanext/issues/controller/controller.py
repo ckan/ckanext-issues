@@ -128,6 +128,9 @@ class IssueController(BaseController):
         except toolkit.ValidationError, e:
             p.toolkit.abort(
                 404, toolkit._('Issue not found: {0}'.format(e.error_summary)))
+        except toolkit.ObjectNotFound, e:
+            p.toolkit.abort(
+                404, toolkit._('Issue not found: {0}'.format(e)))
         extra_vars['dataset'] = dataset
         return p.toolkit.render('issues/show.html', extra_vars=extra_vars)
 
@@ -318,14 +321,27 @@ class IssueController(BaseController):
                 msg = _('You must be logged in to report issues')
                 toolkit.abort(401, msg)
             try:
-                toolkit.get_action('issue_report')(
+                report_info = toolkit.get_action('issue_report')(
                     data_dict={
                         'issue_number': issue_number,
                         'dataset_id': dataset_id
                     }
                 )
-                h.flash_success(_('Issue reported to an administrator'))
+                if report_info:
+                    # we have this info if it is an admin
+                    msgs = [_('Report acknowledged.')]
+                    if report_info['abuse_status'] == \
+                            issuemodel.AbuseStatus.abuse.value:
+                        msgs.append(_('Marked as abuse/spam.'))
+                    msgs.append(_('Issue is visible.')
+                                if report_info['visibility'] == 'visible' else
+                                _('Issue is invisible to normal users.'))
+                    h.flash_success(' '.join(msgs))
+                else:
+                    h.flash_success(_('Issue reported to an administrator'))
             except toolkit.ValidationError:
+                toolkit.abort(404)
+            except toolkit.ObjectNotFound:
                 toolkit.abort(404)
             except ReportAlreadyExists, e:
                 h.flash_error(e.message)
@@ -341,20 +357,31 @@ class IssueController(BaseController):
                 msg = _('You must be logged in to report comments')
                 toolkit.abort(401, msg)
             try:
-                toolkit.get_action('issue_comment_report')(
+                report_info = toolkit.get_action('issue_comment_report')(
                     data_dict={
                         'comment_id': comment_id,
                         'issue_number': issue_number,
                         'dataset_id': dataset_id
                     }
                 )
-                h.flash_success(
-                    _('Comment has been reported to an administrator')
-                )
+                if report_info:
+                    # we have this info if it is an admin
+                    msgs = [_('Report acknowledged.')]
+                    if report_info['abuse_status'] == \
+                            issuemodel.AbuseStatus.abuse.value:
+                        msgs.append(_('Marked as abuse/spam.'))
+                    msgs.append(_('Comment is visible.')
+                                if report_info['visibility'] == 'visible' else
+                                _('Comment is invisible to normal users.'))
+                    h.flash_success(' '.join(msgs))
+                else:
+                    h.flash_success(_('Comment has been reported to an administrator'))
                 h.redirect_to('issues_show',
                               dataset_id=dataset_id,
                               issue_number=issue_number)
             except toolkit.ValidationError:
+                toolkit.abort(404)
+            except toolkit.ObjectNotFound:
                 toolkit.abort(404)
             except ReportAlreadyExists, e:
                 h.flash_error(e.message)
