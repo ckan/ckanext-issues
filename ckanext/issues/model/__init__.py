@@ -399,6 +399,10 @@ class IssueComment(domain_object.DomainObject):
     def as_dict(self):
         out = super(IssueComment, self).as_dict()
         out['user'] = _user_dict(self.user)
+        try:
+            out['abuse_status'] = AbuseStatus(out['abuse_status']).name
+        except ValueError:
+            pass
         return out
 
     def report_abuse(self, session, user_id, **kwargs):

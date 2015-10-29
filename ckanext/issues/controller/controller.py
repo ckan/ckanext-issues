@@ -421,7 +421,7 @@ class IssueController(BaseController):
                                'issue_number': issue_number,
                                'dataset_id': dataset_id}
                 )
-                h.flash_success(_('Abuse report cleared'))
+                h.flash_success(_('Spam/abuse report cleared'))
                 h.redirect_to('issues_show',
                               dataset_id=dataset_id,
                               issue_number=issue_number)

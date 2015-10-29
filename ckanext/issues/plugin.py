@@ -48,7 +48,9 @@ class IssuesPlugin(p.SingletonPlugin):
             'issues_user_has_reported_issue':
                 helpers.issues_user_has_reported_issue,
             'issues_user_is_owner':
-                helpers.user_is_owner,
+                helpers.issues_user_is_owner,
+            'issues_users_who_reported_issue':
+                helpers.issues_users_who_reported_issue,
         }
 
     # IConfigurable

@@ -4,6 +4,8 @@ from ckanext.issues import model as issue_model
 
 
 def issue_auth(context, data_dict, privilege='package_update'):
+    '''Returns whether the current user is allowed to do the action
+    (privilege).'''
     auth_data_dict = dict(data_dict)
     # we're checking package access so it is dataset/package id
     auth_data_dict['id'] = auth_data_dict['dataset_id']
@@ -44,8 +46,8 @@ def issue_search(context, data_dict):
 
 
 def issue_create(context, data_dict):
-    # Any logged in user ...?
-    return issue_auth(context, data_dict, 'package_create')
+    # Any logged in user
+    return {'success': bool(context['user'])}
 
 
 @p.toolkit.auth_disallow_anonymous_access
@@ -115,6 +117,6 @@ def issue_admin(context, data_dict):
     return issue_auth(context, data_dict)
 
 
-@p.toolkit.auth_disallow_anonymous_access
+@p.toolkit.auth_allow_anonymous_access
 def issue_comment_search(context, data_dict):
     return {'success': True}

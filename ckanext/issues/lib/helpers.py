@@ -172,6 +172,19 @@ def issues_user_has_reported_issue(user, abuse_reports):
         return False
 
 
+def issues_users_who_reported_issue(abuse_reports):
+    '''Returns a list of users (dicts) who reported an issue/comment as
+    spam/abuse'''
+    users = []
+    for user_id in abuse_reports:
+        try:
+            users.append(toolkit.get_action('user_show')(data_dict={'id':
+                                                                    user_id}))
+        except toolkit.ObjectNotFound:
+            users.append(user_id)
+    return users
+
+
 def get_issue_subject(issue):
     dataset = model.Package.get(issue['dataset_id'])
     return toolkit._(
@@ -183,7 +196,7 @@ def get_issue_subject(issue):
     )
 
 
-def user_is_owner(user, dataset_id):
+def issues_user_is_owner(user, dataset_id):
     if not user:
         # not logged in
         return False
