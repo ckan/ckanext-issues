@@ -128,8 +128,7 @@ dataset - package object
             </div>
           {% endif %}
           {% if reports_by_users %}
-            <div class="issue-comment-label" data-toggle="tooltip" title="{% for user in h.issues_u
-sers_who_reported_issue(issue_or_comment.abuse_reports) %} {{ user.fullname }} ({{ user.name }}) {%
+            <div class="issue-comment-label" data-toggle="tooltip" title="{% for user in h.issues_users_who_reported_issue(issue_or_comment.abuse_reports) %} {{ user.fullname }} ({{ user.name }}) {%
 endfor %}">
               {{ reports_by_users }} user reports this is spam/abuse
             </div>
