@@ -124,7 +124,7 @@ class IssueFilter(enum.Enum):
     oldest = 'Oldest'
     most_commented = 'Most Commented'
     least_commented = 'Least Commented'
-    recently_updated = 'Recently Update'
+    recently_updated = 'Most Recently Updated'
     least_recently_updated = 'Least Recently Updated'
 
     @classmethod
