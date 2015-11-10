@@ -285,7 +285,7 @@ class TestReportComment(helpers.FunctionalTestBase):
             extra_environ=env,
         )
         response = response.follow()
-        assert_in('Abuse report cleared', response.body)
+        assert_in('Spam/abuse report cleared', response.body)
 
     def test_report_clear_state_normal_user(self):
         user = factories.User()
@@ -300,7 +300,7 @@ class TestReportComment(helpers.FunctionalTestBase):
             extra_environ=env,
         )
         response = response.follow()
-        assert_in('Abuse report cleared', response.body)
+        assert_in('Spam/abuse report cleared', response.body)
 
     def test_reset_on_issue_that_does_not_exist(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
