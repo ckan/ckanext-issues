@@ -41,7 +41,7 @@ class TestAbuseReport(helpers.FunctionalTestBase):
         )
         res_chunks = parse_issues_show(response)
         assert_in('Test Issue', res_chunks['issue_name'])
-        assert_in('Abuse', res_chunks['issue_comment_label'])
+        assert_in('Hidden from normal users', res_chunks['issue_comment_label'])
 
     def test_reported_as_abuse_appears_in_search_for_publisher(self):
         env = {'REMOTE_USER': self.owner['name'].encode('ascii')}
