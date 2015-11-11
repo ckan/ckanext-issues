@@ -150,6 +150,7 @@ def _get_issue_email_body(issue, issue_subject, user_obj):
 
 def _get_comment_email_body(comment, issue_subject, user_obj):
     extra_vars = _get_issue_vars(comment.issue, issue_subject, user_obj)
+    extra_vars['comment'] = comment
     # The template has to be .html (even though it is .txt) so that
     # it is rendered with jinja
     return p.toolkit.render('issues/email/new_comment.html',
