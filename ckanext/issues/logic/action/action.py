@@ -489,9 +489,11 @@ def organization_users_autocomplete(context, data_dict):
         .filter(model.Member.group_id == organization_id)\
         .filter(model.Member.table_name == 'user')\
         .filter(model.Member.capacity.in_(['editor', 'admin']))\
+        .filter(model.Member.state == 'active')\
         .filter(model.User.state != model.State.DELETED)\
         .filter(model.User.id == model.Member.table_id)\
         .filter(model.User.name.ilike('{0}%'.format(q)))\
+        .distinct()\
         .limit(limit)
 
     users = []
