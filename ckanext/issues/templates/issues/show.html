@@ -252,6 +252,8 @@ endfor %}">
     {% if issue.assignee %}
       {{ h.gravatar((issue.assignee.email_hash), size=22) }}
       {{ issue.assignee.name }}
+    {% elif issue.assignee_id %}
+      {{ _('This issue has been assigned to an administrator for the publisher') }}
     {% else %}
       {{ _('No one') }}
     {% endif %}
