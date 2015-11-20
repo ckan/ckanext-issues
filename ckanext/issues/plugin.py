@@ -7,11 +7,6 @@ log = getLogger(__name__)
 import ckan.plugins as p
 from ckan.plugins import implements, toolkit
 
-from ckanext.issues.lib import util, helpers
-from ckanext.issues.model import setup as model_setup
-import ckanext.issues.logic.action as action
-import ckanext.issues.auth as auth
-
 
 class IssuesPlugin(p.SingletonPlugin):
     """
@@ -34,6 +29,7 @@ class IssuesPlugin(p.SingletonPlugin):
     # ITemplateHelpers
 
     def get_helpers(self):
+        from ckanext.issues.lib import util, helpers
         return {
             'issues_installed': lambda: True,
             'issue_count': util.issue_count,
@@ -59,6 +55,7 @@ class IssuesPlugin(p.SingletonPlugin):
         """
         Called by load_environment
         """
+        from ckanext.issues.model import setup as model_setup
         model_setup()
 
     # IRoutes
@@ -133,6 +130,8 @@ class IssuesPlugin(p.SingletonPlugin):
     # IActions
 
     def get_actions(self):
+        import ckanext.issues.logic.action as action
+
         return dict((name, function) for name, function
                     in action.__dict__.items()
                     if callable(function))
@@ -140,6 +139,7 @@ class IssuesPlugin(p.SingletonPlugin):
     # IAuthFunctions
 
     def get_auth_functions(self):
+        import ckanext.issues.auth as auth
         return {
             'issue_admin': auth.issue_admin,
             'issue_search': auth.issue_search,
