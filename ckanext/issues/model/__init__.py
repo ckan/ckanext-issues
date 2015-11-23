@@ -357,8 +357,11 @@ class Issue(domain_object.DomainObject):
         out.update({
             'user': user,
             'comment_count': comment_count,
-            'updated': updated,
         })
+
+        if isinstance(updated, datetime):
+            out['updated'] = updated.isoformat()
+
         if include_dataset:
             pkg = self.dataset
             context = {'model': model, 'session': model.Session}
