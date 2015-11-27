@@ -105,7 +105,7 @@ class IssuesPlugin(p.SingletonPlugin):
             m.connect('issues_show',
                       '/dataset/:dataset_id/issues/:issue_number',
                       action='show')
-            # Broken: m.connect('all_issues_page', '/issues', action='all_issues_page')
+            m.connect('all_issues_page', '/issues', action='all_issues_page')
             m.connect('issues_for_organization',
                       '/organization/:org_id/issues',
                       action='issues_for_organization')
