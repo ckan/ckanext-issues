@@ -187,6 +187,11 @@ class Issue(domain_object.DomainObject):
             .first()
 
     @classmethod
+    def get_issue_count_for_package(cls, dataset_id):
+        return model.Session.query(cls)\
+            .filter(cls.dataset_id==dataset_id).count()
+
+    @classmethod
     def apply_filters_to_an_issue_query(cls,
                                         query,
                                         organization_id=None,
@@ -379,16 +384,16 @@ class IssueComment(domain_object.DomainObject):
         return session.query(cls).filter(cls.id == reference).first()
 
     @classmethod
-    def get_comments(cls, issue):
+    def get_comments_for_issue(cls, issue_id):
         """ Gets all comments for a given issue """
         return model.Session.query(cls).\
-            filter(cls.issue_id == issue.id).order_by("-created")
+            filter(cls.issue_id == issue_id).order_by("-created")
 
     @classmethod
-    def get_comment_count(cls, issue):
+    def get_comment_count_for_issue(cls, issue_id):
         """ Gets count of comments for a given issue """
         return model.Session.query(cls).\
-            filter(cls.issue_id == issue.id).count()
+            filter(cls.issue_id == issue_id).count()
 
     @classmethod
     def reported_comments(cls, session, organization_id=None):
