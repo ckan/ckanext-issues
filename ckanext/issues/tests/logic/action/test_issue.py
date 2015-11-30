@@ -649,29 +649,30 @@ class TestCommentSearch(ClearOnTearDownMixin):
     def test_reported_search_for_org(self):
         result = helpers.call_action('issue_comment_search',
                                      organization_id=self.organization['id'],
-                                     reported=True)
+                                     only_hidden=True)
 
         assert_equals([self.comment1['id']],
                       [c['id'] for c in result])
 
     def test_reported_search(self):
         result = helpers.call_action('issue_comment_search',
-                                     reported=True)
+                                     only_hidden=True)
 
         assert_equals([self.comment1['id'], self.comment3['id']],
                       [c['id'] for c in result])
 
-    def test_unreported_search_for_org(self):
+    def test_search_for_org(self):
         result = helpers.call_action('issue_comment_search',
-                                     organization_id=self.organization['id'],
-                                     reported=False)
+                                     organization_id=self.organization['id'])
 
-        assert_equals([self.comment2['id']],
+        assert_equals([self.comment1['id'], self.comment2['id']],
                       [c['id'] for c in result])
 
-    def test_unreported_search(self):
-        result = helpers.call_action('issue_comment_search',
-                                     reported=False)
+    def test_search(self):
+        result = helpers.call_action('issue_comment_search')
 
-        assert_equals([self.comment2['id'], self.comment4['id']],
+        assert_equals([self.comment1['id'],
+                       self.comment2['id'],
+                       self.comment3['id'],
+                       self.comment4['id']],
                       [c['id'] for c in result])

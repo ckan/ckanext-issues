@@ -396,7 +396,7 @@ class IssueComment(domain_object.DomainObject):
             filter(cls.issue_id == issue_id).count()
 
     @classmethod
-    def reported_comments(cls, session, organization_id=None):
+    def get_hidden_comments(cls, session, organization_id=None):
         query = session.query(IssueComment, Issue) \
             .join(Issue) \
             .join(model.Package) \
@@ -409,12 +409,10 @@ class IssueComment(domain_object.DomainObject):
         return query
 
     @classmethod
-    def unreported_comments(cls, session, organization_id=None):
+    def get_comments(cls, session, organization_id=None):
         query = session.query(IssueComment, Issue) \
             .join(Issue) \
             .join(model.Package) \
-            .filter(cls.visibility != u'hidden') \
-            .filter(cls.abuse_status == AbuseStatus.unmoderated.value) \
 
         if organization_id:
             query = query.filter(model.Package.owner_org == organization_id)

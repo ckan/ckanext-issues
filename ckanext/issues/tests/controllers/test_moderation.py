@@ -6,7 +6,7 @@ try:
 except ImportError:
     from ckan.new_tests import helpers
     from ckan.new_tests import factories
-    from ckan.new_tests.helpers import assert_in
+    from ckan.new_tests.helpers import assert_in, assert_not_in
 
 from ckanext.issues.tests import factories as issue_factories
 from ckanext.issues import model
@@ -56,10 +56,17 @@ class TestCommentModeration(helpers.FunctionalTestBase):
         self.issue = issue_factories.Issue(user=self.user,
                                            user_id=self.user['id'],
                                            dataset_id=self.dataset['id'])
+
         self.comment = issue_factories.IssueComment(
             dataset_id=self.dataset['id'],
             issue_number=self.issue['number'],
             comment='this is a comment',
+        )
+
+        self.comment2 = issue_factories.IssueComment(
+            dataset_id=self.dataset['id'],
+            issue_number=self.issue['number'],
+            comment='this should not be shown',
         )
 
     def test_moderate_all_organization_issues(self):
@@ -76,3 +83,4 @@ class TestCommentModeration(helpers.FunctionalTestBase):
             extra_environ=env,
         )
         assert_in(self.comment['comment'], response)
+        assert_not_in(self.comment2['comment'], response)

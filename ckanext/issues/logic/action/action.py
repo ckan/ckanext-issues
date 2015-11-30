@@ -741,15 +741,15 @@ def issue_comment_search(context, data_dict):
 
     organization_id = data_dict.get('organization_id')
 
-    reported = data_dict.get('reported', False)
+    only_hidden = data_dict.get('only_hidden', False)
 
-    if reported:
-        the_comments = issuemodel.IssueComment.reported_comments(
+    if only_hidden:
+        the_comments = issuemodel.IssueComment.get_hidden_comments(
             session,
             organization_id=organization_id
         )
     else:
-        the_comments = issuemodel.IssueComment.unreported_comments(
+        the_comments = issuemodel.IssueComment.get_comments(
             session,
             organization_id=organization_id
         )
