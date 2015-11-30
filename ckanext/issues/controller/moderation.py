@@ -62,6 +62,7 @@ class CommentModerationController(toolkit.BaseController):
             })
             comments = toolkit.get_action('issue_comment_search')(data_dict={
                 'organization_id': organization['id'],
+                'reported': True,
             })
 
             return toolkit.render(
