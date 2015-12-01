@@ -2,15 +2,15 @@ from ckan.plugins import toolkit
 try:
     from ckan.tests import helpers
     from ckan.tests import factories
-    from ckan.tests.helpers import assert_in
 except ImportError:
     from ckan.new_tests import helpers
     from ckan.new_tests import factories
-    from ckan.new_tests.helpers import assert_in, assert_not_in
 
 from ckanext.issues.tests import factories as issue_factories
 from ckanext.issues import model
 
+from nose.tools import (assert_equals, assert_is_not_none, assert_is_none,
+                        assert_raises, assert_in, assert_not_in)
 
 class TestModeration(helpers.FunctionalTestBase):
 
