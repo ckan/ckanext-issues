@@ -7,6 +7,8 @@ log = getLogger(__name__)
 import ckan.plugins as p
 from ckan.plugins import implements, toolkit
 
+# Imports are done in methods to speed up paster.
+# Please don't move back up to here.
 
 class IssuesPlugin(p.SingletonPlugin):
     """
