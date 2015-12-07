@@ -126,13 +126,15 @@ def _get_recipients(context, dataset):
         return []
 
 def _get_issue_vars(issue, issue_subject, user_obj):
+    # older ckans
+    site_title = config['ckan.site_title']
     try:
         # from ckan 2.4
         from ckan.model.system_info import get_system_info
-        site_title = get_system_info('ckan.site_title')
+        site_title = get_system_info('ckan.site_title', site_title)
     except ImportError:
-        # older ckans
-        site_title = config['ckan.site_title']
+        pass
+
     return {'issue': issue,
             'issue_subject': issue_subject,
             'dataset': model.Package.get(issue.dataset_id),
