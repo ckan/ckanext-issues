@@ -8,6 +8,8 @@ from ckanext.issues.tests import factories as issue_factories
 from ckanext.issues.model import Issue, IssueComment, AbuseStatus
 from ckanext.issues.tests.helpers import ClearOnTearDownMixin
 
+from ckan import model
+
 from nose.tools import assert_equals, assert_raises, assert_not_in
 
 
@@ -607,26 +609,68 @@ class TestOrganizationUsersAutocomplete(ClearOnTearDownMixin):
 
 
 class TestCommentSearch(ClearOnTearDownMixin):
-    def test_search(self):
-        organization = factories.Organization()
-        dataset = factories.Dataset(owner_org=organization['id'])
+    def setup(self):
+        # Organization 1
+        self.organization = factories.Organization()
+        dataset = factories.Dataset(owner_org=self.organization['id'])
         issue = issue_factories.Issue(dataset_id=dataset['id'])
-        comment = issue_factories.IssueComment(
+
+        self.comment1 = issue_factories.IssueComment(
+            issue_number=issue['number'],
+            dataset_id=issue['dataset_id'],
+        )
+        comment_object = IssueComment.get(self.comment1['id'])
+        comment_object.change_visibility(model.Session, u'hidden')
+
+        self.comment2 = issue_factories.IssueComment(  # unreported comment
             issue_number=issue['number'],
             dataset_id=issue['dataset_id'],
         )
 
-        issue_factories.IssueComment(  # unreported comment
-            issue_number=issue['number'],
-            dataset_id=issue['dataset_id'],
+        # Organization 2
+        self.organization2 = factories.Organization()
+        dataset2 = factories.Dataset(owner_org=self.organization2['id'])
+        issue2 = issue_factories.Issue(dataset_id=dataset2['id'])
+
+        self.comment3 = issue_factories.IssueComment(
+            issue_number=issue2['number'],
+            dataset_id=issue2['dataset_id'],
+        )
+        comment_object = IssueComment.get(self.comment3['id'])
+        comment_object.change_visibility(model.Session, u'hidden')
+
+        self.comment4 = issue_factories.IssueComment(  # unreported comment
+            issue_number=issue2['number'],
+            dataset_id=issue2['dataset_id'],
         )
 
-        comment_object = IssueComment.get(comment['id'])
-        comment_object.visibility = u'hidden'
-        comment_object.abuse_status = AbuseStatus.unmoderated.value
-        comment_object.save()
-
+    def test_reported_search_for_org(self):
         result = helpers.call_action('issue_comment_search',
-                                     organization_id=organization['id'])
+                                     organization_id=self.organization['id'],
+                                     only_hidden=True)
 
-        assert_equals([comment['id']], [c['id'] for c in result])
+        assert_equals([self.comment1['id']],
+                      [c['id'] for c in result])
+
+    def test_reported_search(self):
+        result = helpers.call_action('issue_comment_search',
+                                     only_hidden=True)
+
+        assert_equals([self.comment1['id'], self.comment3['id']],
+                      [c['id'] for c in result])
+
+    def test_search_for_org(self):
+        result = helpers.call_action('issue_comment_search',
+                                     organization_id=self.organization['id'])
+
+        assert_equals([self.comment1['id'], self.comment2['id']],
+                      [c['id'] for c in result])
+
+    def test_search(self):
+        result = helpers.call_action('issue_comment_search')
+
+        assert_equals([self.comment1['id'],
+                       self.comment2['id'],
+                       self.comment3['id'],
+                       self.comment4['id']],
+                      [c['id'] for c in result])

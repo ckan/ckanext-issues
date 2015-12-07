@@ -739,15 +739,23 @@ def issue_comment_search(context, data_dict):
     p.toolkit.check_access('issue_comment_search', context, data_dict)
     session = context['session']
 
-    organization_id = data_dict['organization_id']
+    organization_id = data_dict.get('organization_id')
 
-    reported_comments = issuemodel.IssueComment.reported_comments(
-        session,
-        organization_id=organization_id
-    )
+    only_hidden = p.toolkit.asbool(data_dict.get('only_hidden', False))
+
+    if only_hidden:
+        the_comments = issuemodel.IssueComment.get_hidden_comments(
+            session,
+            organization_id=organization_id
+        )
+    else:
+        the_comments = issuemodel.IssueComment.get_comments(
+            session,
+            organization_id=organization_id
+        )
 
     comments = []
-    for comment, issue in reported_comments.all():
+    for comment, issue in the_comments.all():
         comment_dict = comment.as_dict()
         comment_dict.update({
             'dataset_id': issue.dataset_id,
