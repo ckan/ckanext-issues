@@ -618,9 +618,7 @@ class TestCommentSearch(ClearOnTearDownMixin):
             dataset_id=issue['dataset_id'],
         )
         comment_object = IssueComment.get(self.comment1['id'])
-        comment_object.visibility = u'hidden'
-        comment_object.abuse_status = AbuseStatus.unmoderated.value
-        comment_object.save()
+        comment_object.change_visibility(model.Session, u'hidden')
 
         self.comment2 = issue_factories.IssueComment(  # unreported comment
             issue_number=issue['number'],
@@ -637,9 +635,7 @@ class TestCommentSearch(ClearOnTearDownMixin):
             dataset_id=issue2['dataset_id'],
         )
         comment_object = IssueComment.get(self.comment3['id'])
-        comment_object.visibility = u'hidden'
-        comment_object.abuse_status = AbuseStatus.unmoderated.value
-        comment_object.save()
+        comment_object.change_visibility(model.Session, u'hidden')
 
         self.comment4 = issue_factories.IssueComment(  # unreported comment
             issue_number=issue2['number'],

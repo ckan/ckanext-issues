@@ -741,7 +741,7 @@ def issue_comment_search(context, data_dict):
 
     organization_id = data_dict.get('organization_id')
 
-    only_hidden = data_dict.get('only_hidden', False)
+    only_hidden = p.toolkit.asbool(data_dict.get('only_hidden', False))
 
     if only_hidden:
         the_comments = issuemodel.IssueComment.get_hidden_comments(

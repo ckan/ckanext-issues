@@ -412,7 +412,7 @@ class IssueComment(domain_object.DomainObject):
     def get_comments(cls, session, organization_id=None):
         query = session.query(IssueComment, Issue) \
             .join(Issue) \
-            .join(model.Package) \
+            .join(model.Package)
 
         if organization_id:
             query = query.filter(model.Package.owner_org == organization_id)
