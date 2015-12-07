@@ -8,6 +8,8 @@ from ckanext.issues.tests import factories as issue_factories
 from ckanext.issues.model import Issue, IssueComment, AbuseStatus
 from ckanext.issues.tests.helpers import ClearOnTearDownMixin
 
+from ckan import model
+
 from nose.tools import assert_equals, assert_raises, assert_not_in
 
 
