@@ -185,13 +185,24 @@ def issues_users_who_reported_issue(abuse_reports):
     return users
 
 
+def get_site_title():
+    # older ckans
+    site_title = config.get('ckan.site_title')
+    try:
+        # from ckan 2.4
+        from ckan.model.system_info import get_system_info
+        return get_system_info('ckan.site_title', site_title)
+    except ImportError:
+        return site_title
+
+
 def get_issue_subject(issue):
+    site_title = get_site_title()
     dataset = model.Package.get(issue['dataset_id'])
     return toolkit._(
-        '[{dataset}] {issue_title} #{issue_number}'.format(
+        '[{site_title} Issue] {dataset}'.format(
+            site_title=site_title,
             dataset=dataset.title,
-            issue_title=issue['title'],
-            issue_number=issue['number'],
         )
     )
 
