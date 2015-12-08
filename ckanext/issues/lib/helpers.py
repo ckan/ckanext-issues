@@ -197,12 +197,12 @@ def get_site_title():
 
 
 def get_issue_subject(issue):
+    site_title = get_site_title()
     dataset = model.Package.get(issue['dataset_id'])
     return toolkit._(
-        '[{dataset}] {issue_title} #{issue_number}'.format(
+        '[{site_title} Issue] {dataset}'.format(
+            site_title=site_title,
             dataset=dataset.title,
-            issue_title=issue['title'],
-            issue_number=issue['number'],
         )
     )
 
