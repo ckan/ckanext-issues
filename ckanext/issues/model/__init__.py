@@ -15,7 +15,7 @@ import logging
 
 import enum
 from sqlalchemy import func, types, Table, ForeignKey, Column, Index
-from sqlalchemy.orm import relation, backref, subqueryload
+from sqlalchemy.orm import relation, backref, subqueryload, foreign, remote
 from sqlalchemy.sql.expression import or_
 
 log = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ class Issue(domain_object.DomainObject):
     def get_by_name_or_id_and_number(cls, dataset_name_or_id, issue_number,
                                      session=Session):
         return session.query(cls)\
-            .join(model.Package)\
+            .join(model.Package, cls.dataset_id==Package.id)\
             .filter(or_(cls.dataset_id == dataset_name_or_id,
                         model.Package.name == dataset_name_or_id))\
             .filter(cls.number == issue_number)\
@@ -399,7 +399,7 @@ class IssueComment(domain_object.DomainObject):
     def get_hidden_comments(cls, session, organization_id=None):
         query = session.query(IssueComment, Issue) \
             .join(Issue) \
-            .join(model.Package) \
+            .join(model.Package, Issue.dataset_id==Package.id) \
             .filter(cls.visibility == u'hidden') \
             .filter(cls.abuse_status == AbuseStatus.unmoderated.value) \
 
@@ -412,7 +412,7 @@ class IssueComment(domain_object.DomainObject):
     def get_comments(cls, session, organization_id=None):
         query = session.query(IssueComment, Issue) \
             .join(Issue) \
-            .join(model.Package)
+            .join(model.Package, Issue.dataset_id==Package.id)
 
         if organization_id:
             query = query.filter(model.Package.owner_org == organization_id)
@@ -481,18 +481,10 @@ def define_issue_tables():
         Column('number', types.Integer, nullable=False),
         Column('title', types.UnicodeText, nullable=False),
         Column('description', types.UnicodeText),
-        Column('dataset_id', types.UnicodeText,
-               ForeignKey('package.id', onupdate='CASCADE',
-                          ondelete='CASCADE'),
-               nullable=False),
-        Column('resource_id', types.UnicodeText,
-               ForeignKey('resource.id', onupdate='CASCADE',
-                          ondelete='CASCADE')),
-        Column('user_id', types.UnicodeText,
-               ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
-               nullable=False),
-        Column('assignee_id', types.UnicodeText,
-               ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')),
+        Column('dataset_id', types.UnicodeText, nullable=False),
+        Column('resource_id', types.UnicodeText),
+        Column('user_id', types.UnicodeText, nullable=False),
+        Column('assignee_id', types.UnicodeText),
         Column('status', types.String(15), default=ISSUE_STATUS.open,
                nullable=False),
         Column('resolved', types.DateTime),
@@ -511,9 +503,7 @@ def define_issue_tables():
         meta.metadata,
         Column('id', types.Integer, primary_key=True, autoincrement=True),
         Column('comment', types.Unicode, nullable=False),
-        Column('user_id', types.Unicode,
-               ForeignKey('user.id', onupdate='CASCADE', ondelete='CASCADE'),
-               nullable=False, index=True),
+        Column('user_id', types.Unicode, nullable=False, index=True),
         Column('issue_id', types.Integer,
                ForeignKey('issue.id', onupdate='CASCADE', ondelete='CASCADE'),
                nullable=False, index=True),
@@ -531,24 +521,30 @@ def define_issue_tables():
         properties={
             'user': relation(
                 model.User,
-                backref=backref('issues', cascade='all, delete-orphan'),
-                primaryjoin=issue_table.c.user_id.__eq__(User.id)
+                backref=backref('issues',
+                                cascade='all, delete-orphan',
+                                single_parent=True),
+                primaryjoin=foreign(issue_table.c.user_id) == remote(User.id),
+                uselist=False
             ),
             'assignee': relation(
                 model.User,
                 backref=backref('resolved_issues',
                                 cascade='all'),
-                primaryjoin=issue_table.c.assignee_id.__eq__(User.id)
+                primaryjoin=foreign(issue_table.c.assignee_id) == remote(User.id)
             ),
             'dataset': relation(
                 model.Package,
-                backref=backref('issues', cascade='all, delete-orphan'),
-                primaryjoin=issue_table.c.dataset_id.__eq__(Package.id)
+                backref=backref('issues',
+                                cascade='all, delete-orphan',
+                                single_parent=True),
+                primaryjoin=foreign(issue_table.c.dataset_id) == remote(Package.id),
+                uselist=False
             ),
             'resource': relation(
                 model.Resource,
                 backref=backref('issues', cascade='all'),
-                primaryjoin=issue_table.c.resource_id.__eq__(Resource.id)
+                primaryjoin=foreign(issue_table.c.resource_id) == remote(Resource.id)
             ),
         }
     )
@@ -562,8 +558,9 @@ def define_issue_tables():
             'user': relation(
                 model.User,
                 backref=backref('issue_comments',
-                                cascade='all, delete-orphan'),
-                primaryjoin=issue_comment_table.c.user_id.__eq__(User.id)
+                                cascade='all, delete-orphan',
+                                single_parent=True),
+                primaryjoin=foreign(issue_comment_table.c.user_id) == remote(User.id)
             ),
             'issue': relation(
                 Issue,
