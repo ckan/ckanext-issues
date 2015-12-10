@@ -177,7 +177,7 @@ def issue_create(context, data_dict):
     del data_dict['dataset_id']
 
     issue = issuemodel.Issue(**data_dict)
-    issue.dataset = dataset
+    issue.dataset_id = dataset.id
     session = context['session']
     issue.number = _get_next_issue_number(session, dataset.id)
 
