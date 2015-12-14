@@ -16,7 +16,6 @@ class IssuesPlugin(p.SingletonPlugin):
     """
     implements(p.IConfigurer, inherit=True)
     implements(p.ITemplateHelpers, inherit=True)
-    implements(p.IConfigurable)
     implements(p.IRoutes, inherit=True)
     implements(p.IActions)
     implements(p.IAuthFunctions)
@@ -50,15 +49,6 @@ class IssuesPlugin(p.SingletonPlugin):
             'issues_users_who_reported_issue':
                 helpers.issues_users_who_reported_issue,
         }
-
-    # IConfigurable
-
-    def configure(self, config):
-        """
-        Called by load_environment
-        """
-        from ckanext.issues.model import setup as model_setup
-        model_setup()
 
     # IRoutes
 
