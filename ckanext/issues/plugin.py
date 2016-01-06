@@ -11,6 +11,7 @@ from ckanext.issues.lib import util, helpers
 from ckanext.issues.model import setup as model_setup
 import ckanext.issues.logic.action as action
 import ckanext.issues.auth as auth
+import ckan.model as model
 
 
 class IssuesPlugin(p.SingletonPlugin):
@@ -57,7 +58,8 @@ class IssuesPlugin(p.SingletonPlugin):
         """
         Called by load_environment
         """
-        model_setup()
+        if not model.repo.are_tables_created():
+            model_setup()
 
     # IRoutes
 
