@@ -15,30 +15,16 @@ import logging
 
 import enum
 from sqlalchemy import func, types, Table, ForeignKey, Column, Index
-from sqlalchemy.orm import relation, backref, subqueryload
+from sqlalchemy.orm import relation, backref, subqueryload, foreign, remote
 from sqlalchemy.sql.expression import or_
 
 log = logging.getLogger(__name__)
 
-issue_table = None
-issue_category_table = None
-issue_comment_table = None
-issue_report_table = None
-issue_comment_report_table = None
-
-
 def setup():
     """
-    Called at the end of CKAN setup.
-
     Create issue and issue_category tables in the database.
     Prepopulate issue_category table with default categories.
     """
-    if issue_table is None:
-        define_issue_tables()
-        report_tables = define_report_tables([Issue, IssueComment])
-        log.debug('Issue tables defined in memory')
-
     if not model.package_table.exists():
         # during tests?
         return
@@ -124,7 +110,7 @@ class IssueFilter(enum.Enum):
     oldest = 'Oldest'
     most_commented = 'Most Commented'
     least_commented = 'Least Commented'
-    recently_updated = 'Recently Update'
+    recently_updated = 'Most Recently Updated'
     least_recently_updated = 'Least Recently Updated'
 
     @classmethod
@@ -180,11 +166,16 @@ class Issue(domain_object.DomainObject):
     def get_by_name_or_id_and_number(cls, dataset_name_or_id, issue_number,
                                      session=Session):
         return session.query(cls)\
-            .join(model.Package)\
+            .join(model.Package, cls.dataset_id==Package.id)\
             .filter(or_(cls.dataset_id == dataset_name_or_id,
                         model.Package.name == dataset_name_or_id))\
             .filter(cls.number == issue_number)\
             .first()
+
+    @classmethod
+    def get_issue_count_for_package(cls, dataset_id):
+        return model.Session.query(cls)\
+            .filter(cls.dataset_id==dataset_id).count()
 
     @classmethod
     def apply_filters_to_an_issue_query(cls,
@@ -357,8 +348,11 @@ class Issue(domain_object.DomainObject):
         out.update({
             'user': user,
             'comment_count': comment_count,
-            'updated': updated,
         })
+
+        if isinstance(updated, datetime):
+            out['updated'] = updated.isoformat()
+
         if include_dataset:
             pkg = self.dataset
             context = {'model': model, 'session': model.Session}
@@ -376,29 +370,48 @@ class IssueComment(domain_object.DomainObject):
         return session.query(cls).filter(cls.id == reference).first()
 
     @classmethod
-    def get_comments(cls, issue):
+    def get_comments_for_issue(cls, issue_id):
         """ Gets all comments for a given issue """
         return model.Session.query(cls).\
-            filter(cls.issue_id == issue.id).order_by("-created")
+            filter(cls.issue_id == issue_id).order_by("-created")
 
     @classmethod
-    def get_comment_count(cls, issue):
+    def get_comment_count_for_issue(cls, issue_id):
         """ Gets count of comments for a given issue """
         return model.Session.query(cls).\
-            filter(cls.issue_id == issue.id).count()
+            filter(cls.issue_id == issue_id).count()
 
     @classmethod
-    def reported_comments(cls, session, organization_id):
-        return session.query(IssueComment, Issue) \
+    def get_hidden_comments(cls, session, organization_id=None):
+        query = session.query(IssueComment, Issue) \
             .join(Issue) \
-            .join(model.Package) \
+            .join(model.Package, Issue.dataset_id==Package.id) \
             .filter(cls.visibility == u'hidden') \
             .filter(cls.abuse_status == AbuseStatus.unmoderated.value) \
-            .filter(model.Package.owner_org == organization_id)
+
+        if organization_id:
+            query = query.filter(model.Package.owner_org == organization_id)
+
+        return query
+
+    @classmethod
+    def get_comments(cls, session, organization_id=None):
+        query = session.query(IssueComment, Issue) \
+            .join(Issue) \
+            .join(model.Package, Issue.dataset_id==Package.id)
+
+        if organization_id:
+            query = query.filter(model.Package.owner_org == organization_id)
+
+        return query
 
     def as_dict(self):
         out = super(IssueComment, self).as_dict()
         out['user'] = _user_dict(self.user)
+        try:
+            out['abuse_status'] = AbuseStatus(out['abuse_status']).name
+        except ValueError:
+            pass
         return out
 
     def report_abuse(self, session, user_id, **kwargs):
@@ -429,119 +442,110 @@ class IssueComment(domain_object.DomainObject):
         return self
 
 
-def define_issue_tables():
-    global issue_category_table
-    global issue_table
-    global issue_comment_table
-    global issue_report_table
-    global issue_comment_report_table
+issue_category_table = Table(
+    'issue_category',
+    meta.metadata,
+    Column('id', types.Integer, primary_key=True, autoincrement=True),
+    Column('name', types.Unicode(ISSUE_CATEGORY_NAME_MAX_LENGTH),
+           nullable=False, unique=True),
+    Column('description', types.Unicode, nullable=False, unique=False),
+    Column('created', types.DateTime, default=datetime.now,
+           nullable=False))
 
-    issue_category_table = Table(
-        'issue_category',
-        meta.metadata,
-        Column('id', types.Integer, primary_key=True, autoincrement=True),
-        Column('name', types.Unicode(ISSUE_CATEGORY_NAME_MAX_LENGTH),
-               nullable=False, unique=True),
-        Column('description', types.Unicode, nullable=False, unique=False),
-        Column('created', types.DateTime, default=datetime.now,
-               nullable=False))
+issue_table = Table(
+    'issue',
+    meta.metadata,
+    Column('id', types.Integer, primary_key=True, autoincrement=True),
+    Column('number', types.Integer, nullable=False),
+    Column('title', types.UnicodeText, nullable=False),
+    Column('description', types.UnicodeText),
+    Column('dataset_id', types.UnicodeText, nullable=False),
+    Column('resource_id', types.UnicodeText),
+    Column('user_id', types.UnicodeText, nullable=False),
+    Column('assignee_id', types.UnicodeText),
+    Column('status', types.String(15), default=ISSUE_STATUS.open,
+           nullable=False),
+    Column('resolved', types.DateTime),
+    Column('created', types.DateTime, default=datetime.now,
+           nullable=False),
+    Column('visibility', types.Unicode, default=u'visible'),
+    Column('abuse_status',
+           types.Integer,
+           default=AbuseStatus.unmoderated.value),
+    Index('idx_issue_number_dataset_id', 'dataset_id', 'number',
+          unique=True),
+)
 
-    # TODO get rid of these foreign key relations - not allowed for extensions
-    issue_table = Table(
-        'issue',
-        meta.metadata,
-        Column('id', types.Integer, primary_key=True, autoincrement=True),
-        Column('number', types.Integer, nullable=False),
-        Column('title', types.UnicodeText, nullable=False),
-        Column('description', types.UnicodeText),
-        Column('dataset_id', types.UnicodeText,
-               ForeignKey('package.id', onupdate='CASCADE',
-                          ondelete='CASCADE'),
-               nullable=False),
-        Column('resource_id', types.UnicodeText,
-               ForeignKey('resource.id', onupdate='CASCADE',
-                          ondelete='CASCADE')),
-        Column('user_id', types.UnicodeText,
-               ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL'),
-               nullable=False),
-        Column('assignee_id', types.UnicodeText,
-               ForeignKey('user.id', onupdate='CASCADE', ondelete='SET NULL')),
-        Column('status', types.String(15), default=ISSUE_STATUS.open,
-               nullable=False),
-        Column('resolved', types.DateTime),
-        Column('created', types.DateTime, default=datetime.now,
-               nullable=False),
-        Column('visibility', types.Unicode, default=u'visible'),
-        Column('abuse_status',
-               types.Integer,
-               default=AbuseStatus.unmoderated.value),
-        Index('idx_issue_number_dataset_id', 'dataset_id', 'number',
-              unique=True),
-    )
+issue_comment_table = Table(
+    'issue_comment',
+    meta.metadata,
+    Column('id', types.Integer, primary_key=True, autoincrement=True),
+    Column('comment', types.Unicode, nullable=False),
+    Column('user_id', types.Unicode, nullable=False, index=True),
+    Column('issue_id', types.Integer,
+           ForeignKey('issue.id', onupdate='CASCADE', ondelete='CASCADE'),
+           nullable=False, index=True),
+    Column('created', types.DateTime, default=datetime.now,
+           nullable=False),
+    Column('visibility', types.Unicode, default=u'visible'),
+    Column('abuse_status',
+           types.Integer,
+           default=AbuseStatus.unmoderated.value),
+)
 
-    issue_comment_table = Table(
-        'issue_comment',
-        meta.metadata,
-        Column('id', types.Integer, primary_key=True, autoincrement=True),
-        Column('comment', types.Unicode, nullable=False),
-        Column('user_id', types.Unicode,
-               ForeignKey('user.id', onupdate='CASCADE', ondelete='CASCADE'),
-               nullable=False, index=True),
-        Column('issue_id', types.Integer,
-               ForeignKey('issue.id', onupdate='CASCADE', ondelete='CASCADE'),
-               nullable=False, index=True),
-        Column('created', types.DateTime, default=datetime.now,
-               nullable=False),
-        Column('visibility', types.Unicode, default=u'visible'),
-        Column('abuse_status',
-               types.Integer,
-               default=AbuseStatus.unmoderated.value),
-    )
+meta.mapper(
+    Issue,
+    issue_table,
+    properties={
+        'user': relation(
+            model.User,
+            backref=backref('issues',
+                            cascade='all, delete-orphan',
+                            single_parent=True),
+            primaryjoin=foreign(issue_table.c.user_id) == remote(User.id),
+            uselist=False
+        ),
+        'assignee': relation(
+            model.User,
+            backref=backref('resolved_issues',
+                            cascade='all'),
+            primaryjoin=foreign(issue_table.c.assignee_id) == remote(User.id)
+        ),
+        'dataset': relation(
+            model.Package,
+            backref=backref('issues',
+                            cascade='all, delete-orphan',
+                            single_parent=True),
+            primaryjoin=foreign(issue_table.c.dataset_id) == remote(Package.id),
+            uselist=False
+        ),
+        'resource': relation(
+            model.Resource,
+            backref=backref('issues', cascade='all'),
+            primaryjoin=foreign(issue_table.c.resource_id) == remote(Resource.id)
+        ),
+    }
+)
 
-    meta.mapper(
-        Issue,
-        issue_table,
-        properties={
-            'user': relation(
-                model.User,
-                backref=backref('issues', cascade='all, delete-orphan'),
-                primaryjoin=issue_table.c.user_id.__eq__(User.id)
-            ),
-            'assignee': relation(
-                model.User,
-                backref=backref('resolved_issues',
-                                cascade='all'),
-                primaryjoin=issue_table.c.assignee_id.__eq__(User.id)
-            ),
-            'dataset': relation(
-                model.Package,
-                backref=backref('issues', cascade='all, delete-orphan'),
-                primaryjoin=issue_table.c.dataset_id.__eq__(Package.id)
-            ),
-            'resource': relation(
-                model.Resource,
-                backref=backref('issues', cascade='all'),
-                primaryjoin=issue_table.c.resource_id.__eq__(Resource.id)
-            ),
-        }
-    )
+meta.mapper(IssueCategory, issue_category_table)
 
-    meta.mapper(IssueCategory, issue_category_table)
+meta.mapper(
+    IssueComment,
+    issue_comment_table,
+    properties={
+        'user': relation(
+            model.User,
+            backref=backref('issue_comments',
+                            cascade='all, delete-orphan',
+                            single_parent=True),
+            primaryjoin=foreign(issue_comment_table.c.user_id) == remote(User.id)
+        ),
+        'issue': relation(
+            Issue,
+            backref=backref('comments', cascade='all, delete-orphan'),
+            primaryjoin=issue_comment_table.c.issue_id.__eq__(Issue.id)
+        ),
+    }
+)
 
-    meta.mapper(
-        IssueComment,
-        issue_comment_table,
-        properties={
-            'user': relation(
-                model.User,
-                backref=backref('issue_comments',
-                                cascade='all, delete-orphan'),
-                primaryjoin=issue_comment_table.c.user_id.__eq__(User.id)
-            ),
-            'issue': relation(
-                Issue,
-                backref=backref('comments', cascade='all, delete-orphan'),
-                primaryjoin=issue_comment_table.c.issue_id.__eq__(Issue.id)
-            ),
-        }
-    )
+report_tables = define_report_tables([Issue, IssueComment])

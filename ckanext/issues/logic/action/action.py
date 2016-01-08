@@ -11,7 +11,7 @@ import ckan.lib.helpers as h
 import ckanext.issues.model as issuemodel
 from ckanext.issues.logic import schema
 from ckanext.issues.exception import ReportAlreadyExists
-from ckanext.issues.lib.helpers import get_issue_subject
+from ckanext.issues.lib.helpers import get_issue_subject, get_site_title
 try:
     import ckan.authz as authz
 except ImportError:
@@ -21,7 +21,6 @@ from pylons import config
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import desc
 
-NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 
 log = logging.getLogger(__name__)
@@ -61,7 +60,7 @@ def issue_show(context, data_dict):
         issue_number=issue_number,
         session=session)
     if not issue:
-        raise p.toolkit.NotFound(p.toolkit._('Issue does not exist'))
+        raise p.toolkit.ObjectNotFound(p.toolkit._('Issue does not exist'))
 
     context['issue'] = issue
     issue_dict = issue.as_dict()
@@ -78,6 +77,10 @@ def issue_show(context, data_dict):
             can_edit = False
     else:
         can_edit = False
+
+    if issue.visibility != 'visible' and not can_edit:
+        raise p.toolkit.ObjectNotFound(
+            p.toolkit._('Issue marked as spam/abuse'))
 
     include_reports = data_dict.get('include_reports')
 
@@ -123,18 +126,11 @@ def _get_recipients(context, dataset):
         return []
 
 def _get_issue_vars(issue, issue_subject, user_obj):
-    try:
-        # from ckan 2.4
-        from ckan.model.system_info import get_system_info
-        site_title = get_system_info('ckan.site_title')
-    except ImportError:
-        # older ckans
-        site_title = config['ckan.site_title']
     return {'issue': issue,
             'issue_subject': issue_subject,
             'dataset': model.Package.get(issue.dataset_id),
             'user': user_obj,
-            'site_title': site_title,
+            'site_title': get_site_title(),
             'h': h}
 
 
@@ -147,6 +143,7 @@ def _get_issue_email_body(issue, issue_subject, user_obj):
 
 def _get_comment_email_body(comment, issue_subject, user_obj):
     extra_vars = _get_issue_vars(comment.issue, issue_subject, user_obj)
+    extra_vars['comment'] = comment
     # The template has to be .html (even though it is .txt) so that
     # it is rendered with jinja
     return p.toolkit.render('issues/email/new_comment.html',
@@ -180,7 +177,7 @@ def issue_create(context, data_dict):
     del data_dict['dataset_id']
 
     issue = issuemodel.Issue(**data_dict)
-    issue.dataset = dataset
+    issue.dataset_id = dataset.id
     session = context['session']
     issue.number = _get_next_issue_number(session, dataset.id)
 
@@ -282,7 +279,7 @@ def issue_delete(context, data_dict):
         session=session
     )
     if not issue:
-        raise NotFound(
+        raise toolkit.ObjectNotFound(
             '{issue_number} for dataset {dataset_id} was not found.'.format(
                 issue_number=issue_number,
                 dataset_id=dataset_id,
@@ -485,9 +482,11 @@ def organization_users_autocomplete(context, data_dict):
         .filter(model.Member.group_id == organization_id)\
         .filter(model.Member.table_name == 'user')\
         .filter(model.Member.capacity.in_(['editor', 'admin']))\
+        .filter(model.Member.state == 'active')\
         .filter(model.User.state != model.State.DELETED)\
         .filter(model.User.id == model.Member.table_id)\
         .filter(model.User.name.ilike('{0}%'.format(q)))\
+        .distinct()\
         .limit(limit)
 
     users = []
@@ -554,7 +553,7 @@ def _comment_or_issue_report(issue_or_comment, user_ref, dataset_id, session):
         issue_or_comment.abuse_status = issuemodel.AbuseStatus.abuse.value
         return {'visibility': issue_or_comment.visibility,
                 'abuse_reports': issue_or_comment.abuse_reports,
-                'abuse_status': issuemodel.AbuseStatus.abuse.name}
+                'abuse_status': issue_or_comment.abuse_status}
     except p.toolkit.NotAuthorized:
         max_strikes = config.get('ckanext.issues.max_strikes')
         if (max_strikes
@@ -562,6 +561,7 @@ def _comment_or_issue_report(issue_or_comment, user_ref, dataset_id, session):
            p.toolkit.asint(max_strikes)):
                 issue_or_comment.change_visibility(session, u'hidden')
     finally:
+        # commit the IssueReport and changes to the Issue/Comment
         session.commit()
 
 
@@ -732,15 +732,23 @@ def issue_comment_search(context, data_dict):
     p.toolkit.check_access('issue_comment_search', context, data_dict)
     session = context['session']
 
-    organization_id = data_dict['organization_id']
+    organization_id = data_dict.get('organization_id')
 
-    reported_comments = issuemodel.IssueComment.reported_comments(
-        session,
-        organization_id=organization_id
-    )
+    only_hidden = p.toolkit.asbool(data_dict.get('only_hidden', False))
+
+    if only_hidden:
+        the_comments = issuemodel.IssueComment.get_hidden_comments(
+            session,
+            organization_id=organization_id
+        )
+    else:
+        the_comments = issuemodel.IssueComment.get_comments(
+            session,
+            organization_id=organization_id
+        )
 
     comments = []
-    for comment, issue in reported_comments.all():
+    for comment, issue in the_comments.all():
         comment_dict = comment.as_dict()
         comment_dict.update({
             'dataset_id': issue.dataset_id,

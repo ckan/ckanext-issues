@@ -163,6 +163,8 @@ def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
 
 
 def issues_user_has_reported_issue(user, abuse_reports):
+    '''Returns whether the given user is among the given list of an issue's
+    abuse_reports'''
     user_obj = model.User.get(user)
     if user_obj:
         return user_obj.id in abuse_reports
@@ -170,18 +172,42 @@ def issues_user_has_reported_issue(user, abuse_reports):
         return False
 
 
+def issues_users_who_reported_issue(abuse_reports):
+    '''Returns a list of users (dicts) who reported an issue/comment as
+    spam/abuse'''
+    users = []
+    for user_id in abuse_reports:
+        try:
+            users.append(toolkit.get_action('user_show')(data_dict={'id':
+                                                                    user_id}))
+        except toolkit.ObjectNotFound:
+            users.append(user_id)
+    return users
+
+
+def get_site_title():
+    # older ckans
+    site_title = config.get('ckan.site_title')
+    try:
+        # from ckan 2.4
+        from ckan.model.system_info import get_system_info
+        return get_system_info('ckan.site_title', site_title)
+    except ImportError:
+        return site_title
+
+
 def get_issue_subject(issue):
+    site_title = get_site_title()
     dataset = model.Package.get(issue['dataset_id'])
     return toolkit._(
-        '[{dataset}] {issue_title} #{issue_number}'.format(
+        '[{site_title} Issue] {dataset}'.format(
+            site_title=site_title,
             dataset=dataset.title,
-            issue_title=issue['title'],
-            issue_number=issue['number'],
         )
     )
 
 
-def user_is_owner(user, dataset_id):
+def issues_user_is_owner(user, dataset_id):
     if not user:
         # not logged in
         return False
