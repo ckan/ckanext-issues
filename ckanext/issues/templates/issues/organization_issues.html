@@ -83,10 +83,12 @@
       </div>
       {% else %}
         <span>
+            {% block no_issues %}
             There are currently no issues for 
             <a href="{{ h.url_for(controller='organization', action='read', id=org.name) }}">
             {{org.title}}
             </a>
+            {% endblock %}
         </span>
       {% endif %}
     </div>
