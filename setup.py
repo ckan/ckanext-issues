@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.2'
+version = '0.3'
 
 setup(
 	name='ckanext-issues',
@@ -8,7 +8,7 @@ setup(
 	description='CKAN Extension providing Issues (Task/Todos/...)',
 	classifiers=[],
 	keywords='',
-	author='CKAN Project (Open Knowledge Foundation)',
+	author='CKAN Project',
 	author_email='info@okfn.org',
 	url='',
 	license='mit',
