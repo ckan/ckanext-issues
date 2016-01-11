@@ -1,15 +1,15 @@
-[![Build Status](https://travis-ci.org/okfn/ckanext-issues.svg?branch=master)](https://travis-ci.org/okfn/ckanext-issues)
-[![Coverage Status](https://coveralls.io/repos/okfn/ckanext-issues/badge.svg)](https://coveralls.io/r/okfn/ckanext-issues)
+[![Build Status](https://travis-ci.org/ckan/ckanext-issues.svg?branch=master)](https://travis-ci.org/ckan/ckanext-issues)
+[![Coverage Status](https://coveralls.io/repos/ckan/ckanext-issues/badge.svg)](https://coveralls.io/r/ckan/ckanext-issues)
 # CKAN Issues Extension
 
-This extension allows users to to report issues with datasets and resources in
-a CKAN instance.
+This extension allows users to to report issues with datasets in a CKAN
+instance.
 
-**Current Status:** Alpha
+**Current Status:** Beta
 
 ## What it does
 
-Once installed and enabled, the issues extension will make available a per
+Once installed and enabled, the issues extension will make available a per-
 dataset issue tracker.
 
 The issue tracker user interface can be found at:
@@ -44,7 +44,7 @@ Specifically:
 
 To install the plugin, enter your virtualenv and install the source::
 
-    pip install git+http://github.com/okfn/ckanext-issues
+    pip install git+http://github.com/ckan/ckanext-issues
 
 Create the necessary tables:
 
@@ -55,19 +55,8 @@ able to add the following to your CKAN .ini file::
 
     ckan.plugins = issues
 
-After you clear your cache and reload the site, the Issues plugin
-and should be available.
-
-## Configuration
-
-To configure notifications, you should set the following option in your
-configuration, and all users in the group will get the email.
-
-    ckanext.issues.send_email_notifications = true
-
-If you set max_strikes then users can 'report' a comment as spam/abuse. If the number of users reporting a particular comment hits the max_strikes number then it is hidden, pending moderation.
-
-    ckanext.issues.max_strikes = 2
+After you clear your cache and restart the web server, the Issues extension
+should be available.
 
 ## Upgrade from older versions
 
@@ -75,6 +64,16 @@ When upgrading ckanext-issues from older code versions, you should run the issue
 
     paster --plugin=ckanext-issues issues upgrade_db -c test-core.ini
 
+## Configuration
+
+To switch-on notifications, you should set the following option in your
+configuration, and all users in the group will get the email.
+
+    ckanext.issues.send_email_notifications = true
+
+If you set max_strikes then users can 'report' a comment as spam/abuse. If the number of users reporting a particular comment hits the max_strikes number then it is hidden, pending moderation.
+
+    ckanext.issues.max_strikes = 2
 
 ### Activation
 
@@ -98,12 +97,12 @@ For the extra field to work you must not set `enabled_per_dataset` or `enabled_f
 
 Please open an issue in the github [issue tracker][issues].
 
-[issues]: https://github.com/okfn/ckanext-issues
+[issues]: https://github.com/ckan/ckanext-issues
 
 ## Developers
 
 Normal requirements for CKAN Extensions (including an installation of CKAN and
-its dev requirements).
+its dev requirements). Contributions welcome.
 
 ### Testing with Postgres
 To run full production tests on postgres run. These are the tests that the travis build will run
