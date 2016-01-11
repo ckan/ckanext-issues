@@ -71,7 +71,7 @@ If you set max_strikes then users can 'report' a comment as spam/abuse. If the n
 
 ## Upgrade from older versions
 
-Should there be any sites running a version of ckanext-issues code from before 9th December 2015, then you need to be aware there were considerable model changes around then e.g. commit https://github.com/datagovuk/ckanext-issues/commit/88ad77a3
+Should there be any sites running a version of ckanext-issues code from before 11th January 2015, then you need to be aware there was a model change in commit https://github.com/datagovuk/ckanext-issues/commit/88ad77a3 - removal of foreign key constraints.
 
 No automatic migration is provided - feel free to add one to this repo if you have any issues needing migration. Otherwise, delete the issue tables, create them again:
 
