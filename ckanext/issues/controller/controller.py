@@ -128,6 +128,9 @@ class IssueController(BaseController):
         except toolkit.ValidationError, e:
             p.toolkit.abort(
                 404, toolkit._('Issue not found: {0}'.format(e.error_summary)))
+        except toolkit.ObjectNotFound, e:
+            p.toolkit.abort(
+                404, toolkit._('Issue not found: {0}'.format(e)))
         extra_vars['dataset'] = dataset
         return p.toolkit.render('issues/show.html', extra_vars=extra_vars)
 
@@ -318,14 +321,27 @@ class IssueController(BaseController):
                 msg = _('You must be logged in to report issues')
                 toolkit.abort(401, msg)
             try:
-                toolkit.get_action('issue_report')(
+                report_info = toolkit.get_action('issue_report')(
                     data_dict={
                         'issue_number': issue_number,
                         'dataset_id': dataset_id
                     }
                 )
-                h.flash_success(_('Issue reported to an administrator'))
+                if report_info:
+                    # we have this info if it is an admin
+                    msgs = [_('Report acknowledged.')]
+                    if report_info['abuse_status'] == \
+                            issuemodel.AbuseStatus.abuse.value:
+                        msgs.append(_('Marked as abuse/spam.'))
+                    msgs.append(_('Issue is visible.')
+                                if report_info['visibility'] == 'visible' else
+                                _('Issue is invisible to normal users.'))
+                    h.flash_success(' '.join(msgs))
+                else:
+                    h.flash_success(_('Issue reported to an administrator'))
             except toolkit.ValidationError:
+                toolkit.abort(404)
+            except toolkit.ObjectNotFound:
                 toolkit.abort(404)
             except ReportAlreadyExists, e:
                 h.flash_error(e.message)
@@ -341,20 +357,31 @@ class IssueController(BaseController):
                 msg = _('You must be logged in to report comments')
                 toolkit.abort(401, msg)
             try:
-                toolkit.get_action('issue_comment_report')(
+                report_info = toolkit.get_action('issue_comment_report')(
                     data_dict={
                         'comment_id': comment_id,
                         'issue_number': issue_number,
                         'dataset_id': dataset_id
                     }
                 )
-                h.flash_success(
-                    _('Comment has been reported to an administrator')
-                )
+                if report_info:
+                    # we have this info if it is an admin
+                    msgs = [_('Report acknowledged.')]
+                    if report_info['abuse_status'] == \
+                            issuemodel.AbuseStatus.abuse.value:
+                        msgs.append(_('Marked as abuse/spam.'))
+                    msgs.append(_('Comment is visible.')
+                                if report_info['visibility'] == 'visible' else
+                                _('Comment is invisible to normal users.'))
+                    h.flash_success(' '.join(msgs))
+                else:
+                    h.flash_success(_('Comment has been reported to an administrator'))
                 h.redirect_to('issues_show',
                               dataset_id=dataset_id,
                               issue_number=issue_number)
             except toolkit.ValidationError:
+                toolkit.abort(404)
+            except toolkit.ObjectNotFound:
                 toolkit.abort(404)
             except ReportAlreadyExists, e:
                 h.flash_error(e.message)
@@ -394,7 +421,7 @@ class IssueController(BaseController):
                                'issue_number': issue_number,
                                'dataset_id': dataset_id}
                 )
-                h.flash_success(_('Abuse report cleared'))
+                h.flash_success(_('Spam/abuse report cleared'))
                 h.redirect_to('issues_show',
                               dataset_id=dataset_id,
                               issue_number=issue_number)
@@ -449,42 +476,10 @@ class IssueController(BaseController):
 
     def all_issues_page(self):
         """
-        Display a page containing a list of all issues items, sorted by
-        category.
-
-        NB This doesn't seem to work - no connection between issues and
-        categories in the model
+        Display a page containing a list of all issues items
         """
-        # categories
-        categories = model.Session.query(
-            func.count(issuemodel.Issue.id).label('issue_count'),
-            issuemodel.Issue.issue_category_id)\
-            .filter(issuemodel.Issue.resolved == None)\
-            .group_by(issuemodel.Issue.issue_category_id)
-
-        c.categories = []
-        c.pkg_names = {}
-        for t in categories:
-            tc = issuemodel.IssueCategory.get(t.issue_category_id)
-            tc.issue_count = t.issue_count
-
-            # get issues items for each category
-            tc.issues = model.Session.query(issuemodel.Issue)\
-                .filter(issuemodel.Issue.resolved == None)\
-                .filter(
-                    issuemodel.Issue.issue_category_id == t.issue_category_id
-                )\
-                .order_by(issuemodel.Issue.created.desc())
-
-            for issues in tc.issues:
-                if issues.package_id:
-                    c.pkg_names[issues.package_id] = model.Package.get(
-                        issues.package_id).name
-
-            c.categories.append(tc)
-        # sort into alphabetical order
-        c.categories.sort(key=lambda x: x.name)
-        return render("issues/all_issues.html")
+        template_params = all_issues(request.GET)
+        return render("issues/all_issues.html", extra_vars=template_params)
 
 
 def _dataset_handle_error(dataset_id, exc):
@@ -519,6 +514,16 @@ def issues_for_org(org_id, get_query_dict):
         logic.get_action('organization_show')({}, {'id': org_id})
     return template_params
 
+def all_issues(get_query_dict):
+    query, errors = toolkit.navl_validate(
+        dict(get_query_dict),
+        schema.issue_dataset_controller_schema()
+    )
+    if errors:
+        raise toolkit.ValidationError(errors)
+    query.pop('__extras', None)
+    return _search_issues(include_datasets=True,
+                          **query)
 
 def _search_issues(dataset_id=None,
                    organization_id=None,

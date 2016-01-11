@@ -3,14 +3,13 @@ import ckan.model as model
 
 
 def issue_count(package):
-    return model.Session.query(issue_model.Issue)\
-        .filter(issue_model.Issue.package_id==package.id).count()
+    return issue_model.Issue.get_issue_count_for_package(package['id'])
 
 def issue_comment_count(issue):
-    return issue_model.IssueComment.get_comment_count(issue)
+    return issue_model.IssueComment.get_comment_count_for_issue(issue['id'])
 
 def issue_comments(issue):
-    return issue_model.IssueComment.get_comments(issue)
+    return issue_model.IssueComment.get_comments_for_issue(issue['id'])
 
 
 def _issue_query(org, resolved_required=False, days=None):

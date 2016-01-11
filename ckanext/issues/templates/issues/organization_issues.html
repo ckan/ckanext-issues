@@ -18,7 +18,9 @@
   <div class="module-content">
     <div class="header">
       <h1 class="page-heading">
+      {% block page_heading %}
         {{ _('Issues') }} - {{org.title}}
+      {% endblock %}
       </h1>
     </div>
     <div>
@@ -81,10 +83,12 @@
       </div>
       {% else %}
         <span>
+            {% block no_issues %}
             There are currently no issues for 
             <a href="{{ h.url_for(controller='organization', action='read', id=org.name) }}">
             {{org.title}}
             </a>
+            {% endblock %}
         </span>
       {% endif %}
     </div>

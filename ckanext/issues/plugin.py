@@ -7,11 +7,8 @@ log = getLogger(__name__)
 import ckan.plugins as p
 from ckan.plugins import implements, toolkit
 
-from ckanext.issues.lib import util, helpers
-from ckanext.issues.model import setup as model_setup
-import ckanext.issues.logic.action as action
-import ckanext.issues.auth as auth
-
+# Imports are done in methods to speed up paster.
+# Please don't move back up to here.
 
 class IssuesPlugin(p.SingletonPlugin):
     """
@@ -19,7 +16,6 @@ class IssuesPlugin(p.SingletonPlugin):
     """
     implements(p.IConfigurer, inherit=True)
     implements(p.ITemplateHelpers, inherit=True)
-    implements(p.IConfigurable)
     implements(p.IRoutes, inherit=True)
     implements(p.IActions)
     implements(p.IAuthFunctions)
@@ -34,6 +30,7 @@ class IssuesPlugin(p.SingletonPlugin):
     # ITemplateHelpers
 
     def get_helpers(self):
+        from ckanext.issues.lib import util, helpers
         return {
             'issues_installed': lambda: True,
             'issue_count': util.issue_count,
@@ -48,16 +45,10 @@ class IssuesPlugin(p.SingletonPlugin):
             'issues_user_has_reported_issue':
                 helpers.issues_user_has_reported_issue,
             'issues_user_is_owner':
-                helpers.user_is_owner,
+                helpers.issues_user_is_owner,
+            'issues_users_who_reported_issue':
+                helpers.issues_users_who_reported_issue,
         }
-
-    # IConfigurable
-
-    def configure(self, config):
-        """
-        Called by load_environment
-        """
-        model_setup()
 
     # IRoutes
 
@@ -103,7 +94,7 @@ class IssuesPlugin(p.SingletonPlugin):
             m.connect('issues_show',
                       '/dataset/:dataset_id/issues/:issue_number',
                       action='show')
-            # Broken: m.connect('all_issues_page', '/issues', action='all_issues_page')
+            m.connect('all_issues_page', '/issues', action='all_issues_page')
             m.connect('issues_for_organization',
                       '/organization/:org_id/issues',
                       action='issues_for_organization')
@@ -131,6 +122,8 @@ class IssuesPlugin(p.SingletonPlugin):
     # IActions
 
     def get_actions(self):
+        import ckanext.issues.logic.action as action
+
         return dict((name, function) for name, function
                     in action.__dict__.items()
                     if callable(function))
@@ -138,6 +131,7 @@ class IssuesPlugin(p.SingletonPlugin):
     # IAuthFunctions
 
     def get_auth_functions(self):
+        import ckanext.issues.auth as auth
         return {
             'issue_admin': auth.issue_admin,
             'issue_search': auth.issue_search,
