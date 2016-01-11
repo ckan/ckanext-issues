@@ -1,11 +1,13 @@
 try:
-    from ckan.tests import factories, helpers
+    from ckan.new_tests import helpers
+    from ckan.new_tests import factories
 except ImportError:
-    from ckan.new_tests import factories, helpers
-from ckan.new_tests.helpers import FunctionalTestBase
+    from ckan.tests import helpers
+    from ckan.tests import factories
 from ckanext.issues.tests import factories as issue_factories
 
-class TestIssueApi(FunctionalTestBase):
+
+class TestIssueApi(helpers.FunctionalTestBase):
     def setup(self):
         user = factories.User()
         dataset = factories.Dataset()
@@ -20,4 +22,4 @@ class TestIssueApi(FunctionalTestBase):
         )
 
     def test_search_api(self):
-       self._test_app.get("/api/3/action/issue_search", extra_environ={})
+        self._test_app.get("/api/3/action/issue_search", extra_environ={})

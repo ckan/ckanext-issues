@@ -2,8 +2,12 @@ from bs4 import BeautifulSoup
 from nose.tools import assert_equals, assert_in
 
 from ckan.plugins import toolkit
-import ckan.new_tests.helpers as helpers
-import ckan.new_tests.factories as factories
+try:
+    from ckan.new_tests import helpers
+    from ckan.new_tests import factories
+except ImportError:
+    from ckan.tests import helpers
+    from ckan.tests import factories
 
 from ckanext.issues.tests import factories as issue_factories
 
