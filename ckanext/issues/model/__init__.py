@@ -56,6 +56,26 @@ def setup():
     else:
         log.debug('Issue tables already exist')
 
+
+def upgrade():
+    # Migration 1
+    fkey_sql = "SELECT * FROM pg_constraint " \
+               "WHERE conname = 'issue_assignee_id_fkey';"
+    results = model.Session.execute(fkey_sql).fetchall()
+    if results:
+        remove_fkeys_sql = '''
+        ALTER TABLE issue DROP CONSTRAINT issue_assignee_id_fkey;
+        ALTER TABLE issue_comment DROP CONSTRAINT issue_comment_user_id_fkey;
+        ALTER TABLE issue DROP CONSTRAINT issue_dataset_id_fkey;
+        ALTER TABLE issue DROP CONSTRAINT issue_resource_id_fkey;
+        ALTER TABLE issue DROP CONSTRAINT issue_user_id_fkey;
+        '''
+        model.Session.execute(remove_fkeys_sql)
+        print 'Migration 1 done: Problematic foreign key constraints to '\
+              'core ckan tables now removed'
+        model.Session.commit()
+
+
 ISSUE_CATEGORY_NAME_MAX_LENGTH = 100
 DEFAULT_CATEGORIES = {u"broken-resource-link": "Broken data link",
                       u"no-author": "No publisher or author specified",

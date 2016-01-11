@@ -3,7 +3,6 @@ from ckan.lib.cli import CkanCommand
 import logging
 import sys
 
-from pylons import config
 
 class Issues(CkanCommand):
     """
@@ -11,6 +10,9 @@ class Issues(CkanCommand):
 
         paster issues init_db
            - Creates the database table issues needs to run
+
+        paster issues upgrade_db
+           - Does any database migrations required (idempotent)
     """
     summary = __doc__.split('\n')[0]
     usage = __doc__
@@ -32,5 +34,9 @@ class Issues(CkanCommand):
             from ckanext.issues.model import setup
             setup()
             self.log.info('Issues tables are initialized')
+        elif cmd == 'upgrade_db':
+            from ckanext.issues.model import upgrade
+            upgrade()
+            self.log.info('Issues tables are up to date')
         else:
             self.log.error('Command %s not recognized' % (cmd,))

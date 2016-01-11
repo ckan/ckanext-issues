@@ -71,12 +71,9 @@ If you set max_strikes then users can 'report' a comment as spam/abuse. If the n
 
 ## Upgrade from older versions
 
-Should there be any sites running a version of ckanext-issues code from before 11th January 2015, then you need to be aware there was a model change in commit https://github.com/datagovuk/ckanext-issues/commit/88ad77a3 - removal of foreign key constraints.
+When upgrading ckanext-issues from older code versions, you should run the issues upgrade command, in case there are any model migrations (e.g. 11th Jan 2016):
 
-No automatic migration is provided - feel free to add one to this repo if you have any issues needing migration. Otherwise, delete the issue tables, create them again:
-
-    psql ckan_default -c 'drop table issue_comment; drop table issue;'
-    paster --plugin=ckanext-issues issues init_db -c ckan.ini
+    paster --plugin=ckanext-issues issues upgrade_db -c test-core.ini
 
 
 ### Activation
