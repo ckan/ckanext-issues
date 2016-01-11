@@ -40,11 +40,15 @@ Specifically:
     /api/3/action/issue_comment_report
     /api/3/action/issue_comment_report_clear
 
-## Installation and Activation
+## Installation
 
 To install the plugin, enter your virtualenv and install the source::
 
     pip install git+http://github.com/okfn/ckanext-issues
+
+Create the necessary tables:
+
+    paster --plugin=ckanext-issues issues init_db -c ckan.ini
 
 This will also register a plugin entry point, so you now should be
 able to add the following to your CKAN .ini file::
@@ -64,6 +68,13 @@ configuration, and all users in the group will get the email.
 If you set max_strikes then users can 'report' a comment as spam/abuse. If the number of users reporting a particular comment hits the max_strikes number then it is hidden, pending moderation.
 
     ckanext.issues.max_strikes = 2
+
+## Upgrade from older versions
+
+When upgrading ckanext-issues from older code versions, you should run the issues upgrade command, in case there are any model migrations (e.g. 11th Jan 2016):
+
+    paster --plugin=ckanext-issues issues upgrade_db -c test-core.ini
+
 
 ### Activation
 
