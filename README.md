@@ -44,7 +44,7 @@ Specifically:
 
 To install the plugin, enter your virtualenv and install the source::
 
-    pip install git+http://github.com/ckan/ckanext-issues
+    pip install -e git+http://github.com/ckan/ckanext-issues
 
 Create the necessary tables:
 
