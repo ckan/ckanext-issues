@@ -23,6 +23,7 @@ setup(
 	install_requires=[
         'enum34',
         'akismet==0.2.0',
+	'celery==2.4.2',
     ],
 	entry_points=\
 	"""
