@@ -27,9 +27,22 @@ def register_translator():
     registry.register(translator, translator_obj)
 
 @celery.task(name="issues.check_spam_comment")
-def check_spam_comment(comment_id, ckan_ini_filepath=None, user_ip=None, user_agent=None):
-    pass
-    #check_spam(comment_text, 'viagra-test-123',  ckan_ini_filepath, user_ip, user_agent)
+def check_spam_comment(dataset_id, issue_number, comment_id, ckan_ini_filepath=None, user_ip=None, user_agent=None):
+    data = {'issue_number': issue_number, 'dataset_id': dataset_id, 'comment_id': comment_id}
+    issue = t.get_action('issue_show')({}, data)
+    comments = [r for r in issue['comments'] if r['id'] == comment_id]
+    if not comments:
+        # Cannot find comment
+        return
+
+    comment = comments[0]
+
+    is_spam = check_spam(comment['comment'], comment['user']['name'],  ckan_ini_filepath, user_ip, user_agent)
+    if is_spam:
+        username = t.get_action('get_site_user')({'ignore_auth': True}, {})['name']
+        report = t.get_action('issue_comment_report')
+        report({'user': username}, data)
+
 
 @celery.task(name="issues.check_spam_issue")
 def check_spam_issue(dataset_id, issue_number, ckan_ini_filepath=None, user_ip=None, user_agent=None):
