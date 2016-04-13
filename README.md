@@ -93,6 +93,17 @@ and you can set the default for all the other datasets (without that extra field
 
 For the extra field to work you must not set `enabled_per_dataset` or `enabled_for_organizations` options.
 
+### Spam-checking with Akismet 
+
+To enable spam-checking of issues and comments you will need to sign up to [Akismet](https://akismet.com/) and obtain an API Key.  Once you have a key you should add it to the ini file as
+
+```
+ckanext.issues.akismet.key = MYAPIKEY
+```
+
+If enabled creating an issue or a comment will trigger a background task that checks the content with Akismet, marking it as spam if Akismet suggests that it is.  
+
+
 ## Feedback
 
 Please open an issue in the github [issue tracker][issues].
