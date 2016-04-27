@@ -1,4 +1,5 @@
 #!/bin/sh -e
+set -x
 
 echo "NO_START=0\nJETTY_HOST=127.0.0.1\nJETTY_PORT=8983\n" | sudo tee /etc/default/jetty
 cat /etc/default/jetty
