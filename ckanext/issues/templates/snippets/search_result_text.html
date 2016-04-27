@@ -1,0 +1,8 @@
+{% if type == 'issue' %}
+  {% set text_query = ungettext('{number} issue found for "{query}"', '{number} issues found for "{query}"', count) %}
+  {% set text_query_none = _('No issues found for "{query}"') %}
+  {% set text_no_query = ungettext('{number} issue found', '{number} issues found', count) %}
+  {% set text_no_query_none = _('No issues found') %}
+{% endif %}
+
+{% ckan_extends %}
