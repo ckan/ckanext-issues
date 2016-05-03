@@ -19,6 +19,7 @@ def register_translator():
     from paste.registry import Registry
     from pylons import translator
     from ckan.lib.cli import MockTranslator
+
     global registry
     global translator_obj
 
@@ -27,13 +28,29 @@ def register_translator():
     translator_obj = MockTranslator()
     registry.register(translator, translator_obj)
 
-@celery.task(name="issues.check_spam_comment")
-def check_spam_comment(comment_id, ckan_ini_filepath=None, user_ip=None, user_agent=None):
-    data = {'id': comment_id}
-    comment = t.get_action('issue_comment_show')({}, data)
 
-    print comment
-    is_spam = check_spam(comment['comment'], comment['user']['name'],  ckan_ini_filepath, user_ip, user_agent)
+@celery.task(name="issues.check_spam_comment")
+def check_spam_comment(comment_id, ckan_ini_filepath=None,
+                                             user_ip=None, user_agent=None):
+    load_config(ckan_ini_filepath or '/var/ckan/ckan.ini')
+    register_translator()
+
+    import ckan.model as model
+
+    username = t.get_action('get_site_user')(
+        {'ignore_auth': True}, {})['name']
+    ctx = {
+        'user': username,
+        'model': model,
+        'session': model.Session
+    }
+    data = {'id': comment_id}
+    comment = t.get_action('issue_comment_show')(ctx, data)
+
+    is_spam = check_spam(comment['comment'], comment['user']['name'],
+                                           user_ip, user_agent)
+
+    print "SPAM CHECK: {}".format(is_spam)
     if is_spam:
         username = t.get_action('get_site_user')({'ignore_auth': True}, {})['name']
         report = t.get_action('issue_comment_report')
@@ -41,10 +58,24 @@ def check_spam_comment(comment_id, ckan_ini_filepath=None, user_ip=None, user_ag
 
 
 @celery.task(name="issues.check_spam_issue")
-def check_spam_issue(dataset_id, issue_number, ckan_ini_filepath=None, user_ip=None, user_agent=None):
-    data = {'issue_number': issue_number, 'dataset_id': dataset_id}
-    issue = t.get_action('issue_show')({}, data)
-    is_spam = check_spam(issue['description'], issue['user']['name'], ckan_ini_filepath, user_ip, user_agent)
+def check_spam_issue(dataset_id, issue_number, ckan_ini_filepath=None,
+                                      user_ip=None, user_agent=None):
+    load_config(ckan_ini_filepath or '/var/ckan/ckan.ini')
+    register_translator()
+
+    import ckan.model as model
+
+    username = t.get_action('get_site_user')({'ignore_auth': True}, {})['name']
+    ctx = {
+        'user': username,
+        'model': model,
+        'session': model.Session
+    }
+
+    data = {'issue_number': issue_number, 'dataset_id': dataset_id, 'include_reports': False}
+    issue = t.get_action('issue_show')(ctx, data)
+    is_spam = check_spam(issue['description'], issue['user']['name'], user_ip, user_agent)
+    print "SPAM CHECK: {}".format(is_spam)
 
     if is_spam:
         username = t.get_action('get_site_user')({'ignore_auth': True}, {})['name']
@@ -52,18 +83,15 @@ def check_spam_issue(dataset_id, issue_number, ckan_ini_filepath=None, user_ip=N
         report({'user': username}, data)
 
 
-def check_spam(comment, author, ckan_ini_filepath=None, user_ip=None, user_agent=None):
+def check_spam(comment, author, user_ip=None, user_agent=None):
     import logging
     from pylons import config
-
-    # Load a CKAN instance if we have been given a path to a .ini file
-    if ckan_ini_filepath:
-        load_config(ckan_ini_filepath)
-        register_translator()
 
     apikey = config.get('ckanext.issues.akismet.key', '')
     if not apikey:
         return False
+
+    print "User:", author, user_ip, user_agent
 
     log = logging.getLogger(__file__)
     log.info('Checking comment for spam')
@@ -71,6 +99,6 @@ def check_spam(comment, author, ckan_ini_filepath=None, user_ip=None, user_agent
     api = akismet.Akismet(apikey)
     if not api.verify_key():
         log.warning("Akismet API key is not verified")
-        return
+        return False
 
     return api.comment_check(comment, {'comment_author': author, 'user_ip': user_ip or '', 'user_agent': user_agent or ''})

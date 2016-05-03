@@ -412,9 +412,6 @@ def _filter_reports_for_user(user_id, results):
 def issue_comment_show(context, data_dict):
     ''' Show a single IssueComment '''
     p.toolkit.check_access('issue_comment_show', context, data_dict)
-    user = context['user']
-    user_obj = model.User.get(user)
-
     comment = issuemodel.IssueComment.get(data_dict['id'])
     return comment.as_dict()
 
