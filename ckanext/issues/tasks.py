@@ -20,23 +20,19 @@ def register_translator():
     from pylons import translator
     from ckan.lib.cli import MockTranslator
     global registry
+    global translator_obj
+
     registry = Registry()
     registry.prepare()
-    global translator_obj
     translator_obj = MockTranslator()
     registry.register(translator, translator_obj)
 
 @celery.task(name="issues.check_spam_comment")
-def check_spam_comment(dataset_id, issue_number, comment_id, ckan_ini_filepath=None, user_ip=None, user_agent=None):
-    data = {'issue_number': issue_number, 'dataset_id': dataset_id, 'comment_id': comment_id}
-    issue = t.get_action('issue_show')({}, data)
-    comments = [r for r in issue['comments'] if r['id'] == comment_id]
-    if not comments:
-        # Cannot find comment
-        return
+def check_spam_comment(comment_id, ckan_ini_filepath=None, user_ip=None, user_agent=None):
+    data = {'id': comment_id}
+    comment = t.get_action('issue_comment_show')({}, data)
 
-    comment = comments[0]
-
+    print comment
     is_spam = check_spam(comment['comment'], comment['user']['name'],  ckan_ini_filepath, user_ip, user_agent)
     if is_spam:
         username = t.get_action('get_site_user')({'ignore_auth': True}, {})['name']

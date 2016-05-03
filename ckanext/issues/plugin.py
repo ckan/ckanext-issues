@@ -1,7 +1,6 @@
 """
 CKAN Issue Extension
 """
-from sqlalchemy import event
 from logging import getLogger
 log = getLogger(__name__)
 
@@ -11,31 +10,9 @@ from ckan.plugins import implements, toolkit
 # Imports are done in methods to speed up paster.
 # Please don't move back up to here.
 
-from ckanext.issues.model import Issue
+from ckanext.issues.model import Issue, IssueComment
 
-@event.listens_for(Issue, 'after_insert')
-def receive_after_insert(mapper, connection, target):
-    # Trigger a background spam check if we have the appropriate
-    # configuration in place.
-    import uuid
-    from pylons import config
-    from ckan.lib.celery_app import celery
-
-    if not config.get('ckanext.issues.akismet.key'):
-        return
-
-    user_agent = ''
-
-    if isinstance(target, Issue):
-        args = [target.dataset_id,
-                target.number,
-                None,
-                user_agent]
-
-        celery.send_task("issues.check_spam_issue",
-                    args=args,
-                    task_id=str(uuid.uuid4()))
-
+import events  # Import the DB event listeners
 
 class IssuesPlugin(p.SingletonPlugin):
     """
@@ -165,6 +142,7 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_show': auth.issue_show,
             'issue_create': auth.issue_create,
             'issue_comment_create': auth.issue_comment_create,
+            'issue_comment_show': auth.issue_comment_show,
             'issue_update': auth.issue_update,
             'issue_delete': auth.issue_delete,
             'issue_report': auth.issue_report,

@@ -64,6 +64,7 @@ class TestSpamCheckTask(helpers.FunctionalTestBase):
         assert res['abuse_status'] == 'unmoderated'
 
     def test_comment(self):
+        print "***"
         res = toolkit.get_action('issue_comment_create')({'user': self.non_spammer['name']}, {
             'dataset_id': self.issue_fine['dataset_id'],
             'issue_number': self.issue_fine['number'],

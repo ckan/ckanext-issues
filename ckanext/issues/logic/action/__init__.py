@@ -10,6 +10,7 @@ from action import (
     issue_comment_report,
     issue_comment_report_clear,
     issue_comment_search,
+    issue_comment_show,
     issue_update,
     organization_users_autocomplete,
 )
