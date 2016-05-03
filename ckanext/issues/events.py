@@ -21,7 +21,8 @@ def receive_after_issue_insert(mapper, connection, target):
 
     celery.send_task("issues.check_spam_issue",
                 args=args,
-                task_id=str(uuid.uuid4()))
+                task_id=str(uuid.uuid4()),
+                queue='priority')
 
 def receive_after_comment_insert(mapper, connection, target):
     # Trigger a background spam check if we have the appropriate
@@ -37,7 +38,8 @@ def receive_after_comment_insert(mapper, connection, target):
 
     celery.send_task("issues.check_spam_comment",
                 args=args,
-                task_id=str(uuid.uuid4()))
+                task_id=str(uuid.uuid4()),
+                queue='priority')
 
 
 
