@@ -101,6 +101,23 @@ class IssuesPlugin(p.SingletonPlugin):
 
         moderation = 'ckanext.issues.controller:ModerationController'
         with SubMapper(map, controller=moderation) as m:
+            m.connect('issues_moderation',
+                      '/issues/moderation',
+                      action='index')
+            m.connect('issues_moderation_delete_comment',
+                      '/issues/moderation/comment/delete/:id',
+                      action='moderate_comment_delete')
+            m.connect('issues_moderation_reset_comment',
+                      '/issues/moderation/comment/reset/:id',
+                      action='moderate_comment_reset')
+
+            m.connect('issues_moderation_delete_issue',
+                      '/issues/moderation/issue/delete/:id',
+                      action='moderate_issue_delete')
+            m.connect('issues_moderation_reset_issue',
+                      '/issues/moderation/issue/reset/:id',
+                      action='moderate_issue_reset')
+
             m.connect('issues_moderate_reported_issues',
                       '/organization/:organization_id/issues/reported',
                       action='all_reported_issues')

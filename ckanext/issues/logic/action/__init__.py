@@ -12,4 +12,5 @@ from action import (
     issue_comment_search,
     issue_update,
     organization_users_autocomplete,
+    issue_comment_delete,
 )

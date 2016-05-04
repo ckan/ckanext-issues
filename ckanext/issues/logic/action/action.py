@@ -468,6 +468,33 @@ def issue_comment_create(context, data_dict):
     log.debug('Created issue comment %s' % (issue.id))
     return issue_comment.as_dict()
 
+@validate(schema.issue_comment_delete_schema)
+def issue_comment_delete(context, data_dict):
+    '''Delete a comment
+
+    :param comment_id: The ID of the comment to be deleted
+    :type comment_id: string
+    '''
+    comment = issuemodel.IssueComment.get(data_dict['comment_id'])
+
+    data_dict['issue_number'] = comment.issue.number
+    data_dict['dataset_id'] = comment.issue.dataset_id
+    p.toolkit.check_access('issue_delete', context, data_dict)
+
+    session = context['session']
+
+    if not comment:
+        raise toolkit.ObjectNotFound(
+            '{issue_number} for dataset {dataset_id} was not found.'.format(
+                issue_number=issue_number,
+                dataset_id=dataset_id,
+            )
+        )
+    comment.clear_all_abuse_reports(session)
+
+    session.delete(comment)
+    session.commit()
+
 
 @p.toolkit.side_effect_free
 @validate(schema.organization_users_autocomplete_schema)
@@ -686,14 +713,11 @@ def issue_report_clear(context, data_dict):
     return True
 
 
-@validate(schema.issue_comment_report_schema)
+@validate(schema.issue_comment_report_clear_schema)
 def issue_comment_report_clear(context, data_dict):
     '''Clear the reports on an comment
 
-    :param dataset_id: the name or id of the dataset that the issue item
-        belongs to
-    :type dataset_id: string
-    :param comment_id: the id of the issue the comment belongs to
+    :param comment_id: the id of the comment
     :type comment_id: integer
     '''
     p.toolkit.check_access('issue_report_clear', context, data_dict)
