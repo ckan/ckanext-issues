@@ -409,7 +409,6 @@ class IssueComment(domain_object.DomainObject):
             .filter(cls.visibility == u'hidden') \
             .filter(cls.abuse_status == AbuseStatus.unmoderated.value)
 
-        print query
         if organization_id:
             query = query.filter(model.Package.owner_org == organization_id)
 

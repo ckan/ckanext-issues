@@ -36,23 +36,21 @@ class ModerationController(toolkit.BaseController):
         h.redirect_to('issues_moderation')
 
     def moderate_issue_delete(self, id):
-        # issue_delete, dataset_id, issue_number
-        #:param dataset_id: the name or id of the dataset that the issue item
-        #    belongs to
-        #:type dataset_id: string
-       # :param issue_number: the number of the issue.
-        #:type issue_number: integer
-
+        import ckanext.issues.model as issuemodel
+        issue = issuemodel.Issue.get(id)
+        toolkit.get_action('issue_delete')(data_dict={
+            'dataset_id': issue.dataset_id,
+            'issue_number': issue.number,
+        })
         h.redirect_to('issues_moderation')
 
     def moderate_issue_reset(self, id):
-        # issue_report_clear
-        #:param dataset_id: the name or id of the dataset that the issue item
-        #    belongs to
-        #:type dataset_id: string
-       # :param issue_number: the number of the issue.
-        #:type issue_number: integer
-
+        import ckanext.issues.model as issuemodel
+        issue = issuemodel.Issue.get(id)
+        toolkit.get_action('issue_report_clear')(data_dict={
+            'dataset_id': issue.dataset_id,
+            'issue_number': issue.number,
+        })
         h.redirect_to('issues_moderation')
 
     def all_reported_issues(self, organization_id):
