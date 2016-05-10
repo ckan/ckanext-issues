@@ -771,6 +771,8 @@ def issue_comment_search(context, data_dict):
             organization_id=organization_id
         )
 
+    count = the_comments.count()
+
     comments = []
     for comment, issue in the_comments.all():
         comment_dict = comment.as_dict()
@@ -780,4 +782,9 @@ def issue_comment_search(context, data_dict):
         })
         comments.append(comment_dict)
 
-    return comments
+    result = {
+        'count': count,
+        'results': comments,
+    }
+
+    return result

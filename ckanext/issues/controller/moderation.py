@@ -7,21 +7,33 @@ class ModerationController(toolkit.BaseController):
         ''' Base moderation page for ALL Issues and Comments.
            POST requests will  be to either delete the item, or to
            mark it as not spam (with Akismet)'''
+
+        try:
+            page = int(toolkit.request.params.get('page', 1))
+            page = page or 1  # 0 is not valid
+        except:
+            page = 1
+
+        offset = (page * 10) - 10
+
         if not toolkit.c.user:
             msg = toolkit._('You must be logged in to moderate issues and comments')
             toolkit.abort(401, msg)
 
         issues = toolkit.get_action('issue_search')(data_dict={
             'visibility': 'hidden',
+            'offset': offset,
+            'limit': 10,
         })
-
         comments = toolkit.get_action('issue_comment_search')(data_dict={
             'only_hidden': True,
+            'offset': offset,
+            'limit' : 10
         })
-
+        print(comments)
         extra_vars = {
             'issues': issues.get('results'),
-            'comments': comments,
+            'comments': comments.get('results'),
         }
 
         return toolkit.render('issues/moderation_all.html',
@@ -119,7 +131,7 @@ class CommentModerationController(toolkit.BaseController):
             return toolkit.render(
                 'issues/comment_moderation.html',
                 extra_vars={
-                    'comments': comments,
+                    'comments': comments.get('results'),
                     'organization': organization,
                 }
             )
