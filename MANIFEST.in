@@ -4,3 +4,4 @@ recursive-include ckanext/issues/logic *
 recursive-include ckanext/issues/public *
 recursive-include ckanext/issues/templates *
 recursive-include ckanext/issues/tests *
+recursive-include ckanext/issues/i18n *
