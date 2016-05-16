@@ -365,12 +365,12 @@ def issue_search(context, data_dict):
     include_results = p.toolkit.asbool(data_dict.pop('include_results', True))
     data_dict['include_datasets'] = include_datasets
 
-    query = issuemodel.Issue.get_issues(
+    query, total = issuemodel.Issue.get_issues(
         session=context['session'],
         **data_dict)
 
     if include_count:
-        count = query.count()
+        count = total
     else:
         count = None
 
@@ -760,10 +760,13 @@ def issue_comment_search(context, data_dict):
 
     only_hidden = p.toolkit.asbool(data_dict.get('only_hidden', False))
 
+    total = 0
     if only_hidden:
-        the_comments = issuemodel.IssueComment.get_hidden_comments(
+        the_comments, total = issuemodel.IssueComment.get_hidden_comments(
             session,
-            organization_id=organization_id
+            organization_id=organization_id,
+            offset=data_dict.get('offset', None),
+            limit=data_dict.get('limit', None)
         )
     else:
         the_comments = issuemodel.IssueComment.get_comments(
@@ -780,4 +783,7 @@ def issue_comment_search(context, data_dict):
         })
         comments.append(comment_dict)
 
-    return comments
+    return {
+        'count': the_comments.count() if not total else total,
+        'results': comments,
+    }

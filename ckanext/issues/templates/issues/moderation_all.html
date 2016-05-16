@@ -19,25 +19,53 @@
   <section class="module issues-home" style="min-height: 500px;">
 
         <div class="col-md-6">
-            <h2>Issues</h2>
+            <h2>Issues ({{ issues.count}} total)</h2>
             <ul id="issue-list" class="issue-list-group list-group">
-                {% for issue in issues%}
+                {% for issue in issues.get('results') %}
                     {{issue_description(issue)}}
+                    <div>&nbsp;</div>
                 {% else %}
                     No issues for moderation
                 {% endfor %}
             </ul>
+
+            <section class="module">
+              <div class="pagination pagination-centered">
+                <ul>
+                  {% if issue_pages.has_previous %}<li><a href="?cpage={{cpage}}&ipage={{ ipage - 1 }}">«</a></li>{% endif %}
+                  {% for index in issue_pages.iter_pages() %}
+                    <li{% if index == current %} class="active"{% endif %}><a href="?cpage={{cpage}}&ipage={{ index }}">{{ index }}</a></li>
+                  {% endfor %}
+                  {% if issue_pages.has_next %}<li><a href="?cpage={{cpage}}&ipage={{ ipage + 1 }}">»</a></li>{% endif %}
+                </ul>
+              </div>
+            </section>
+
         </div>
 
         <div class="col-md-6">
-            <h2>Comments</h2>
+            <h2>Comments ({{comments.count}} total)</h2>
             <ul id="issue-list" class="issue-list-group list-group">
-              {% for comment in comments %}
+              {% for comment in comments.get('results') %}
                     {{ comment_description(comment) }}
+                    <div>&nbsp;</div>
               {% else %}
                 No comments for moderation
               {% endfor %}
             </ul>
+
+            <section class="module">
+              <div class="pagination pagination-centered">
+                <ul>
+                  {% if comments_pages.has_previous %}<li><a href="?ipage={{ipage}}&cpage={{ cpage - 1 }}">«</a></li>{% endif %}
+                  {% for index in comments_pages.iter_pages() %}
+                    <li{% if index == cpage %} class="active"{% endif %}><a href="?ipage={{ipage}}&cpage={{ index }}">{{ index }}</a></li>
+                  {% endfor %}
+                  {% if comments_pages.has_next %}<li><a href="?ipage={{ipage}}&cpage={{ cpage + 1 }}">»</a></li>{% endif %}
+                </ul>
+              </div>
+            </section>
+
         </div>
   </section>
 
