@@ -24,6 +24,8 @@ class ModerationController(toolkit.BaseController):
            POST requests will  be to either delete the item, or to
            mark it as not spam (with Akismet)'''
         if not authz.is_sysadmin(toolkit.c.user):
+
+        if not toolkit.c.user:
             msg = toolkit._('You must be logged in to moderate issues and comments')
             toolkit.abort(401, msg)
 
@@ -37,7 +39,6 @@ class ModerationController(toolkit.BaseController):
             'offset': (ipage * per_page) - per_page,
             'limit': per_page
         })
-
         comments = toolkit.get_action('issue_comment_search')(data_dict={
             'only_hidden': True,
             'offset': (cpage * per_page) - per_page,
@@ -65,10 +66,8 @@ class ModerationController(toolkit.BaseController):
         h.redirect_to('issues_moderation')
 
     def moderate_issue_delete(self, id):
-        # Get the issue model so we can determine the dataset_id and issue_number
-        # to pass to the action layer
-        import ckanext.issues.model as imodel
-        issue = imodel.Issue.get(id)
+        import ckanext.issues.model as issuemodel
+        issue = issuemodel.Issue.get(id)
 
         toolkit.get_action('issue_delete')(data_dict={
             'dataset_id': issue.dataset_id,
@@ -78,9 +77,8 @@ class ModerationController(toolkit.BaseController):
         h.redirect_to('issues_moderation')
 
     def moderate_issue_reset(self, id):
-        import ckanext.issues.model as imodel
-        issue = imodel.Issue.get(id)
-
+        import ckanext.issues.model as issuemodel
+        issue = issuemodel.Issue.get(id)
         toolkit.get_action('issue_report_clear')(data_dict={
             'dataset_id': issue.dataset_id,
             'issue_number': issue.number,
@@ -154,7 +152,7 @@ class CommentModerationController(toolkit.BaseController):
             return toolkit.render(
                 'issues/comment_moderation.html',
                 extra_vars={
-                    'comments': comments,
+                    'comments': comments.get('results'),
                     'organization': organization,
                 }
             )

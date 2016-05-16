@@ -5,7 +5,7 @@ except ImportError:
 from ckan.plugins import toolkit
 
 from ckanext.issues.tests import factories as issue_factories
-from ckanext.issues.model import Issue, IssueComment, AbuseStatus
+from ckanext.issues.model import Issue, IssueComment
 from ckanext.issues.tests.helpers import ClearOnTearDownMixin
 
 from ckan import model
