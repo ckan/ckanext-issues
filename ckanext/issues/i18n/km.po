@@ -15,7 +15,7 @@ msgstr ""
 "Language: km\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Poedit 1.8.4\n"
-"X-Poedit-Basepath: ../ckanext\n"
+"X-Poedit-Basepath: ../../../ckanext\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-SearchPath-0: .\n"
 
