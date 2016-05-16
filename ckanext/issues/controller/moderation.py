@@ -24,8 +24,6 @@ class ModerationController(toolkit.BaseController):
            POST requests will  be to either delete the item, or to
            mark it as not spam (with Akismet)'''
         if not authz.is_sysadmin(toolkit.c.user):
-
-        if not toolkit.c.user:
             msg = toolkit._('You must be logged in to moderate issues and comments')
             toolkit.abort(401, msg)
 
