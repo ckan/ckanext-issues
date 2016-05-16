@@ -305,7 +305,7 @@ class TestIssueSearch(ClearOnTearDownMixin):
         issues_list = search_res['results']
         assert_equals([i['id'] for i in created_issues][:5],
                       [i['id'] for i in issues_list])
-        assert_equals(search_res['count'], 5)
+        assert_equals(search_res['count'], 10)
 
     def test_offset(self):
         user = factories.User()
