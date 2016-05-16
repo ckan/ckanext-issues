@@ -1,0 +1,333 @@
+#
+# Translators:
+# ODM Cambodia <cambodia@opendevmekong.net>, 2015
+msgid ""
+msgstr ""
+"Project-Id-Version: ODM ckanext-issues\n"
+"POT-Creation-Date: 2016-05-16 13:07+0200\n"
+"PO-Revision-Date: 2016-05-16 13:11+0200\n"
+"Last-Translator: Alex Corbi <a.corbi@gmail.com>\n"
+"Language-Team: Khmer (http://www.transifex.com/open-development-mekong/odm-"
+"ckanext-issues/language/km/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: km\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 1.8.4\n"
+"X-Poedit-Basepath: ../ckanext\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: issues/public/scripts/autocomplete-action-api.js:31
+msgid "No matches found"
+msgstr ""
+
+#: issues/public/scripts/autocomplete-action-api.js:32
+msgid "Start typing…"
+msgstr ""
+
+#: issues/public/scripts/autocomplete-action-api.js:34
+msgid "Input is too short, must be at least one character"
+msgstr ""
+
+#: issues/auth.py:51
+#, python-brace-format
+msgid "Dataset owner is not allowed to change status of issue {0}"
+msgstr ""
+
+#: issues/auth.py:64 issues/auth.py:68
+#, python-brace-format
+msgid ""
+"Value {0} for ckanext.issues.minimun_role_required not valid. Allowed "
+"values: {1}"
+msgstr ""
+
+#: issues/auth.py:75
+msgid "You must be logged in to report access issues information"
+msgstr ""
+
+#: issues/auth.py:96 issues/auth.py:110 issues/auth.py:136
+#, python-brace-format
+msgid "User {0} not authorized for action on issue {1}"
+msgstr ""
+
+#: issues/auth.py:126
+#, python-brace-format
+msgid "Dataset {0} not found, therefore user cannot be authorized"
+msgstr ""
+
+#: issues/controller/controller.py:42
+msgid "Issues have not been enabled for this dataset"
+msgstr ""
+
+#: issues/controller/controller.py:45
+msgid "Dataset not found"
+msgstr ""
+
+#: issues/controller/controller.py:48
+msgid "Unauthorized to view issues for this dataset"
+msgstr ""
+
+#: issues/controller/controller.py:53
+msgid "Please login to add a new issue"
+msgstr ""
+
+#: issues/controller/controller.py:62
+msgid "Not authorized to add a new issue"
+msgstr ""
+
+#: issues/controller/controller.py:90
+msgid "Your issue has been registered, thank you for the feedback"
+msgstr ""
+
+#: issues/controller/controller.py:108
+#, python-brace-format
+msgid "Issue not found: {0}"
+msgstr ""
+
+#: issues/controller/controller.py:151
+msgid "Invalid request"
+msgstr ""
+
+#: issues/controller/controller.py:163
+msgid "Not authorized"
+msgstr ""
+
+#: issues/controller/controller.py:173
+msgid "Comment cannot be empty"
+msgstr ""
+
+#: issues/controller/controller.py:189
+msgid "Issue closed"
+msgstr ""
+
+#: issues/controller/controller.py:191
+msgid "Issue re-opened"
+msgstr ""
+
+#: issues/controller/controller.py:224
+#, python-brace-format
+msgid "Unauthorized to delete issue {0}"
+msgstr ""
+
+#: issues/controller/controller.py:227
+#, python-brace-format
+msgid "Issue {0} has been deleted."
+msgstr ""
+
+#: issues/controller/controller.py:245
+#, python-brace-format
+msgid "User {0} does not exist"
+msgstr ""
+
+#: issues/controller/controller.py:255
+msgid "Unauthorized to assign users to issue"
+msgstr ""
+
+#: issues/controller/controller.py:270
+msgid "You must be logged in to flag issues as spam"
+msgstr ""
+
+#: issues/controller/controller.py:277
+msgid "Issue reported as spam"
+msgstr ""
+
+#: issues/controller/controller.py:287
+msgid "You must be logged in to flag comments as spam"
+msgstr ""
+
+#: issues/controller/controller.py:295
+msgid "Comment reported as spam"
+msgstr ""
+
+#: issues/controller/controller.py:308
+msgid "Issue unflagged as spam"
+msgstr ""
+
+#: issues/controller/controller.py:312 issues/controller/controller.py:330
+msgid "You must be logged in to reset spam counters"
+msgstr ""
+
+#: issues/controller/controller.py:326
+msgid "Comment unflagged as spam"
+msgstr ""
+
+#: issues/controller/controller.py:399
+#, python-brace-format
+msgid "Validation error: {0}"
+msgstr ""
+
+#: issues/controller/review_system.py:26
+#: issues/controller/review_system.py:46
+msgid "Not authorized to modify the dataset"
+msgstr ""
+
+#: issues/controller/review_system.py:29
+msgid "The dataset has now been made private."
+msgstr ""
+
+#: issues/controller/review_system.py:48
+msgid "The dataset has now been made public."
+msgstr ""
+
+#: issues/controller/show.py:13
+msgid "No description provided"
+msgstr ""
+
+#: issues/logic/validators/validators.py:13
+#, python-brace-format
+msgid "{0} is not a valid status"
+msgstr ""
+
+#: issues/logic/validators/validators.py:32
+msgid "Not found"
+msgstr ""
+
+#: issues/logic/validators/validators.py:33
+msgid "Dataset"
+msgstr ""
+
+#: issues/logic/validators/validators.py:42
+msgid "Issue not found"
+msgstr ""
+
+#: issues/logic/validators/validators.py:49
+msgid "Issue Comment not found"
+msgstr ""
+
+#: issues/templates/issues/add.html:3 issues/templates/issues/add.html:5
+#: issues/templates/issues/home.html:18
+msgid "New Issue"
+msgstr ""
+
+#: issues/templates/issues/add.html:16 issues/templates/issues/edit.html:14
+msgid "The form contains invalid entries:"
+msgstr ""
+
+#: issues/templates/issues/add.html:27 issues/templates/issues/edit.html:25
+msgid "Title"
+msgstr "ចំណងជើង"
+
+#: issues/templates/issues/add.html:28 issues/templates/issues/edit.html:26
+msgid "Description"
+msgstr "ការពិពណ៌នា"
+
+#: issues/templates/issues/add.html:28 issues/templates/issues/edit.html:26
+msgid "Add a comment"
+msgstr ""
+
+#: issues/templates/issues/add.html:30 issues/templates/issues/edit.html:28
+msgid "Resource"
+msgstr ""
+
+#: issues/templates/issues/add.html:35
+#: issues/templates/issues/confirm_delete.html:14
+#: issues/templates/issues/edit.html:34
+msgid "Cancel"
+msgstr ""
+
+#: issues/templates/issues/add.html:37
+msgid "Create"
+msgstr ""
+
+#: issues/templates/issues/base.html:9
+msgid "Datasets"
+msgstr ""
+
+#: issues/templates/issues/base_form_page.html:14
+msgid "What are issues?"
+msgstr ""
+
+#: issues/templates/issues/common.html:23
+#, python-format
+msgid "%s comments"
+msgstr ""
+
+#: issues/templates/issues/confirm_delete.html:3
+#: issues/templates/issues/confirm_delete.html:15
+msgid "Confirm Delete"
+msgstr ""
+
+#: issues/templates/issues/confirm_delete.html:11
+#, python-brace-format
+msgid "Are you sure you want to delete issue - {0}?"
+msgstr ""
+
+#: issues/templates/issues/edit.html:3 issues/templates/issues/edit.html:5
+msgid "Edit Issue"
+msgstr ""
+
+#: issues/templates/issues/edit.html:36
+msgid "Update"
+msgstr ""
+
+#: issues/templates/issues/home.html:9 issues/templates/issues/home.html:16
+#: issues/templates/issues/show.html:8
+#: issues/templates/package/read_base.html:6
+msgid "Issues"
+msgstr ""
+
+#: issues/templates/issues/home.html:23
+msgid "Search issues..."
+msgstr ""
+
+#: issues/templates/issues/home.html:25
+#, python-brace-format
+msgid "{number} issue found"
+msgid_plural "{number} issues found"
+msgstr[0] ""
+
+#: issues/templates/issues/home.html:35
+msgid "No issues"
+msgstr ""
+
+#: issues/templates/issues/show.html:47
+msgid "Abuse - admin notified"
+msgstr ""
+
+#: issues/templates/issues/show.html:86
+msgid "Report Abuse"
+msgstr ""
+
+#: issues/templates/issues/show.html:95
+msgid "Not abuse"
+msgstr ""
+
+#: issues/templates/issues/show.html:137
+#, python-brace-format
+msgid "{number} comment"
+msgid_plural "{number} comments"
+msgstr[0] ""
+
+#: issues/templates/issues/show.html:171
+msgid "Are you sure you want to delete this issue?"
+msgstr ""
+
+#: issues/templates/issues/show.html:172
+msgid "Delete"
+msgstr ""
+
+#: issues/templates/issues/show.html:177
+msgid "Close"
+msgstr ""
+
+#: issues/templates/issues/show.html:181
+msgid "Re-open"
+msgstr ""
+
+#: issues/templates/issues/show.html:187
+msgid "Comment"
+msgstr ""
+
+#: issues/templates/issues/show.html:194
+msgid "Login to comment"
+msgstr ""
+
+#: issues/templates/issues/show.html:213
+msgid "No one"
+msgstr ""
+
+#: issues/templates/issues/show.html:234
+msgid "Assign"
+msgstr ""
