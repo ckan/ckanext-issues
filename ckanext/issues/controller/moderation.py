@@ -30,7 +30,7 @@ class ModerationController(toolkit.BaseController):
         ipage = self._get_page('ipage')
         cpage = self._get_page('cpage')
 
-        per_page = 2
+        per_page = 5
 
         issues = toolkit.get_action('issue_search')(data_dict={
             'visibility': 'hidden',
@@ -150,7 +150,7 @@ class CommentModerationController(toolkit.BaseController):
             return toolkit.render(
                 'issues/comment_moderation.html',
                 extra_vars={
-                    'comments': comments.get('results'),
+                    'comments': comments,
                     'organization': organization,
                 }
             )

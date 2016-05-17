@@ -573,6 +573,7 @@ def _comment_or_issue_report(issue_or_comment, user_ref, dataset_id, session):
             'session': session,
             'model': model,
         }
+
         p.toolkit.check_access('package_update', context,
                                data_dict={'id': dataset_id})
 
@@ -774,7 +775,7 @@ def issue_comment_search(context, data_dict):
             organization_id=organization_id
         )
 
-    count = the_comments.count()
+    count = the_comments.count() if not total else total
 
     comments = []
     for comment, issue in the_comments.all():

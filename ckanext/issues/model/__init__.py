@@ -407,8 +407,7 @@ class IssueComment(domain_object.DomainObject):
         query = session.query(IssueComment, Issue) \
             .join(Issue) \
             .join(model.Package, Issue.dataset_id==Package.id) \
-            .filter(cls.visibility == u'hidden') \
-            .filter(cls.abuse_status == AbuseStatus.unmoderated.value)
+            .filter(cls.visibility == u'hidden')
 
         if organization_id:
             query = query.filter(model.Package.owner_org == organization_id)
