@@ -1,10 +1,11 @@
-#
+# 
 # Translators:
+# Theint Naing Yoon <yoon@phandeeyar.org>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: ODM ckanext-issues\n"
 "POT-Creation-Date: 2016-05-16 13:07+0200\n"
-"PO-Revision-Date: 2016-05-16 13:11+0200\n"
+"PO-Revision-Date: 2016-05-16 11:15+0000\n"
 "Last-Translator: Alex Corbi <a.corbi@gmail.com>\n"
 "Language-Team: Burmese (http://www.transifex.com/open-development-mekong/odm-ckanext-issues/language/my/)\n"
 "MIME-Version: 1.0\n"
@@ -13,9 +14,9 @@ msgstr ""
 "Language: my\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Poedit 1.8.4\n"
-"X-Poedit-Basepath: ../../../ckanext\n"
-"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Basepath: ../ckanext\n"
 "X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 
 #: issues/public/scripts/autocomplete-action-api.js:31
 msgid "No matches found"
@@ -36,7 +37,9 @@ msgstr ""
 
 #: issues/auth.py:64 issues/auth.py:68
 #, python-brace-format
-msgid "Value {0} for ckanext.issues.minimun_role_required not valid. Allowed values: {1}"
+msgid ""
+"Value {0} for ckanext.issues.minimun_role_required not valid. Allowed "
+"values: {1}"
 msgstr ""
 
 #: issues/auth.py:75
@@ -191,7 +194,8 @@ msgstr ""
 msgid "Issue Comment not found"
 msgstr ""
 
-#: issues/templates/issues/add.html:3 issues/templates/issues/add.html:5 issues/templates/issues/home.html:18
+#: issues/templates/issues/add.html:3 issues/templates/issues/add.html:5
+#: issues/templates/issues/home.html:18
 msgid "New Issue"
 msgstr "အကြောင်းကိစ္စအသစ်"
 
@@ -215,7 +219,8 @@ msgstr ""
 msgid "Resource"
 msgstr ""
 
-#: issues/templates/issues/add.html:35 issues/templates/issues/confirm_delete.html:14
+#: issues/templates/issues/add.html:35
+#: issues/templates/issues/confirm_delete.html:14
 #: issues/templates/issues/edit.html:34
 msgid "Cancel"
 msgstr ""
@@ -237,7 +242,8 @@ msgstr ""
 msgid "%s comments"
 msgstr ""
 
-#: issues/templates/issues/confirm_delete.html:3 issues/templates/issues/confirm_delete.html:15
+#: issues/templates/issues/confirm_delete.html:3
+#: issues/templates/issues/confirm_delete.html:15
 msgid "Confirm Delete"
 msgstr ""
 
@@ -254,7 +260,8 @@ msgstr ""
 msgid "Update"
 msgstr ""
 
-#: issues/templates/issues/home.html:9 issues/templates/issues/home.html:16 issues/templates/issues/show.html:8
+#: issues/templates/issues/home.html:9 issues/templates/issues/home.html:16
+#: issues/templates/issues/show.html:8
 #: issues/templates/package/read_base.html:6
 msgid "Issues"
 msgstr "အကြောင်းအရာများ"

@@ -1,210 +1,210 @@
-#
+# 
 # Translators:
+# Linh Do <linh@nature.org.vn>, 2016
 # ODM Vietnam <vietnam@opendevmekong.net>, 2015
 # PanNature Vietnam <contact@nature.org.vn>, 2015
+# trang3019 <ng.thutrang.11@gmail.com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: ODM ckanext-issues\n"
 "POT-Creation-Date: 2016-05-16 13:07+0200\n"
-"PO-Revision-Date: 2016-05-16 13:11+0200\n"
-"Last-Translator: Alex Corbi <a.corbi@gmail.com>\n"
-"Language-Team: Vietnamese (http://www.transifex.com/open-development-mekong/"
-"odm-ckanext-issues/language/vi/)\n"
+"PO-Revision-Date: 2016-05-20 06:07+0000\n"
+"Last-Translator: Linh Do <linh@nature.org.vn>\n"
+"Language-Team: Vietnamese (http://www.transifex.com/open-development-mekong/odm-ckanext-issues/language/vi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: vi\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Poedit 1.8.4\n"
-"X-Poedit-Basepath: ../../../ckanext\n"
-"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Basepath: ../ckanext\n"
 "X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 
 #: issues/public/scripts/autocomplete-action-api.js:31
 msgid "No matches found"
-msgstr ""
+msgstr "Không tìm thấy kết quả phù hợp"
 
 #: issues/public/scripts/autocomplete-action-api.js:32
 msgid "Start typing…"
-msgstr ""
+msgstr "Nhập tại đây...."
 
 #: issues/public/scripts/autocomplete-action-api.js:34
 msgid "Input is too short, must be at least one character"
-msgstr ""
+msgstr "Dữ liệu nhập quá ngắn, yêu cầu tối thiểu một ký tự"
 
 #: issues/auth.py:51
 #, python-brace-format
 msgid "Dataset owner is not allowed to change status of issue {0}"
-msgstr ""
+msgstr "Tác giả không cho phép thay đổi chủ đề {0}"
 
 #: issues/auth.py:64 issues/auth.py:68
 #, python-brace-format
 msgid ""
 "Value {0} for ckanext.issues.minimun_role_required not valid. Allowed "
 "values: {1}"
-msgstr ""
+msgstr "Giá trị {0} đối với ckanext.issues.minimun_role_required không được chấp nhận. Giá trị cho phép: {1}"
 
 #: issues/auth.py:75
 msgid "You must be logged in to report access issues information"
-msgstr ""
+msgstr "Bạn cần đăng nhập trước khi thao tác"
 
 #: issues/auth.py:96 issues/auth.py:110 issues/auth.py:136
 #, python-brace-format
 msgid "User {0} not authorized for action on issue {1}"
-msgstr ""
+msgstr "Người dùng {0} không được phép thao tác đối với vấn đề {1}"
 
 #: issues/auth.py:126
 #, python-brace-format
 msgid "Dataset {0} not found, therefore user cannot be authorized"
-msgstr ""
+msgstr "Dữ liệu {0} không được tìm thấy, do đó người dùng không được cấp phép"
 
 #: issues/controller/controller.py:42
 msgid "Issues have not been enabled for this dataset"
-msgstr ""
+msgstr "Các nội dung chưa được cấp phép đối với bộ dữ liệu"
 
 #: issues/controller/controller.py:45
 msgid "Dataset not found"
-msgstr ""
+msgstr "Không tìm thấy dữ liệu"
 
 #: issues/controller/controller.py:48
 msgid "Unauthorized to view issues for this dataset"
-msgstr ""
+msgstr "Không cho phép xem nội dung dữ liệu"
 
 #: issues/controller/controller.py:53
 msgid "Please login to add a new issue"
-msgstr ""
+msgstr "Hãy đăng nhập để nhập nội dung "
 
 #: issues/controller/controller.py:62
 msgid "Not authorized to add a new issue"
-msgstr ""
+msgstr "Không cho phép nhập nội dung"
 
 #: issues/controller/controller.py:90
 msgid "Your issue has been registered, thank you for the feedback"
-msgstr ""
+msgstr "Nhóm quản trị đã nhận được nội dung của bạn. Cảm ơn bạn đã gửi thông tin phản hồi"
 
 #: issues/controller/controller.py:108
 #, python-brace-format
 msgid "Issue not found: {0}"
-msgstr ""
+msgstr "Không tìm thấy nội dung {0}"
 
 #: issues/controller/controller.py:151
 msgid "Invalid request"
-msgstr ""
+msgstr "Đề nghị không có hiệu lực"
 
 #: issues/controller/controller.py:163
 msgid "Not authorized"
-msgstr ""
+msgstr "Không được phép"
 
 #: issues/controller/controller.py:173
 msgid "Comment cannot be empty"
-msgstr ""
+msgstr "Không cho phép để trống mục Nhận xét"
 
 #: issues/controller/controller.py:189
 msgid "Issue closed"
-msgstr ""
+msgstr "Nội dung đã được đóng"
 
 #: issues/controller/controller.py:191
 msgid "Issue re-opened"
-msgstr ""
+msgstr "Nội dung được mở trở lại"
 
 #: issues/controller/controller.py:224
 #, python-brace-format
 msgid "Unauthorized to delete issue {0}"
-msgstr ""
+msgstr "Không cho phép xóa nội dung{0}"
 
 #: issues/controller/controller.py:227
 #, python-brace-format
 msgid "Issue {0} has been deleted."
-msgstr ""
+msgstr "Nội dung {0} đã được xóa."
 
 #: issues/controller/controller.py:245
 #, python-brace-format
 msgid "User {0} does not exist"
-msgstr ""
+msgstr "Người  dùng {0} không tồn tại"
 
 #: issues/controller/controller.py:255
 msgid "Unauthorized to assign users to issue"
-msgstr ""
+msgstr "Không cho phép cấp quyền cho người dùng "
 
 #: issues/controller/controller.py:270
 msgid "You must be logged in to flag issues as spam"
-msgstr ""
+msgstr "Bạn cần đăng nhập để thông báo spam nội dung"
 
 #: issues/controller/controller.py:277
 msgid "Issue reported as spam"
-msgstr ""
+msgstr "Nội dung được thông báo spam"
 
 #: issues/controller/controller.py:287
 msgid "You must be logged in to flag comments as spam"
-msgstr ""
+msgstr "Bạn cần đăng nhập để thông báo spam"
 
 #: issues/controller/controller.py:295
 msgid "Comment reported as spam"
-msgstr ""
+msgstr "Nội dung nhận xét bị thông báo spam"
 
 #: issues/controller/controller.py:308
 msgid "Issue unflagged as spam"
-msgstr ""
+msgstr "Nội dung đã được dỡ bỏ thông báo spam"
 
 #: issues/controller/controller.py:312 issues/controller/controller.py:330
 msgid "You must be logged in to reset spam counters"
-msgstr ""
+msgstr "Bạn cần đăng nhập để thiết lập lại ghi nhận spam"
 
 #: issues/controller/controller.py:326
 msgid "Comment unflagged as spam"
-msgstr ""
+msgstr "Nội dung nhận xét đã được dỡ bỏ thông báo spam"
 
 #: issues/controller/controller.py:399
 #, python-brace-format
 msgid "Validation error: {0}"
-msgstr ""
+msgstr "Lỗi hợp thức hóa: {0}"
 
-#: issues/controller/review_system.py:26
-#: issues/controller/review_system.py:46
+#: issues/controller/review_system.py:26 issues/controller/review_system.py:46
 msgid "Not authorized to modify the dataset"
-msgstr ""
+msgstr "Không cho phép chỉnh sửa dữ liệu"
 
 #: issues/controller/review_system.py:29
 msgid "The dataset has now been made private."
-msgstr ""
+msgstr "Dữ liệu được đặt ở chế độ cá nhân"
 
 #: issues/controller/review_system.py:48
 msgid "The dataset has now been made public."
-msgstr ""
+msgstr "Dữ  liệu đã được công khai"
 
 #: issues/controller/show.py:13
 msgid "No description provided"
-msgstr ""
+msgstr "Không có mô tả"
 
 #: issues/logic/validators/validators.py:13
 #, python-brace-format
 msgid "{0} is not a valid status"
-msgstr ""
+msgstr "{0} không phù hợp "
 
 #: issues/logic/validators/validators.py:32
 msgid "Not found"
-msgstr ""
+msgstr "Không tìm thấy"
 
 #: issues/logic/validators/validators.py:33
 msgid "Dataset"
-msgstr ""
+msgstr "Dữ liệu"
 
 #: issues/logic/validators/validators.py:42
 msgid "Issue not found"
-msgstr ""
+msgstr "Không tìm thấy nội dung"
 
 #: issues/logic/validators/validators.py:49
 msgid "Issue Comment not found"
-msgstr ""
+msgstr "Không tìm thấy nhận xét phản hồi"
 
 #: issues/templates/issues/add.html:3 issues/templates/issues/add.html:5
 #: issues/templates/issues/home.html:18
 msgid "New Issue"
-msgstr ""
+msgstr "Vấn đề mới"
 
 #: issues/templates/issues/add.html:16 issues/templates/issues/edit.html:14
 msgid "The form contains invalid entries:"
-msgstr ""
+msgstr "Mẫu có chứa nội dung nhập không phù hợp:"
 
 #: issues/templates/issues/add.html:27 issues/templates/issues/edit.html:25
 msgid "Title"
@@ -216,119 +216,119 @@ msgstr "Mô tả"
 
 #: issues/templates/issues/add.html:28 issues/templates/issues/edit.html:26
 msgid "Add a comment"
-msgstr ""
+msgstr "Thêm nhận xét"
 
 #: issues/templates/issues/add.html:30 issues/templates/issues/edit.html:28
 msgid "Resource"
-msgstr ""
+msgstr "Tài nguyên"
 
 #: issues/templates/issues/add.html:35
 #: issues/templates/issues/confirm_delete.html:14
 #: issues/templates/issues/edit.html:34
 msgid "Cancel"
-msgstr ""
+msgstr "Hủy"
 
 #: issues/templates/issues/add.html:37
 msgid "Create"
-msgstr ""
+msgstr "Tạo mới"
 
 #: issues/templates/issues/base.html:9
 msgid "Datasets"
-msgstr ""
+msgstr "Dữ liệu"
 
 #: issues/templates/issues/base_form_page.html:14
 msgid "What are issues?"
-msgstr ""
+msgstr "Nội dung là gì?"
 
 #: issues/templates/issues/common.html:23
 #, python-format
 msgid "%s comments"
-msgstr ""
+msgstr "%s nhận xét"
 
 #: issues/templates/issues/confirm_delete.html:3
 #: issues/templates/issues/confirm_delete.html:15
 msgid "Confirm Delete"
-msgstr ""
+msgstr "Xác nhận lệnh xóa"
 
 #: issues/templates/issues/confirm_delete.html:11
 #, python-brace-format
 msgid "Are you sure you want to delete issue - {0}?"
-msgstr ""
+msgstr "Bạn có chắc chắn muốn xóa nội dung - {0}?"
 
 #: issues/templates/issues/edit.html:3 issues/templates/issues/edit.html:5
 msgid "Edit Issue"
-msgstr ""
+msgstr "Chỉnh sửa nội dung"
 
 #: issues/templates/issues/edit.html:36
 msgid "Update"
-msgstr ""
+msgstr "Cập nhật"
 
 #: issues/templates/issues/home.html:9 issues/templates/issues/home.html:16
 #: issues/templates/issues/show.html:8
 #: issues/templates/package/read_base.html:6
 msgid "Issues"
-msgstr ""
+msgstr "Nội dung"
 
 #: issues/templates/issues/home.html:23
 msgid "Search issues..."
-msgstr ""
+msgstr "Tìm kiếm..."
 
 #: issues/templates/issues/home.html:25
 #, python-brace-format
 msgid "{number} issue found"
 msgid_plural "{number} issues found"
-msgstr[0] ""
+msgstr[0] "{số lượng} nội dung được tìm thấy"
 
 #: issues/templates/issues/home.html:35
 msgid "No issues"
-msgstr ""
+msgstr "Không có nội dung"
 
 #: issues/templates/issues/show.html:47
 msgid "Abuse - admin notified"
-msgstr ""
+msgstr "Phát hiện có lạm dụng quản lý"
 
 #: issues/templates/issues/show.html:86
 msgid "Report Abuse"
-msgstr ""
+msgstr "Ghi nhận có tình trạng lạm dụng"
 
 #: issues/templates/issues/show.html:95
 msgid "Not abuse"
-msgstr ""
+msgstr "Không phát hiện lạm dụng"
 
 #: issues/templates/issues/show.html:137
 #, python-brace-format
 msgid "{number} comment"
 msgid_plural "{number} comments"
-msgstr[0] ""
+msgstr[0] "{số lượng} nhận xét"
 
 #: issues/templates/issues/show.html:171
 msgid "Are you sure you want to delete this issue?"
-msgstr ""
+msgstr "Bạn có chắc chắn muốn xóa nội dung này?"
 
 #: issues/templates/issues/show.html:172
 msgid "Delete"
-msgstr ""
+msgstr "Xóa"
 
 #: issues/templates/issues/show.html:177
 msgid "Close"
-msgstr ""
+msgstr "Đóng"
 
 #: issues/templates/issues/show.html:181
 msgid "Re-open"
-msgstr ""
+msgstr "Mở lại"
 
 #: issues/templates/issues/show.html:187
 msgid "Comment"
-msgstr ""
+msgstr "Nhận xét"
 
 #: issues/templates/issues/show.html:194
 msgid "Login to comment"
-msgstr ""
+msgstr "Đăng nhập để nhận xét"
 
 #: issues/templates/issues/show.html:213
 msgid "No one"
-msgstr ""
+msgstr "Không có ai"
 
 #: issues/templates/issues/show.html:234
 msgid "Assign"
-msgstr ""
+msgstr "Phân công"
