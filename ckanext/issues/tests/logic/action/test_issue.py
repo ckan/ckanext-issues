@@ -7,6 +7,7 @@ from ckan.plugins import toolkit
 from ckanext.issues.tests import factories as issue_factories
 from ckanext.issues.model import Issue, IssueComment, AbuseStatus
 from ckanext.issues.tests.helpers import ClearOnTearDownMixin
+from ckanext.issues.logic.action.action import _get_recipients
 
 from ckan import model
 
@@ -157,6 +158,20 @@ class TestIssueNew(ClearOnTearDownMixin):
         )
         issue_object = Issue.get(issue_create_result['id'])
         assert_equals('visible', issue_object.visibility)
+
+    def test_get_recipients(self):
+        user = factories.User()
+        org = factories.Organization(user=user)
+        dataset = factories.Dataset(owner_org=org['id'])
+        dataset_obj = model.Package.get(dataset['id'])
+
+        recip = _get_recipients(context={}, dataset=dataset_obj)
+
+        assert_equals(len(recip), 1)
+        assert_equals(recip[0]['user_id'], user['id'])
+        assert_equals(recip[0]['capacity'], 'Admin')
+        assert_equals(recip[0]['organization_name'], org['name'])
+        assert_equals(recip[0]['organization_title'], org['title'])
 
 
 class TestIssueComment(ClearOnTearDownMixin):
