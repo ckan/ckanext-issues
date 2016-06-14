@@ -109,33 +109,44 @@ def _get_next_issue_number(session, dataset_id):
 
 def _get_recipients(context, dataset):
     organization = dataset.owner_org
-    if organization:
-        roles = authz.get_roles_with_permission('update_dataset')
-        recipients = []
-        for role in roles:
-            recipients += p.toolkit.get_action('member_list')(
-                context,
-                data_dict={
-                    'id': organization,
-                    'object_type': 'user',
-                    'capacity': role,
-                }
-            )
-        return [recipient[0] for recipient in recipients]
-    else:
+    if not organization:
         return []
+    org_obj = model.Group.get(organization)
+    if not org_obj:
+        return []
+    recipients = []
+    roles = authz.get_roles_with_permission('update_dataset')
+    for role in roles:
+        members = p.toolkit.get_action('member_list')(
+            context,
+            data_dict={
+                'id': organization,
+                'object_type': 'user',
+                'capacity': role,
+            }
+        )
+        for member in members:
+            recipients.append(dict(
+                user_id=member[0],
+                capacity=member[2],
+                organization_name=org_obj.name,
+                organization_title=org_obj.title,
+                ))
+    return recipients
 
-def _get_issue_vars(issue, issue_subject, user_obj):
+
+def _get_issue_vars(issue, issue_subject, user_obj, recipient):
     return {'issue': issue,
             'issue_subject': issue_subject,
             'dataset': model.Package.get(issue.dataset_id),
             'user': user_obj,
             'site_title': get_site_title(),
+            'recipient': recipient,
             'h': h}
 
 
-def _get_issue_email_body(issue, issue_subject, user_obj):
-    extra_vars = _get_issue_vars(issue, issue_subject, user_obj)
+def _get_issue_email_body(issue, issue_subject, user_obj, recipient):
+    extra_vars = _get_issue_vars(issue, issue_subject, user_obj, recipient)
     # Would use p.toolkit.render, but it mucks with response and other things,
     # which is unnecessary, and p.toolkit.render_text uses genshi...
     return render_jinja2('issues/email/new_issue.html', extra_vars=extra_vars)
@@ -191,10 +202,13 @@ def issue_create(context, data_dict):
     if notifications:
         recipients = _get_recipients(context, dataset)
         subject = get_issue_subject(issue.as_dict())
-        body = _get_issue_email_body(issue, subject, user_obj)
 
-        for recipient in recipients:
-            user_obj = model.User.get(recipient)
+        for i, recipient in enumerate(recipients):
+            body = _get_issue_email_body(issue, subject, user_obj, recipient)
+            user_obj = model.User.get(recipient['user_id'])
+            if i == 0:
+                log.debug('Mailing to %s (and %s others):\n%s',
+                          user_obj.email, len(recipients) - 1, body)
             try:
                 mailer.mail_user(user_obj, subject, body)
             except (mailer.MailerException, TypeError), e:

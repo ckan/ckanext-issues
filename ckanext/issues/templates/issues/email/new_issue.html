@@ -1,11 +1,10 @@
-
-A user '{{ user.fullname }}' has raised an issue with one of your datasets on {{ site_title }}.
+On {{ site_title }} a user has raised an issue with one of the datasets from organization '{{ recipient.organization_title }}', for which you are an {{ recipient.capacity }}.' for which you are an {{ capacity }}.
 
 The dataset is: {{ dataset.title }}
 The issue is:
 
-    {{ issue_subject }}
-    "{{ issue.description }}"
+> {{ issue_subject|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
+> {{ issue.description|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
 
 Please correct the problem or add an initial comment about the issue at: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. Once the issue has been resolved, click 'Close issue'.
 
@@ -17,4 +16,4 @@ The {{ site_title }} team
 
 Issue: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}
 Dataset: {{ h.url_for('dataset_read', id=dataset.name, qualified=True) }}
-
+User: {{ user.fullname or user.name }}
