@@ -3,9 +3,9 @@ A user '{{ user.fullname }}' has added a comment to one of your issues on {{ sit
 
 The dataset is: {{ dataset.title }}
 The issue is: {{ issue_subject }}
-The comment is: 
+The comment is:
 
-    "{{ comment.comment }}"
+> {{ comment.comment|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
 
 In order to respond to the comment, please see the issue at: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. Once the issue has been resolved, click 'Close issue'.
 
