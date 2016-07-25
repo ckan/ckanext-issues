@@ -152,13 +152,12 @@ def _get_issue_email_body(issue, issue_subject, user_obj, recipient):
     return render_jinja2('issues/email/new_issue.html', extra_vars=extra_vars)
 
 
-def _get_comment_email_body(comment, issue_subject, user_obj):
-    extra_vars = _get_issue_vars(comment.issue, issue_subject, user_obj)
+def _get_comment_email_body(comment, issue_subject, user_obj, recipient):
+    extra_vars = _get_issue_vars(comment.issue, issue_subject, user_obj,
+                                 recipient)
     extra_vars['comment'] = comment
-    # The template has to be .html (even though it is .txt) so that
-    # it is rendered with jinja
-    return p.toolkit.render('issues/email/new_comment.html',
-                            extra_vars=extra_vars)
+    return render_jinja2('issues/email/new_comment.html',
+                         extra_vars=extra_vars)
 
 
 @validate(schema.issue_create_schema)
@@ -469,10 +468,12 @@ def issue_comment_create(context, data_dict):
         dataset = model.Package.get(data_dict['dataset_id'])
         recipients = _get_recipients(context, dataset)
         subject = get_issue_subject(issue.as_dict())
-        body = _get_comment_email_body(issue_comment, subject, user_obj)
 
         for recipient in recipients:
-            user_obj = model.User.get(recipient)
+            body = _get_comment_email_body(
+                issue_comment, subject, user_obj, recipient)
+
+            user_obj = model.User.get(recipient['user_id'])
             try:
                 mailer.mail_user(user_obj, subject, body)
             except (mailer.MailerException, TypeError), e:

@@ -1,17 +1,21 @@
+import mock
+
+from nose.tools import assert_equals, assert_raises, assert_not_in, assert_in
+
 try:
     from ckan.tests import factories, helpers
+    from ckan.tests.helpers import FunctionalTestBase
 except ImportError:
     from ckan.new_tests import factories, helpers
+    from ckan.new_tests.helpers import FunctionalTestBase
 from ckan.plugins import toolkit
 
 from ckanext.issues.tests import factories as issue_factories
-from ckanext.issues.model import Issue, IssueComment, AbuseStatus
+from ckanext.issues.model import Issue, IssueComment
 from ckanext.issues.tests.helpers import ClearOnTearDownMixin
 from ckanext.issues.logic.action.action import _get_recipients
 
 from ckan import model
-
-from nose.tools import assert_equals, assert_raises, assert_not_in
 
 
 class TestIssueShow(ClearOnTearDownMixin):
@@ -40,25 +44,47 @@ class TestIssueShow(ClearOnTearDownMixin):
         assert_not_in('password', user.keys())
 
 
-class TestIssueNew(ClearOnTearDownMixin):
+class TestIssueNewWithEmailing(FunctionalTestBase, ClearOnTearDownMixin):
     def setup(self):
         self.user = factories.User()
         self.dataset = factories.Dataset()
 
+    @classmethod
+    def _apply_config_changes(cls, cfg):
+        # Mock out the emailer
+        from ckan.lib import mailer
+        cls.mock_mailer = mock.MagicMock()
+        mailer.mail_user = cls.mock_mailer
+        cfg['ckanext.issues.send_email_notifications'] = True
+
     def test_issue_create(self):
-        issue_create_result = toolkit.get_action('issue_create')(
-            context={'user': self.user['name']},
-            data_dict={
-                'title': 'Title',
-                'description': 'Description',
-                'dataset_id': self.dataset['id'],
-            }
-        )
+        creator = factories.User(name='creator')
+        admin = factories.User(name='admin')
+        org = factories.Organization(
+            users=[{'name': admin['id'], 'capacity': 'admin'}])
+        dataset = factories.Dataset(owner_org=org['id'])
+
+        # mock the render as it is easier to look at the variables passed in
+        # than the rendered text
+        with mock.patch('ckanext.issues.logic.action.action.render_jinja2') \
+                as render_mock:
+            issue_create_result = toolkit.get_action('issue_create')(
+                context={'user': creator['name']},
+                data_dict={
+                    'title': 'Title',
+                    'description': 'Description',
+                    'dataset_id': dataset['id'],
+                }
+            )
 
         issue_object = Issue.get(issue_create_result['id'])
         assert_equals('Title', issue_object.title)
         assert_equals('Description', issue_object.description)
         assert_equals(1, issue_object.number)
+        # some test user for the org called 'test.ckan.net' gets emailed too
+        users_emailed = [call[1]['extra_vars']['recipient']['user_id']
+                         for call in render_mock.call_args_list]
+        assert_in(admin['id'], users_emailed)
 
     def test_issue_create_second(self):
         issue_0 = toolkit.get_action('issue_create')(
@@ -174,31 +200,52 @@ class TestIssueNew(ClearOnTearDownMixin):
         assert_equals(recip[0]['organization_title'], org['title'])
 
 
-class TestIssueComment(ClearOnTearDownMixin):
-    def test_create_comment_on_issue(self):
-        user = factories.User()
-        dataset = factories.Dataset()
+class TestIssueComment(FunctionalTestBase, ClearOnTearDownMixin):
+    @classmethod
+    def _apply_config_changes(cls, cfg):
+        # Mock out the emailer
+        from ckan.lib import mailer
+        cls.mock_mailer = mock.MagicMock()
+        mailer.mail_user = cls.mock_mailer
+        cfg['ckanext.issues.send_email_notifications'] = True
 
-        issue = issue_factories.Issue(user=user, user_id=user['id'],
+    def test_create_comment_on_issue(self):
+        creator = factories.User(name='creator')
+        commenter = factories.User(name='commenter')
+        admin = factories.User(name='admin')
+        org = factories.Organization(
+            users=[{'name': admin['id'], 'capacity': 'admin'}])
+        dataset = factories.Dataset(owner_org=org['id'])
+
+        issue = issue_factories.Issue(user=creator, user_id=creator['id'],
                                       dataset_id=dataset['id'])
 
-        helpers.call_action(
-            'issue_comment_create',
-            context={'user': user['name']},
-            issue_number=issue['number'],
-            dataset_id=issue['dataset_id'],
-            comment='some comment'
-        )
+        # mock the render as it is easier to look at the variables passed in
+        # than the rendered text
+        with mock.patch('ckanext.issues.logic.action.action.render_jinja2') \
+                as render_mock:
+            helpers.call_action(
+                'issue_comment_create',
+                context={'user': commenter['name']},
+                issue_number=issue['number'],
+                dataset_id=issue['dataset_id'],
+                comment='some comment'
+            )
 
         result = helpers.call_action(
             'issue_show',
-            context={'user': user['name']},
+            context={'user': commenter['name']},
             dataset_id=issue['dataset_id'],
             issue_number=issue['number']
         )
         comments = result['comments']
         assert_equals(len(comments), 1)
         assert_equals(comments[0]['comment'], 'some comment')
+        assert_equals(comments[0]['user']['name'], 'commenter')
+        # some test user for the org called 'test.ckan.net' gets emailed too
+        users_emailed = [call[1]['extra_vars']['recipient']['user_id']
+                         for call in render_mock.call_args_list]
+        assert_in(admin['id'], users_emailed)
 
     def test_create_comment_on_closed_issue(self):
         user = factories.User()
