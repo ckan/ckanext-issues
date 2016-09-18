@@ -6,7 +6,7 @@ from sqlalchemy import func
 from pylons.i18n import _
 from pylons import request, config, tmpl_context as c
 
-from ckan.lib.base import BaseController, render, abort, redirect
+from ckan.lib.base import BaseController, render, abort
 import ckan.lib.helpers as h
 from ckan.lib import mailer
 import ckan.model as model
@@ -196,7 +196,7 @@ class IssueController(BaseController):
         comment = request.POST.get('comment')
         if not comment or comment.strip() == '':
             h.flash_error(_('Comment cannot be empty'))
-            redirect(next_url)
+            h.redirect_to(next_url)
             return
 
         # do this first because will error here if not allowed and do not want
@@ -223,7 +223,7 @@ class IssueController(BaseController):
             }
         logic.get_action('issue_comment_create')(self.context, data_dict)
 
-        redirect(next_url)
+        h.redirect_to(next_url)
 
     def dataset(self, dataset_id):
         """
