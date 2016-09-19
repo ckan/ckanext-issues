@@ -6,7 +6,7 @@ from sqlalchemy import func
 from pylons.i18n import _
 from pylons import request, config, tmpl_context as c
 
-from ckan.lib.base import BaseController, render, abort, redirect
+from ckan.lib.base import BaseController, render, abort
 import ckan.lib.helpers as h
 from ckan.lib import mailer
 import ckan.model as model
@@ -112,9 +112,10 @@ class IssueController(BaseController):
                 )
                 h.flash_success(_('Your issue has been registered, '
                                   'thank you for the feedback'))
-                redirect(h.url_for('issues_show',
-                                   dataset_id=dataset_dict['name'],
-                                   issue_number=issue_dict['number']))
+                p.toolkit.redirect_to(
+                    'issues_show',
+                    dataset_id=dataset_dict['name'],
+                    issue_number=issue_dict['number'])
 
         c.data_dict = data_dict
         return render("issues/add.html")
@@ -196,7 +197,7 @@ class IssueController(BaseController):
         comment = request.POST.get('comment')
         if not comment or comment.strip() == '':
             h.flash_error(_('Comment cannot be empty'))
-            redirect(next_url)
+            p.toolkit.redirect_to(next_url)
             return
 
         # do this first because will error here if not allowed and do not want
@@ -223,7 +224,7 @@ class IssueController(BaseController):
             }
         logic.get_action('issue_comment_create')(self.context, data_dict)
 
-        redirect(next_url)
+        p.toolkit.redirect_to(next_url)
 
     def dataset(self, dataset_id):
         """
@@ -240,9 +241,9 @@ class IssueController(BaseController):
     def delete(self, dataset_id, issue_number):
         dataset = self._before_dataset(dataset_id)
         if 'cancel' in request.params:
-            h.redirect_to('issues_show',
-                          dataset_id=dataset_id,
-                          issue_number=issue_number)
+            p.toolkit.redirect_to('issues_show',
+                                  dataset_id=dataset_id,
+                                  issue_number=issue_number)
 
         if request.method == 'POST':
             try:
@@ -258,7 +259,7 @@ class IssueController(BaseController):
             h.flash_notice(
                 _('Issue {0} has been deleted.'.format(issue_number))
             )
-            h.redirect_to('issues_dataset', dataset_id=dataset_id)
+            p.toolkit.redirect_to('issues_dataset', dataset_id=dataset_id)
         else:
             return render('issues/confirm_delete.html',
                           extra_vars={
@@ -346,9 +347,9 @@ class IssueController(BaseController):
             except ReportAlreadyExists, e:
                 h.flash_error(e.message)
 
-            h.redirect_to('issues_show',
-                          dataset_id=dataset_id,
-                          issue_number=issue_number)
+            p.toolkit.redirect_to('issues_show',
+                                  dataset_id=dataset_id,
+                                  issue_number=issue_number)
 
     def report_comment(self, dataset_id, issue_number, comment_id):
         dataset = self._before_dataset(dataset_id)
@@ -376,17 +377,17 @@ class IssueController(BaseController):
                     h.flash_success(' '.join(msgs))
                 else:
                     h.flash_success(_('Comment has been reported to an administrator'))
-                h.redirect_to('issues_show',
-                              dataset_id=dataset_id,
-                              issue_number=issue_number)
+                p.toolkit.redirect_to('issues_show',
+                                      dataset_id=dataset_id,
+                                      issue_number=issue_number)
             except toolkit.ValidationError:
                 toolkit.abort(404)
             except toolkit.ObjectNotFound:
                 toolkit.abort(404)
             except ReportAlreadyExists, e:
                 h.flash_error(e.message)
-            h.redirect_to('issues_show', dataset_id=dataset_id,
-                          issue_number=issue_number)
+            p.toolkit.redirect_to('issues_show', dataset_id=dataset_id,
+                                  issue_number=issue_number)
 
     def report_clear(self, dataset_id, issue_number):
         dataset = self._before_dataset(dataset_id)
@@ -399,9 +400,9 @@ class IssueController(BaseController):
                     }
                 )
                 h.flash_success(_('Issue report cleared'))
-                h.redirect_to('issues_show',
-                              dataset_id=dataset_id,
-                              issue_number=issue_number)
+                p.toolkit.redirect_to('issues_show',
+                                      dataset_id=dataset_id,
+                                      issue_number=issue_number)
             except toolkit.NotAuthorized:
                 msg = _('You must be logged in clear abuse reports').format(
                     issue_number
@@ -422,9 +423,9 @@ class IssueController(BaseController):
                                'dataset_id': dataset_id}
                 )
                 h.flash_success(_('Spam/abuse report cleared'))
-                h.redirect_to('issues_show',
-                              dataset_id=dataset_id,
-                              issue_number=issue_number)
+                p.toolkit.redirect_to('issues_show',
+                                      dataset_id=dataset_id,
+                                      issue_number=issue_number)
             except toolkit.NotAuthorized:
                 msg = _('You must be logged in to clear abuse reports').format(
                     issue_number
