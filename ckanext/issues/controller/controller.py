@@ -112,10 +112,10 @@ class IssueController(BaseController):
                 )
                 h.flash_success(_('Your issue has been registered, '
                                   'thank you for the feedback'))
-                p.toolkit.redirect(h.url_for(
+                p.toolkit.redirect_to(
                     'issues_show',
                     dataset_id=dataset_dict['name'],
-                    issue_number=issue_dict['number']))
+                    issue_number=issue_dict['number'])
 
         c.data_dict = data_dict
         return render("issues/add.html")
