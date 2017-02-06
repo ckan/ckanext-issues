@@ -79,7 +79,7 @@ If you set max_strikes then users can 'report' a comment as spam/abuse. If the n
 
 By default, issues are enabled for all datasets. If you wish to restrict
 issues to specific datasets or organizations, you can use these config options:
-    
+
     ckanext.issues.enabled_for_datasets = mydataset1 mydataset2 ...
     ckanext.issues.enabled_for_organizations = department-of-transport health-regulator
 
@@ -91,7 +91,7 @@ and you can set the default for all the other datasets (without that extra field
 
     ckanext.issues.enabled_without_extra = false
 
-For the extra field to work you must not set `enabled_per_dataset` or `enabled_for_organizations` options.
+For the extra field to work you must not set `enabled_for_datasets` or `enabled_for_organizations` options.
 
 ## Feedback
 
