@@ -2,6 +2,8 @@ from ckan import model
 import ckan.plugins as p
 from ckanext.issues import model as issue_model
 
+_ = p.toolkit._
+
 
 def issue_auth(context, data_dict, privilege='package_update'):
     '''Returns whether the current user is allowed to do the action
@@ -15,12 +17,11 @@ def issue_auth(context, data_dict, privilege='package_update'):
     except p.toolkit.NotAuthorized:
         return {
             'success': False,
-            'msg': p.toolkit._(
-                'User {0} not authorized for action on issue {1}'.format(
-                    str(context['user']),
-                    auth_data_dict['id']
-                )
-            )
+            'msg': _(
+                'User {user} not authorized for action on issue {issue}'
+                ).format(
+                user=str(context['user']),
+                issue=auth_data_dict['id'])
         }
 
 
@@ -37,10 +38,8 @@ def issue_search(context, data_dict):
     except p.toolkit.NotAuthorized:
         return {
             'success': False,
-            'msg': p.toolkit._(
-                'User {0} not authorized for action'.format(
-                    str(context['user'])
-                )
+            'msg': _('User {0} not authorized for action').format(
+                str(context['user'])
             )
         }
 
@@ -86,7 +85,7 @@ def issue_update(context, data_dict):
     # all other cases not allowed
     return {
         'success': False,
-        'msg': p.toolkit._(
+        'msg': _(
             'User {user} not authorized for action on issue {issue}'.format(
                 user=str(user),
                 issue=data_dict['issue_number'])
