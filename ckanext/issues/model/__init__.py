@@ -278,15 +278,16 @@ class Issue(domain_object.DomainObject):
             .outerjoin(IssueComment, Issue.id == IssueComment.issue_id)\
             .group_by(model.User.name, Issue.id)
 
+        if include_reports:
+            query = query.options(subqueryload('abuse_reports'))
+
+        total = query.count()
         if offset:
             query = query.offset(offset)
         if limit:
             query = query.limit(limit)
 
-        if include_reports:
-            query = query.options(subqueryload('abuse_reports'))
-
-        return query
+        return query, total
 
     @classmethod
     def get_count_for_dataset(cls, dataset_id=None, organization_id=None,
@@ -402,17 +403,23 @@ class IssueComment(domain_object.DomainObject):
             filter(cls.issue_id == issue_id).count()
 
     @classmethod
-    def get_hidden_comments(cls, session, organization_id=None):
+    def get_hidden_comments(cls, session, organization_id=None, offset=None, limit=None):
         query = session.query(IssueComment, Issue) \
             .join(Issue) \
             .join(model.Package, Issue.dataset_id==Package.id) \
-            .filter(cls.visibility == u'hidden') \
-            .filter(cls.abuse_status == AbuseStatus.unmoderated.value) \
+            .filter(cls.visibility == u'hidden')
 
         if organization_id:
             query = query.filter(model.Package.owner_org == organization_id)
 
-        return query
+        total = query.count()
+        if offset:
+            query = query.offset(offset)
+        if limit:
+            query = query.limit(limit)
+
+
+        return query, total
 
     @classmethod
     def get_comments(cls, session, organization_id=None):

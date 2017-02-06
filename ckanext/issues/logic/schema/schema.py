@@ -109,11 +109,15 @@ def issue_comment_report_schema():
         'comment_id': [not_missing, unicode, issue_comment_exists],
     }
 
-
 def issue_comment_report_clear_schema():
-    schema = issue_report_schema()
-    schema.update({'clear_abuse_status': [ignore_missing, bool]})
-    return schema
+    return {
+        'comment_id': [not_missing, unicode, issue_comment_exists],
+    }
+
+def issue_comment_delete_schema():
+    return {
+        'comment_id': [not_missing, unicode, issue_comment_exists],
+    }
 
 
 def issue_dataset_controller_schema():

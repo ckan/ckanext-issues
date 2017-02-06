@@ -378,12 +378,12 @@ def issue_search(context, data_dict):
     include_results = p.toolkit.asbool(data_dict.pop('include_results', True))
     data_dict['include_datasets'] = include_datasets
 
-    query = issuemodel.Issue.get_issues(
+    query, total = issuemodel.Issue.get_issues(
         session=context['session'],
         **data_dict)
 
     if include_count:
-        count = query.count()
+        count = total
     else:
         count = None
 
@@ -483,6 +483,33 @@ def issue_comment_create(context, data_dict):
     log.debug('Created issue comment %s' % (issue.id))
     return issue_comment.as_dict()
 
+@validate(schema.issue_comment_delete_schema)
+def issue_comment_delete(context, data_dict):
+    '''Delete a comment
+
+    :param comment_id: The ID of the comment to be deleted
+    :type comment_id: string
+    '''
+    comment = issuemodel.IssueComment.get(data_dict['comment_id'])
+
+    data_dict['issue_number'] = comment.issue.number
+    data_dict['dataset_id'] = comment.issue.dataset_id
+    p.toolkit.check_access('issue_delete', context, data_dict)
+
+    session = context['session']
+
+    if not comment:
+        raise toolkit.ObjectNotFound(
+            '{issue_number} for dataset {dataset_id} was not found.'.format(
+                issue_number=issue_number,
+                dataset_id=dataset_id,
+            )
+        )
+    comment.clear_all_abuse_reports(session)
+
+    session.delete(comment)
+    session.commit()
+
 
 @p.toolkit.side_effect_free
 @validate(schema.organization_users_autocomplete_schema)
@@ -561,6 +588,7 @@ def _comment_or_issue_report(issue_or_comment, user_ref, dataset_id, session):
             'session': session,
             'model': model,
         }
+
         p.toolkit.check_access('package_update', context,
                                data_dict={'id': dataset_id})
 
@@ -701,14 +729,11 @@ def issue_report_clear(context, data_dict):
     return True
 
 
-@validate(schema.issue_comment_report_schema)
+@validate(schema.issue_comment_report_clear_schema)
 def issue_comment_report_clear(context, data_dict):
     '''Clear the reports on an comment
 
-    :param dataset_id: the name or id of the dataset that the issue item
-        belongs to
-    :type dataset_id: string
-    :param comment_id: the id of the issue the comment belongs to
+    :param comment_id: the id of the comment
     :type comment_id: integer
     '''
     p.toolkit.check_access('issue_report_clear', context, data_dict)
@@ -751,16 +776,21 @@ def issue_comment_search(context, data_dict):
 
     only_hidden = p.toolkit.asbool(data_dict.get('only_hidden', False))
 
+    total = 0
     if only_hidden:
-        the_comments = issuemodel.IssueComment.get_hidden_comments(
+        the_comments, total = issuemodel.IssueComment.get_hidden_comments(
             session,
-            organization_id=organization_id
+            organization_id=organization_id,
+            offset=data_dict.get('offset', None),
+            limit=data_dict.get('limit', None)
         )
     else:
         the_comments = issuemodel.IssueComment.get_comments(
             session,
             organization_id=organization_id
         )
+
+    count = the_comments.count() if not total else total
 
     comments = []
     for comment, issue in the_comments.all():
@@ -771,4 +801,7 @@ def issue_comment_search(context, data_dict):
         })
         comments.append(comment_dict)
 
-    return comments
+    return {
+        'count': the_comments.count() if not total else total,
+        'results': comments,
+    }

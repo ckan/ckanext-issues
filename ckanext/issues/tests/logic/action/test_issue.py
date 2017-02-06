@@ -367,7 +367,7 @@ class TestIssueSearch(ClearOnTearDownMixin):
         issues_list = search_res['results']
         assert_equals([i['id'] for i in created_issues][:5],
                       [i['id'] for i in issues_list])
-        assert_equals(search_res['count'], 5)
+        assert_equals(search_res['count'], 10)
 
     def test_offset(self):
         user = factories.User()
@@ -712,21 +712,21 @@ class TestCommentSearch(ClearOnTearDownMixin):
                                      only_hidden=True)
 
         assert_equals([self.comment1['id']],
-                      [c['id'] for c in result])
+                      [c['id'] for c in result.get('results')])
 
     def test_reported_search(self):
         result = helpers.call_action('issue_comment_search',
                                      only_hidden=True)
 
         assert_equals([self.comment1['id'], self.comment3['id']],
-                      [c['id'] for c in result])
+                      [c['id'] for c in result.get('results')])
 
     def test_search_for_org(self):
         result = helpers.call_action('issue_comment_search',
                                      organization_id=self.organization['id'])
 
         assert_equals([self.comment1['id'], self.comment2['id']],
-                      [c['id'] for c in result])
+                      [c['id'] for c in result.get('results')])
 
     def test_search(self):
         result = helpers.call_action('issue_comment_search')
@@ -735,4 +735,4 @@ class TestCommentSearch(ClearOnTearDownMixin):
                        self.comment2['id'],
                        self.comment3['id'],
                        self.comment4['id']],
-                      [c['id'] for c in result])
+                      [c['id'] for c in result.get('results')])
