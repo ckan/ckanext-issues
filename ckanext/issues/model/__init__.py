@@ -544,7 +544,7 @@ meta.mapper(
             backref=backref('issues', cascade='all'),
             primaryjoin=foreign(issue_table.c.resource_id) == remote(Resource.id)
         ),
-    }
+    },
 )
 
 meta.mapper(IssueCategory, issue_category_table)
@@ -565,7 +565,7 @@ meta.mapper(
             backref=backref('comments', cascade='all, delete-orphan'),
             primaryjoin=issue_comment_table.c.issue_id.__eq__(Issue.id)
         ),
-    }
+    },
 )
 
 report_tables = define_report_tables([Issue, IssueComment])

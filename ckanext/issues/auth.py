@@ -116,6 +116,9 @@ def issue_admin(context, data_dict):
     sysadmins/organization admins and organization editors'''
     return issue_auth(context, data_dict)
 
+@p.toolkit.auth_allow_anonymous_access
+def issue_comment_show(context, data_dict):
+    return {'success': True}
 
 @p.toolkit.auth_allow_anonymous_access
 def issue_comment_search(context, data_dict):

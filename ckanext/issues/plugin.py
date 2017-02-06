@@ -10,6 +10,10 @@ from ckan.plugins import implements, toolkit
 # Imports are done in methods to speed up paster.
 # Please don't move back up to here.
 
+from ckanext.issues.model import Issue, IssueComment
+
+import events  # Import the DB event listeners
+
 class IssuesPlugin(p.SingletonPlugin):
     """
     CKAN Issues Extension
@@ -138,6 +142,7 @@ class IssuesPlugin(p.SingletonPlugin):
             'issue_show': auth.issue_show,
             'issue_create': auth.issue_create,
             'issue_comment_create': auth.issue_comment_create,
+            'issue_comment_show': auth.issue_comment_show,
             'issue_update': auth.issue_update,
             'issue_delete': auth.issue_delete,
             'issue_report': auth.issue_report,

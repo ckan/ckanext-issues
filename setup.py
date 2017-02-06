@@ -22,7 +22,10 @@ setup(
 	zip_safe=False,
 	install_requires=[
         'enum34',
-    ],
+        'akismet==0.2.0',
+	'celery==2.4.2',
+	'redis==2.9.1',
+    	],
 	entry_points=\
 	"""
     [ckan.plugins]
@@ -30,5 +33,8 @@ setup(
 
     [paste.paster_command]
     issues = ckanext.issues.commands:Issues
+
+    [ckan.celery_task]
+    tasks=ckanext.issues.celery_import:task_imports
 	""",
 )

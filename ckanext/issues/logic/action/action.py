@@ -422,6 +422,13 @@ def _filter_reports_for_user(user_id, results):
     return results
 
 
+def issue_comment_show(context, data_dict):
+    ''' Show a single IssueComment '''
+    p.toolkit.check_access('issue_comment_show', context, data_dict)
+    comment = issuemodel.IssueComment.get(data_dict['id'])
+    return comment.as_dict()
+
+
 @validate(schema.issue_comment_schema)
 def issue_comment_create(context, data_dict):
     '''Add a new issue comment.
