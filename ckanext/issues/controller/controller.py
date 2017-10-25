@@ -6,7 +6,7 @@ from sqlalchemy import func
 from pylons.i18n import _
 from pylons import request, config, tmpl_context as c
 
-from ckan.lib.base import BaseController, render, abort, redirect
+from ckan.lib.base import BaseController, render, abort
 import ckan.lib.helpers as h
 import ckan.model as model
 import ckan.logic as logic
@@ -90,7 +90,7 @@ class IssueController(BaseController):
                 h.flash_success(_('Your issue has been registered, '
                                   'thank you for the feedback'))
 
-                redirect(h.url_for(
+                p.toolkit.redirect_to(h.url_for(
                     'issues_show',
                     package_id=c.pkg['name'],
                     id=issue_dict['id']
@@ -124,7 +124,7 @@ class IssueController(BaseController):
             data_dict = dict(request.params)
             data_dict['id'] = id
             data_dict['dataset_id'] = package_id
-            
+
             resource = model.Resource.get(resource_id) if resource_id else None
             if resource:
                 data_dict['resource_id'] = resource.id
@@ -171,7 +171,7 @@ class IssueController(BaseController):
         comment = request.POST.get('comment')
         if not comment or comment.strip() == '':
             h.flash_error(_('Comment cannot be empty'))
-            redirect(next_url)
+            p.toolkit.redirect_to(next_url)
             return
 
         # do this first because will error here if not allowed and do not want
@@ -197,7 +197,7 @@ class IssueController(BaseController):
             }
         logic.get_action('issue_comment_create')(self.context, data_dict)
 
-        redirect(next_url)
+        p.toolkit.redirect_to(next_url)
 
     def home(self, package_id):
         """
@@ -214,7 +214,7 @@ class IssueController(BaseController):
     def delete(self, dataset_id, issue_id):
         dataset = self._before(dataset_id)
         if 'cancel' in request.params:
-            h.redirect_to('issues_show', package_id=dataset_id, id=issue_id)
+            p.toolkit.redirect_to('issues_show', package_id=dataset_id, id=issue_id)
 
         if request.method == 'POST':
             try:
@@ -226,7 +226,7 @@ class IssueController(BaseController):
 
             h.flash_notice(_('Issue {0} has been deleted.'.format(issue_id)))
 
-            h.redirect_to('issues_home', package_id=dataset_id)
+            p.toolkit.redirect_to('issues_home', package_id=dataset_id)
         else:
             return render('issues/confirm_delete.html',
                           extra_vars={
@@ -275,7 +275,7 @@ class IssueController(BaseController):
                     data_dict={'issue_id': issue_id, 'dataset_id': dataset_id}
                 )
                 h.flash_success(_('Issue reported as spam'))
-                h.redirect_to('issues_show', package_id=dataset_id,
+                p.toolkit.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.ValidationError, e:
                 toolkit.abort(404)
@@ -293,7 +293,7 @@ class IssueController(BaseController):
                                'dataset_id': dataset_id}
                 )
                 h.flash_success(_('Comment reported as spam'))
-                h.redirect_to('issues_show', package_id=dataset_id,
+                p.toolkit.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.ValidationError, e:
                 toolkit.abort(404)
@@ -306,7 +306,7 @@ class IssueController(BaseController):
                     data_dict={'issue_id': issue_id, 'dataset_id': dataset_id}
                 )
                 h.flash_success(_('Issue unflagged as spam'))
-                h.redirect_to('issues_show', package_id=dataset_id,
+                p.toolkit.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.NotAuthorized:
                 msg = _('You must be logged in to reset spam counters'.format(
@@ -324,7 +324,7 @@ class IssueController(BaseController):
                                'dataset_id': dataset_id}
                 )
                 h.flash_success(_('Comment unflagged as spam'))
-                h.redirect_to('issues_show', package_id=dataset_id,
+                p.toolkit.redirect_to('issues_show', package_id=dataset_id,
                               id=issue_id)
             except toolkit.NotAuthorized:
                 msg = _('You must be logged in to reset spam counters'.format(
