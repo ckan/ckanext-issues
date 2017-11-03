@@ -30,8 +30,8 @@ def notify_delete(context,issue):
 
 def notify(context,issue,email_template):
 
-  notify_admin = h.asbool(config.get("ckanext.issues.notify_admin", False))
-  notify_owner = h.asbool(config.get("ckanext.issues.notify_owner", False))
+  notify_admin = toolkit.asbool(config.get("ckanext.issues.notify_admin", False))
+  notify_owner = toolkit.asbool(config.get("ckanext.issues.notify_owner", False))
   if not notify_admin and not notify_owner:
       return
 
