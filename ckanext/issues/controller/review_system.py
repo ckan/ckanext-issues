@@ -12,7 +12,7 @@ log = getLogger(__name__)
 
 def issue_created_in_dataset(data_dict):
 
-    review_system = h.asbool(config.get("ckanext.issues.review_system", False))
+    review_system = toolkit.asbool(config.get("ckanext.issues.review_system", False))
 
     log.debug("review_system issue_created: %s %s",data_dict,review_system)
 
@@ -32,7 +32,7 @@ def issue_created_in_dataset(data_dict):
 
 def issue_deleted_from_dataset(data_dict):
 
-    review_system = h.asbool(config.get("ckanext.issues.review_system", False))
+    review_system = toolkit.asbool(config.get("ckanext.issues.review_system", False))
 
     log.debug("review_system issue_deleted: %s %s",data_dict,review_system)
 

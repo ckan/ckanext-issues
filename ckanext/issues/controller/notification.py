@@ -4,6 +4,7 @@ from pylons import config
 from logging import getLogger
 import ckan.model as model
 import ckan.lib.helpers as h
+import ckan.plugins.toolkit as toolkit
 from ckan.lib.base import render
 from ckan.logic import action
 from genshi.template.text import NewTextTemplate
