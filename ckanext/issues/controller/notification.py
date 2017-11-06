@@ -73,7 +73,7 @@ def notify(context,issue,email_template):
           admin_email = admin_user.email
 
           if admin_email != contact_email:
-            email_msg = render(email_template,extra_vars=extra_vars,loader_class=NewTextTemplate)
+            email_msg = render(email_template,extra_vars=extra_vars)
             send_email(admin_name,admin_email,email_msg)
 
 def send_email(contact_name,contact_email,email_msg):
