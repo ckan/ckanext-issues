@@ -7,7 +7,6 @@ import ckan.lib.helpers as h
 import ckan.plugins.toolkit as toolkit
 from ckan.lib.base import render
 from ckan.logic import action
-from genshi.template.text import NewTextTemplate
 from ckan.lib.mailer import mail_recipient
 import threading
 
@@ -56,7 +55,7 @@ def notify(context,issue,email_template):
     contact_name = dataset.author or dataset.maintainer
     contact_email =  dataset.author_email or dataset.maintainer_email
 
-    email_msg = render(email_template,extra_vars=extra_vars,loader_class=NewTextTemplate)
+    email_msg = render(email_template,extra_vars=extra_vars)
     send_email(contact_name,contact_email,email_msg)
 
   if notify_admin:
