@@ -4,9 +4,9 @@ from pylons import config
 from logging import getLogger
 import ckan.model as model
 import ckan.lib.helpers as h
+import ckan.plugins.toolkit as toolkit
 from ckan.lib.base import render
 from ckan.logic import action
-from genshi.template.text import NewTextTemplate
 from ckan.lib.mailer import mail_recipient
 import threading
 
@@ -29,8 +29,8 @@ def notify_delete(context,issue):
 
 def notify(context,issue,email_template):
 
-  notify_admin = h.asbool(config.get("ckanext.issues.notify_admin", False))
-  notify_owner = h.asbool(config.get("ckanext.issues.notify_owner", False))
+  notify_admin = toolkit.asbool(config.get("ckanext.issues.notify_admin", False))
+  notify_owner = toolkit.asbool(config.get("ckanext.issues.notify_owner", False))
   if not notify_admin and not notify_owner:
       return
 
@@ -55,7 +55,7 @@ def notify(context,issue,email_template):
     contact_name = dataset.author or dataset.maintainer
     contact_email =  dataset.author_email or dataset.maintainer_email
 
-    email_msg = render(email_template,extra_vars=extra_vars,loader_class=NewTextTemplate)
+    email_msg = render(email_template,extra_vars=extra_vars)
     send_email(contact_name,contact_email,email_msg)
 
   if notify_admin:
@@ -73,7 +73,7 @@ def notify(context,issue,email_template):
           admin_email = admin_user.email
 
           if admin_email != contact_email:
-            email_msg = render(email_template,extra_vars=extra_vars,loader_class=NewTextTemplate)
+            email_msg = render(email_template,extra_vars=extra_vars)
             send_email(admin_name,admin_email,email_msg)
 
 def send_email(contact_name,contact_email,email_msg):
