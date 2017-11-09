@@ -9,6 +9,7 @@ from ckan.lib.base import render
 from ckan.logic import action
 from ckan.lib.mailer import mail_recipient
 import threading
+from distutils.util import strtobool
 
 log = getLogger(__name__)
 
@@ -29,8 +30,8 @@ def notify_delete(context,issue):
 
 def notify(context,issue,email_template):
 
-  notify_admin = toolkit.asbool(config.get("ckanext.issues.notify_admin", False))
-  notify_owner = toolkit.asbool(config.get("ckanext.issues.notify_owner", False))
+  notify_admin = strtobool(config.get("ckanext.issues.notify_admin", False))
+  notify_owner = strtobooll(config.get("ckanext.issues.notify_owner", False))
   if not notify_admin and not notify_owner:
       return
 
