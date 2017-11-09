@@ -6,7 +6,6 @@ from ckan.plugins import toolkit
 from ckan.lib import helpers
 from ckanext.issues.model import IssueFilter
 from ckanext.issues import model as issuemodel
-from distutils.util import strtobool
 
 ISSUES_PER_PAGE = (15, 30, 50)
 
@@ -99,9 +98,9 @@ def issues_enabled(dataset):
         if extras is not None:
             for extra in extras:
                 if extra.get('key') == 'issues_enabled':
-                    return strtobool(extra.get('value'))
+                    return toolkit.asbool(extra.get('value'))
         else:
-            return strtobool(config.get('ckanext.issues.enabled_per_dataset_default', True))
+            return toolkit.asbool(config.get('ckanext.issues.enabled_per_dataset_default', True))
 
 
 def issues_list(dataset_ref, status=issuemodel.ISSUE_STATUS.open):
