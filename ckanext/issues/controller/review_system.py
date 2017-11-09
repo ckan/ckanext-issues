@@ -13,9 +13,10 @@ log = getLogger(__name__)
 
 def issue_created_in_dataset(data_dict):
 
-    review_system = strtobool(config.get("ckanext.issues.review_system", False))
+		log.debug("review_system issue_created: %s %s",data_dict,review_system)
 
-    log.debug("review_system issue_created: %s %s",data_dict,review_system)
+    #review_system = strtobool(config.get("ckanext.issues.review_system", False))
+		review_system = True
 
     if review_system:
         issue_count = toolkit.get_action('issue_count')(data_dict={'dataset_id':data_dict['dataset_id'],'status':issuemodel.ISSUE_STATUS.open})
@@ -33,7 +34,8 @@ def issue_created_in_dataset(data_dict):
 
 def issue_deleted_from_dataset(data_dict):
 
-    review_system = strtobool(config.get("ckanext.issues.review_system", False))
+    #review_system = strtobool(config.get("ckanext.issues.review_system", False))
+		review_system = True
 
     log.debug("review_system issue_deleted: %s %s",data_dict,review_system)
 
