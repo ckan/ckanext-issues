@@ -1,11 +1,11 @@
 
-$username ($email) has raised an issue with one of your datasets on data.opendevelopmentmekong.net:
+$username ({{email}}) has raised an issue with one of your datasets on data.opendevelopmentmekong.net:
 
-Dataset title: '$title'
-Issue title: "$issue.title"
-Issue description: "$issue.description"
+Dataset title: '{{title}}'
+Issue title: "{{issue.title}}"
+Issue description: "{{issue.description}}"
 
-In order to resolve this issue, please visit $site_url and click the 'resolve' button once the issue has been corrected.
+In order to resolve this issue, please visit {{site_url}} and click the 'resolve' button once the issue has been corrected.
 
 Thank you
 
