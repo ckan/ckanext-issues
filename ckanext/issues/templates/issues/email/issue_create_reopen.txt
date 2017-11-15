@@ -5,7 +5,7 @@ Dataset title: '{{title}}'
 Issue title: "{{issue.title}}"
 Issue description: "{{issue.description}}"
 
-In order to resolve this issue, please visit $site_url and click the 'resolve' button once the issue has been corrected.
+In order to resolve this issue, please visit {{site_url}} and click the 'resolve' button once the issue has been corrected.
 
 Thank you
 

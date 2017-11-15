@@ -5,7 +5,7 @@ Dataset title: '{{title}}'
 Issue title: "{{issue.title}}"
 Issue description: "{{issue.description}}"
 
-If you consider this Issue should not be closed, please visit $site_url and re-open it, speciying your reasons in the comment.
+If you consider this Issue should not be closed, please visit {{site_url}} and re-open it, speciying your reasons in the comment.
 
 Thank you
 
