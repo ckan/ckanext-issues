@@ -1,4 +1,5 @@
 {% if type == 'issue' %}
+  {% set count=count if count else 0 %}
   {% set text_query = ungettext('{number} issue found for "{query}"', '{number} issues found for "{query}"', count) %}
   {% set text_query_none = _('No issues found for "{query}"') %}
   {% set text_no_query = ungettext('{number} issue found', '{number} issues found', count) %}
