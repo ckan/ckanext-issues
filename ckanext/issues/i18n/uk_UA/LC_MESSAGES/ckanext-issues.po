@@ -22,7 +22,7 @@ msgstr ""
 
 #: ckanext/issues/auth.py:20
 msgid "User {0} not authorized for action on issue {1}"
-msgstr "Користувач {0} не авторизований для роботи"
+msgstr "Користувач {0} не авторизований для роботи зі скаргами {1}"
 
 
 
@@ -92,7 +92,7 @@ msgstr "Ваша скарга була зареєстрована, дякуєм�
 #: ckanext/issues/controller/controller.py:131
 #: ckanext/issues/controller/controller.py:134
 msgid "Issue not found: {0}"
-msgstr "Скарга не знайдена : {0}"
+msgstr "Скарга не знайдена: {0}"
 
 
 
@@ -195,7 +195,7 @@ msgstr "Скарга була направлена до адміністрато
 
 #: ckanext/issues/controller/controller.py:358
 msgid "You must be logged in to report comments"
-msgstr "Ви повинні бути авторизовані, щоб поскаржитися на коментар"
+msgstr "Ви повинні бути авторизовані, щоб поскаржитися на коментарі"
 
 
 
@@ -351,7 +351,7 @@ msgstr "Нова скарга"
 #: ckanext/issues/templates/issues/add.html:16
 #: ckanext/issues/templates/issues/edit.html:14
 msgid "The form contains invalid entries:"
-msgstr "Форма містить неправильні знаки"
+msgstr "Форма містить неправильні знаки:"
 
 #: ckanext/issues/templates/issues/add.html:27
 #: ckanext/issues/templates/issues/edit.html:25
@@ -393,7 +393,7 @@ msgstr "Що таке скарги?"
 
 #: ckanext/issues/templates/issues/base_form_page.html:16
 msgid " <p>Issues are ... .</p> "
-msgstr " <p>Скари – це ... .</p> "
+msgstr " <p>Скарги – це ... .</p> "
 
 #: ckanext/issues/templates/issues/comment_moderation.html:8
 #: ckanext/issues/templates/issues/moderation.html:8
