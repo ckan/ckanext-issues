@@ -404,7 +404,7 @@ msgstr "Подані скарги"
 #: ckanext/issues/templates/issues/moderation.html:28
 #: ckanext/issues/templates/issues/organization_issues.html:11
 msgid "Organizations"
-msgstr "Організації"
+msgstr "Розпорядники"
 
 #: ckanext/issues/templates/issues/comment_moderation.html:68
 #: ckanext/issues/templates/issues/moderation.html:69
