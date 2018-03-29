@@ -50,6 +50,10 @@
   border-bottom: 1px solid #d5deed;
 }
 
+.issue-comment-wrapper:last-of-type {
+  border-bottom: none;
+}
+
 .issue-comment {
   position: relative;
 }
@@ -141,6 +145,34 @@
 
 .issue-abuse {
   color: #b0b0b0;
+}
+
+.issue-comment-footer {
+  margin-top: 10px;
+  font-size: 80%;
+}
+
+.issue-comment-footer .issue-comment-action {
+  margin-bottom: 5px;
+  margin-top: 0px;
+  padding-left: 0px;
+  display: inline-block;
+}
+
+.issue-comment-footer .issue-comment-action .link-button {
+  border: none;
+  padding: 0px;
+  margin-right: 10px;
+  color: #2d5ca6;
+}
+
+.issue-comment-footer .issue-comment-action .link-button:hover {
+  color: #23527c;
+}
+
+.issue-comment-footer .issue-comment-label {
+  margin-bottom: 5px;
+  float: none;
 }
 
 /*****************************************
