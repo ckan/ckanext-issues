@@ -11,11 +11,9 @@
 
 {% block secondary_content %}
   <section class="module module-narrow">
-    <h2 class="module-heading"><i class="icon-info-sign"></i> {{ _('What are issues?') }}</h2>
+    <h2 class="module-heading">{{ _('What are issues?') }}</h2>
     <div class="module-content">
-      {% trans %}
-        <p>Issues are ... .</p>
-      {% endtrans %}
+        <p>{% trans %}Issues are ... .{% endtrans %}</p>
     </div>
   </section>
 {% endblock %}
