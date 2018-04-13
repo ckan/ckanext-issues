@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the ckanext-issues project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-issues 0.3\n"

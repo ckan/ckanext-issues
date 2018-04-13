@@ -372,7 +372,7 @@ msgstr "Додати коментар"
 #: ckanext/issues/templates/issues/confirm_delete.html:14
 #: ckanext/issues/templates/issues/edit.html:34
 msgid "Cancel"
-msgstr "Видалити"
+msgstr "Скасувати"
 
 #: ckanext/issues/templates/issues/add.html:35
 msgid "Create"
