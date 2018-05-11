@@ -6,6 +6,10 @@
   margin-bottom: 35px;
 }
 
+h1.page-heading .issues-actions .btn {
+  font-size: 15px;
+}
+
 .issue-header h1.page-heading {
   word-wrap: break-word;
   margin-bottom: 0;
