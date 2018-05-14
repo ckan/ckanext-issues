@@ -10,7 +10,17 @@ from ckan.plugins import implements, toolkit
 # Imports are done in methods to speed up paster.
 # Please don't move back up to here.
 
-class IssuesPlugin(p.SingletonPlugin):
+if toolkit.check_ckan_version(min_version='2.5'):
+    from ckan.lib.plugins import DefaultTranslation
+
+    class IssuesPluginBase(p.SingletonPlugin, DefaultTranslation):
+        p.implements(p.ITranslation, inherit=True)
+else:
+    class IssuesPluginBase(p.SingletonPlugin):
+        pass
+
+
+class IssuesPlugin(IssuesPluginBase):
     """
     CKAN Issues Extension
     """
