@@ -3,11 +3,12 @@
 # This file is distributed under the same license as the ckanext-issues project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-issues 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-03-20 22:27+0000\n"
+"POT-Creation-Date: 2018-05-16 16:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -297,6 +298,10 @@ msgstr ""
 msgid "All Issues"
 msgstr ""
 
+#: ckanext/issues/templates/issues/all_issues.html:24
+msgid "There are currently no issues"
+msgstr ""
+
 #: ckanext/issues/templates/issues/base.html:9
 msgid "Datasets"
 msgstr ""
@@ -306,7 +311,7 @@ msgid "What are issues?"
 msgstr ""
 
 #: ckanext/issues/templates/issues/base_form_page.html:16
-msgid " <p>Issues are ... .</p> "
+msgid "Issues are the system for getting feedback about datasets."
 msgstr ""
 
 #: ckanext/issues/templates/issues/comment_moderation.html:8
@@ -325,10 +330,26 @@ msgstr ""
 msgid "Not abuse"
 msgstr ""
 
-#: ckanext/issues/templates/issues/common.html:30
+#: ckanext/issues/templates/issues/common.html:18
 #: ckanext/issues/templates/issues/organization_issues.html:76
 #, python-format
 msgid "%s comments"
+msgstr ""
+
+#: ckanext/issues/templates/issues/common.html:25
+msgid "Spam/Abuse - hidden from normal users"
+msgstr ""
+
+#: ckanext/issues/templates/issues/common.html:29
+msgid "Reported by you to admins"
+msgstr ""
+
+#: ckanext/issues/templates/issues/common.html:38
+msgid "Status"
+msgstr ""
+
+#: ckanext/issues/templates/issues/common.html:52
+msgid "Visibility"
 msgstr ""
 
 #: ckanext/issues/templates/issues/confirm_delete.html:3
@@ -353,15 +374,7 @@ msgstr ""
 msgid "Search issues..."
 msgstr ""
 
-#: ckanext/issues/templates/issues/dataset.html:28
-#: ckanext/issues/templates/issues/organization_issues.html:29
-#: ckanext/issues/templates/snippets/search_result_text.html:5
-msgid "{number} issue found"
-msgid_plural "{number} issues found"
-msgstr[0] ""
-msgstr[1] ""
-
-#: ckanext/issues/templates/issues/dataset.html:38
+#: ckanext/issues/templates/issues/dataset.html:35
 msgid "No issues"
 msgstr ""
 
@@ -374,55 +387,126 @@ msgstr ""
 msgid "Update"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:125
+#: ckanext/issues/templates/issues/organization_issues.html:29
+#: ckanext/issues/templates/snippets/search_result_text.html:5
+msgid "{number} issue found"
+msgid_plural "{number} issues found"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ckanext/issues/templates/issues/show.html:76
+msgid "Owner"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:81
+msgid "commented"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:100
+msgid "Report abuse"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:111
+msgid "You have reported this as abuse, cancel the report"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:112
+#: ckanext/issues/templates/issues/show.html:128
+msgid "Flag"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:127
+msgid "Mark as spam/abuse"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:140
+msgid "Mark as NOT spam/abuse"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:141
 msgid "Not spam/abuse"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:174
+#: ckanext/issues/templates/issues/show.html:149
+msgid "user reports this is spam/abuse"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:154
+msgid "Hidden from normal users"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:159
+msgid "Moderated"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:178
+msgid "opened this issue"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:179
 msgid "{number} comment"
 msgid_plural "{number} comments"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ckanext/issues/templates/issues/show.html:208
+#: ckanext/issues/templates/issues/show.html:204
+msgid "Leave a comment"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:207
+msgid "You can use Markdown formatting here"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:213
 msgid "Are you sure you want to delete this issue?"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:209
+#: ckanext/issues/templates/issues/show.html:214
 msgid "Delete"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:214
+#: ckanext/issues/templates/issues/show.html:219
 msgid "Close"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:218
+#: ckanext/issues/templates/issues/show.html:223
 msgid "Re-open"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:224
+#: ckanext/issues/templates/issues/show.html:229
 msgid "Comment"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:231
+#: ckanext/issues/templates/issues/show.html:236
 msgid "Login to comment"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:256
+#: ckanext/issues/templates/issues/show.html:247
+msgid "All issues of dataset"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:247
+msgid "All issues of this dataset"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:255
+msgid "Assignee"
+msgstr ""
+
+#: ckanext/issues/templates/issues/show.html:262
 msgid "This issue has been assigned to an administrator for the publisher"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:258
+#: ckanext/issues/templates/issues/show.html:264
 msgid "No one"
 msgstr ""
 
-#: ckanext/issues/templates/issues/show.html:279
-msgid "Assign"
+#: ckanext/issues/templates/issues/show.html:270
+msgid "Change Assignee"
 msgstr ""
 
-#: ckanext/issues/templates/issues/email/new_comment.html:4
-#: ckanext/issues/templates/issues/email/new_issue.html:4
-msgid "The dataset is: "
+#: ckanext/issues/templates/issues/show.html:280
+msgid "Assign"
 msgstr ""
 
 #: ckanext/issues/templates/issues/email/new_issue.html:2
@@ -433,16 +517,40 @@ msgstr ""
 msgid "a user has raised an issue with one of the datasets from organization"
 msgstr ""
 
-#: ckanext/issues/templates/issues/email/new_issue.html:5
+#: ckanext/issues/templates/issues/email/new_issue.html:4
+msgid "The dataset is: "
+msgstr ""
+
+#: ckanext/issues/templates/issues/email/new_issue.html:6
 msgid "The issue is:"
 msgstr ""
 
-#: ckanext/issues/templates/issues/email/new_issue.html:10
+#: ckanext/issues/templates/issues/email/new_issue.html:11
 msgid "Please correct the problem or add an initial comment about the issue at: "
 msgstr ""
 
-#: ckanext/issues/templates/issues/email/new_issue.html:12
+#: ckanext/issues/templates/issues/email/new_issue.html:13
 msgid "Thank you,"
+msgstr ""
+
+#: ckanext/issues/templates/issues/email/new_issue.html:15
+msgid "The"
+msgstr ""
+
+#: ckanext/issues/templates/issues/email/new_issue.html:15
+msgid "team"
+msgstr ""
+
+#: ckanext/issues/templates/issues/email/new_issue.html:19
+msgid "Issue:"
+msgstr ""
+
+#: ckanext/issues/templates/issues/email/new_issue.html:20
+msgid "Dataset:"
+msgstr ""
+
+#: ckanext/issues/templates/issues/email/new_issue.html:21
+msgid "User:"
 msgstr ""
 
 #: ckanext/issues/templates/snippets/search_result_text.html:3
