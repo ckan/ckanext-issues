@@ -1,19 +1,19 @@
 
-<p>{% trans %}A user {{ user.fullname }} has added a comment to one of your issues on {{ site_title }}.{% endtrans %}</p>
+{% trans %}A user {{ user.fullname }} has added a comment to one of your issues on {{ site_title }}.{% endtrans %}
 
-<p>{% trans %}The dataset is{% endtrans %}: {{ dataset.title }}<br>
-{% trans %}The issue is{% endtrans %}: {{ issue_subject }}<br>
-{% trans %}The comment is{% endtrans %}:<br>
+{% trans %}The dataset is{% endtrans %}: {{ dataset.title }}
+{% trans %}The issue is{% endtrans %}: {{ issue_subject }}
+{% trans %}The comment is{% endtrans %}:
 > {{ comment.comment|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
-</p>
-<p>{% trans %}In order to respond to the comment, please see the issue at{% endtrans %}: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. {% trans %}Once the issue has been resolved, click 'Close issue'.{% endtrans %}</p>
 
-<p>{% trans %}Thank you{% endtrans %}</p>
+{% trans %}In order to respond to the comment, please see the issue at{% endtrans %}: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. {% trans %}Once the issue has been resolved, click 'Close issue'.{% endtrans %}
 
-<p>{% trans %}The {{ site_title }} team{% endtrans %}</p>
+{% trans %}Thank you{% endtrans %}
 
-<p>--</p>
+{% trans %}The {{ site_title }} team{% endtrans %}
 
-<p>{% trans %}Issue{% endtrans %}: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}</p>
-<p>{% trans %}Dataset{% endtrans %}: {{ h.url_for('dataset_read', id=dataset.name, qualified=True) }}</p>
+--
+
+{% trans %}Issue{% endtrans %}: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}
+{% trans %}Dataset{% endtrans %}: {{ h.url_for('dataset_read', id=dataset.name, qualified=True) }}
 

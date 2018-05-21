@@ -1,22 +1,22 @@
 
-<p>{% trans %}On{% endtrans %} {{ site_title }} {% trans %}a user has raised an issue with one of the datasets from organization{% endtrans %} '{{ recipient.organization_title }}', for which you are an {{ recipient.capacity }}.' for which you are an {{ capacity }}.</p>
+{% trans %}On{% endtrans %} {{ site_title }} {% trans %}a user has raised an issue with one of the datasets from organization{% endtrans %} '{{ recipient.organization_title }}', for which you are an {{ recipient.capacity }}.' for which you are an {{ capacity }}.
 
-<p>{% trans %}The dataset is: {% endtrans %}{{ dataset.title }}</p>
+{% trans %}The dataset is: {% endtrans %}{{ dataset.title }}
 
-<p>{% trans %}The issue is:{% endtrans %}
+{% trans %}The issue is:{% endtrans %}
 
 > {{ issue_subject|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
 > {{ issue.description|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
-</p>
-<p>{% trans %}Please correct the problem or add an initial comment about the issue at: {% endtrans %}{{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. Once the issue has been resolved, click 'Close issue'.</p>
 
-<p>{% trans %}Thank you,{% endtrans %}</p>
+{% trans %}Please correct the problem or add an initial comment about the issue at: {% endtrans %}{{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. Once the issue has been resolved, click 'Close issue'.
 
-<p>{% trans %}The{% endtrans %} {{ site_title }} {% trans %}team{% endtrans %}</p>
+{% trans %}Thank you,{% endtrans %}
 
-<p>--</p>
+{% trans %}The{% endtrans %} {{ site_title }} {% trans %}team{% endtrans %}
 
-<p>{% trans %}Issue:{% endtrans %} {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}
+--
+
+{% trans %}Issue:{% endtrans %} {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}
 {% trans %}Dataset:{% endtrans %} {{ h.url_for('dataset_read', id=dataset.name, qualified=True) }}
 {% trans %}User:{% endtrans %} {{ user.fullname or user.name }}
-</p>
+
