@@ -1,19 +1,9 @@
 {% macro issue_item(issue, pkg, current_user) -%}
       <li class="list-group-item">
         <span class="list-group-item-number">#{{issue.number}}</span>
-        {% set reported_by_current_user = h.issues_user_has_reported_issue(current_user, issue.abuse_reports) %}
-        {% if issue.visibility == 'hidden' %}
-          <div class="issue-comment-label">
-            Spam/Abuse - hidden from normal users
-          </div>
-        {% elif reported_by_current_user %}
-          <div class="issue-comment-label">
-            <i class="icon-flag"></i>Reported by you to admins
-          </div>
-        {% endif%}
         <h4 class="list-group-item-name">
           {% set issue_icon = 'abuse' if issue.visibility == 'hidden' else issue.status %}
-          <span class="{{ issue_icon }} icon" title="{{issue.status}} issue"><i class="icon-exclamation-sign"></i></span>
+          <span class="{{ issue_icon }} icon" title="{{issue.status}} issue"><i class="fa fa-exclamation-circle" aria-hidden="true"></i></span>
           <a href="{{ h.url_for('issues_show', dataset_id=pkg.id, issue_number=issue.number) }}" {% if issue.visibility == 'hidden'%} class="issue-abuse"{% endif%}>
             {{issue.title}}
           </a>
@@ -21,24 +11,31 @@
         <ul class="list-group-item-meta">
           <li>Opened by <a href="{{ h.url_for('user_datasets', id=issue.user) }}">{{issue.user}}</a></li>
           <li>
-            <i class="icon-clock"></i>
             <span class="timeago" title="{{h.render_datetime(issue.created)}}"> updated {{ h.time_ago_from_timestamp(issue.created) }}</span>
           </li>
           <li>
-            <i class="icon-comments"></i>
             <a href="{{issue.ckan_url}}">
               {{ _('%s comments') % (issue.comment_count) }}
             </a>
           </li>
         </ul>
+        {% set reported_by_current_user = h.issues_user_has_reported_issue(current_user, issue.abuse_reports) %}
+        {% if issue.visibility == 'hidden' %}
+          <div class="issue-comment-label">
+            {% trans %}Spam/Abuse - hidden from normal users{% endtrans %}
+          </div>
+        {% elif reported_by_current_user %}
+          <div class="issue-comment-label">
+            {% trans %}Reported by you to admins{% endtrans %}
+          </div>
+        {% endif%}
       </li>
 {%- endmacro %}
 
 {% macro search_options_sidebar(user_can_change_visibility, url_params) -%}
   <div class="module module-narrow module-shallow">
     <h2 class="module-heading">
-        <i class="icon-medium icon-filter"></i>
-        Status
+        {% trans %}Status{% endtrans %}
     </h2>
     <ul class="unstyled nav nav-simple">
         {% for valid_status in ['open', 'closed'] %}
@@ -52,8 +49,7 @@
     </ul>
     {% if user_can_change_visibility %}
     <h2 class="module-heading">
-        <i class="icon-medium icon-filter"></i>
-        Visibility
+        {% trans %}Visibility{% endtrans %}
     </h2>
     <ul class="unstyled nav nav-simple nav-facet">
         {% for valid_visibility in ['visible', 'hidden'] %}

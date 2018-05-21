@@ -469,7 +469,7 @@ issue_category_table = Table(
     Column('name', types.Unicode(ISSUE_CATEGORY_NAME_MAX_LENGTH),
            nullable=False, unique=True),
     Column('description', types.Unicode, nullable=False, unique=False),
-    Column('created', types.DateTime, default=datetime.now,
+    Column('created', types.DateTime, default=datetime.utcnow,
            nullable=False))
 
 issue_table = Table(
@@ -486,7 +486,7 @@ issue_table = Table(
     Column('status', types.String(15), default=ISSUE_STATUS.open,
            nullable=False),
     Column('resolved', types.DateTime),
-    Column('created', types.DateTime, default=datetime.now,
+    Column('created', types.DateTime, default=datetime.utcnow,
            nullable=False),
     Column('visibility', types.Unicode, default=u'visible'),
     Column('abuse_status',
@@ -505,7 +505,7 @@ issue_comment_table = Table(
     Column('issue_id', types.Integer,
            ForeignKey('issue.id', onupdate='CASCADE', ondelete='CASCADE'),
            nullable=False, index=True),
-    Column('created', types.DateTime, default=datetime.now,
+    Column('created', types.DateTime, default=datetime.utcnow,
            nullable=False),
     Column('visibility', types.Unicode, default=u'visible'),
     Column('abuse_status',

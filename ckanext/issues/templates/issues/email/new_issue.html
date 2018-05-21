@@ -1,19 +1,22 @@
-On {{ site_title }} a user has raised an issue with one of the datasets from organization '{{ recipient.organization_title }}', for which you are an {{ recipient.capacity }}.' for which you are an {{ capacity }}.
 
-The dataset is: {{ dataset.title }}
-The issue is:
+{% trans %}On{% endtrans %} {{ site_title }} {% trans %}a user has raised an issue with one of the datasets from organization{% endtrans %} '{{ recipient.organization_title }}', for which you are an {{ recipient.capacity }}.' for which you are an {{ capacity }}.
+
+{% trans %}The dataset is: {% endtrans %}{{ dataset.title }}
+
+{% trans %}The issue is:{% endtrans %}
 
 > {{ issue_subject|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
 > {{ issue.description|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
 
-Please correct the problem or add an initial comment about the issue at: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. Once the issue has been resolved, click 'Close issue'.
+{% trans %}Please correct the problem or add an initial comment about the issue at: {% endtrans %}{{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. Once the issue has been resolved, click 'Close issue'.
 
-Thank you,
+{% trans %}Thank you,{% endtrans %}
 
-The {{ site_title }} team
+{% trans %}The{% endtrans %} {{ site_title }} {% trans %}team{% endtrans %}
 
 --
 
-Issue: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}
-Dataset: {{ h.url_for('dataset_read', id=dataset.name, qualified=True) }}
-User: {{ user.fullname or user.name }}
+{% trans %}Issue:{% endtrans %} {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}
+{% trans %}Dataset:{% endtrans %} {{ h.url_for('dataset_read', id=dataset.name, qualified=True) }}
+{% trans %}User:{% endtrans %} {{ user.fullname or user.name }}
+
