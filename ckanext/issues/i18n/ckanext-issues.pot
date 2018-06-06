@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-issues 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-05-16 16:14+0000\n"
+"POT-Creation-Date: 2018-06-06 13:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.3.4\n"
+"Generated-By: Babel 2.5.3\n"
 
 #: ckanext/issues/auth.py:20
 msgid "User {0} not authorized for action on issue {1}"
@@ -56,6 +56,14 @@ msgstr ""
 
 #: ckanext/issues/controller/controller.py:86
 msgid "Not authorized to add a new issue"
+msgstr ""
+
+#: ckanext/issues/controller/controller.py:106
+msgid "title"
+msgstr ""
+
+#: ckanext/issues/controller/controller.py:106
+msgid "Please enter a title"
 msgstr ""
 
 #: ckanext/issues/controller/controller.py:113
@@ -330,6 +338,14 @@ msgstr ""
 msgid "Not abuse"
 msgstr ""
 
+#: ckanext/issues/templates/issues/common.html:12
+msgid "Opened by"
+msgstr ""
+
+#: ckanext/issues/templates/issues/common.html:14
+msgid "updated"
+msgstr ""
+
 #: ckanext/issues/templates/issues/common.html:18
 #: ckanext/issues/templates/issues/organization_issues.html:76
 #, python-format
@@ -527,6 +543,10 @@ msgstr ""
 
 #: ckanext/issues/templates/issues/email/new_issue.html:11
 msgid "Please correct the problem or add an initial comment about the issue at: "
+msgstr ""
+
+#: ckanext/issues/templates/issues/email/new_issue.html:11
+msgid "Once the issue has been resolved, click 'Close issue'."
 msgstr ""
 
 #: ckanext/issues/templates/issues/email/new_issue.html:13

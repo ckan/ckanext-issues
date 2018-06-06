@@ -9,9 +9,9 @@
           </a>
         </h4>
         <ul class="list-group-item-meta">
-          <li>Opened by <a href="{{ h.url_for('user_datasets', id=issue.user) }}">{{issue.user}}</a></li>
+          <li>{% trans %}Opened by{% endtrans %} <a href="{{ h.url_for('user_datasets', id=issue.user) }}">{{issue.user}}</a></li>
           <li>
-            <span class="timeago" title="{{h.render_datetime(issue.created)}}"> updated {{ h.time_ago_from_timestamp(issue.created) }}</span>
+            <span class="timeago" title="{{h.render_datetime(issue.created)}}"> {% trans %}updated{% endtrans %} {{ h.time_ago_from_timestamp(issue.created) }}</span>
           </li>
           <li>
             <a href="{{issue.ckan_url}}">

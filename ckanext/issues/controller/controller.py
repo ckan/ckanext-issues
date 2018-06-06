@@ -103,7 +103,7 @@ class IssueController(BaseController):
                 })
 
             if not data_dict['title']:
-                c.error_summary['title'] = ["Please enter a title"]
+                c.error_summary[_('title')] = [_("Please enter a title")]
             c.errors = c.error_summary
 
             if not c.error_summary:  # save and redirect

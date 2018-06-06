@@ -8,7 +8,7 @@
 > {{ issue_subject|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
 > {{ issue.description|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
 
-{% trans %}Please correct the problem or add an initial comment about the issue at: {% endtrans %}{{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. Once the issue has been resolved, click 'Close issue'.
+{% trans %}Please correct the problem or add an initial comment about the issue at: {% endtrans %}{{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. {% trans %}Once the issue has been resolved, click 'Close issue'.{% endtrans %}
 
 {% trans %}Thank you,{% endtrans %}
 
