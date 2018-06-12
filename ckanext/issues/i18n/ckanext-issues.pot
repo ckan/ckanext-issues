@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-issues 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-06-12 14:06+0000\n"
+"POT-Creation-Date: 2018-06-12 16:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -116,66 +116,66 @@ msgstr ""
 msgid "Unauthorized to assign users to issue"
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:323
+#: ckanext/issues/controller/controller.py:322
 msgid "You must be logged in to report issues"
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:335
-#: ckanext/issues/controller/controller.py:381
+#: ckanext/issues/controller/controller.py:333
+#: ckanext/issues/controller/controller.py:370
 msgid "Report acknowledged."
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:338
-#: ckanext/issues/controller/controller.py:384
+#: ckanext/issues/controller/controller.py:336
+#: ckanext/issues/controller/controller.py:373
 msgid "Marked as abuse/spam."
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:339
+#: ckanext/issues/controller/controller.py:337
 msgid "Issue is visible."
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:341
+#: ckanext/issues/controller/controller.py:339
 msgid "Issue is invisible to normal users."
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:344
+#: ckanext/issues/controller/controller.py:342
 msgid "Issue reported to an administrator"
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:363
+#: ckanext/issues/controller/controller.py:358
 msgid "You must be logged in to report comments"
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:385
+#: ckanext/issues/controller/controller.py:374
 msgid "Comment is visible."
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:387
+#: ckanext/issues/controller/controller.py:376
 msgid "Comment is invisible to normal users."
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:390
+#: ckanext/issues/controller/controller.py:379
 msgid "Comment has been reported to an administrator"
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:416
+#: ckanext/issues/controller/controller.py:402
 msgid "Issue report cleared"
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:421
+#: ckanext/issues/controller/controller.py:407
 msgid "You must be logged in clear abuse reports"
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:439
+#: ckanext/issues/controller/controller.py:425
 msgid "Spam/abuse report cleared"
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:444
+#: ckanext/issues/controller/controller.py:430
 msgid "You must be logged in to clear abuse reports"
 msgstr ""
 
-#: ckanext/issues/controller/controller.py:461
-#: ckanext/issues/controller/controller.py:501
+#: ckanext/issues/controller/controller.py:447
+#: ckanext/issues/controller/controller.py:487
 msgid "Validation error: {0}"
 msgstr ""
 
@@ -212,12 +212,9 @@ msgstr ""
 msgid "No description provided"
 msgstr ""
 
-#: ckanext/issues/lib/helpers.py:96
-msgid "Least Commented"
-msgstr ""
-
-#: ckanext/issues/lib/helpers.py:205
-msgid "[{site_title} Issue] {dataset}"
+#: ckanext/issues/lib/helpers.py:202
+#, python-format
+msgid "[%s Issue] %s"
 msgstr ""
 
 #: ckanext/issues/logic/action/action.py:63
@@ -565,8 +562,13 @@ msgid "Thank you"
 msgstr ""
 
 #: ckanext/issues/templates/issues/email/new_comment.html:13
-#, python-format
-msgid "The %(site_title)s team"
+#: ckanext/issues/templates/issues/email/new_issue.html:15
+msgid "The"
+msgstr ""
+
+#: ckanext/issues/templates/issues/email/new_comment.html:13
+#: ckanext/issues/templates/issues/email/new_issue.html:15
+msgid "team"
 msgstr ""
 
 #: ckanext/issues/templates/issues/email/new_comment.html:17
@@ -595,14 +597,6 @@ msgstr ""
 
 #: ckanext/issues/templates/issues/email/new_issue.html:13
 msgid "Thank you,"
-msgstr ""
-
-#: ckanext/issues/templates/issues/email/new_issue.html:15
-msgid "The"
-msgstr ""
-
-#: ckanext/issues/templates/issues/email/new_issue.html:15
-msgid "team"
 msgstr ""
 
 #: ckanext/issues/templates/issues/email/new_issue.html:19
