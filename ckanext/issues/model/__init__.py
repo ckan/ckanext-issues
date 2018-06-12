@@ -223,7 +223,7 @@ class Issue(domain_object.DomainObject):
                 query = query.filter(model.Package.owner_org == org.id)
 
         if q:
-            search_expr = '%{0}%'.format(q)
+            search_expr = u'%{0}%'.format(q)
             query = query.filter(or_(cls.title.ilike(search_expr),
                                      cls.description.ilike(search_expr)))
 

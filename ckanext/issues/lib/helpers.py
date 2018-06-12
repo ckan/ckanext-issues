@@ -91,7 +91,7 @@ class Pagination(object):
 
 
 def get_issue_filter_types():
-    return [(f.value, k) for k, f in IssueFilter.__members__.items()]
+    return [(toolkit._(f.value), k) for k, f in IssueFilter.__members__.items()]
 
 
 def get_issues_per_page():

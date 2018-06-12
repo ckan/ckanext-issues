@@ -39,7 +39,7 @@ dataset - package object
     <div class="issue-comment-content{% if issue.visibility == 'hidden' %} issue-abuse{% endif %}">
       {{ h.render_markdown(issue.comment) }}
     </div>
-    {{ issue_or_comment_footer(issue_or_comment=issue, dataset=dataset, issue=issue, header_is_for_issue=False, can_edit_issue=can_edit_issue) }}
+    {{ issue_or_comment_footer(issue_or_comment=issue, dataset=dataset, issue=issue, header_is_for_issue=True, can_edit_issue=can_edit_issue) }}
   </div>
 </div>
 {% endmacro %}
@@ -173,7 +173,7 @@ dataset - package object
         </h1>
         <div class="issue-header-meta">
           <span class="issue-header-status {{issue.status}}">
-            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{issue.status.title()}}
+            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ _(issue.status.title()) }}
           </span>
           <a href="{{issue.user.ckan_url}}">{{issue.user.name}}</a> {% trans %}opened this issue{% endtrans %} {{issue.time_ago}} &middot;
           {{ ungettext('{number} comment', '{number} comments', comment_count).format(number=comment_count) }}

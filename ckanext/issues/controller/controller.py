@@ -295,8 +295,8 @@ class IssueController(BaseController):
 
                 if notifications:
                     subject = get_issue_subject(issue)
-                    body = toolkit._('Assigned to {user}'.format(
-                        user=assignee['display_name']))
+                    msg = toolkit._("Assigned to %s")
+                    body = msg % assignee['display_name']
 
                     user_obj = model.User.get(assignee_id)
                     try:

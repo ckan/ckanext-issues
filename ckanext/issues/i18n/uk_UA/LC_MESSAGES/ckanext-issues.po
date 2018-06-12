@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-issues 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-06-06 13:03+0000\n"
+"POT-Creation-Date: 2018-06-12 14:06+0000\n"
 "PO-Revision-Date: 2018-03-20 22:22+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: uk_UA\n"
@@ -111,73 +111,74 @@ msgid "User {0} does not exist"
 msgstr "Користувача {0} не існує"
 
 #: ckanext/issues/controller/controller.py:298
-msgid "Assigned to {user}"
-msgstr "Закріплена за {user}"
+#, python-format
+msgid "Assigned to %s"
+msgstr "Закріплена за %s"
 
 #: ckanext/issues/controller/controller.py:308
 msgid "Unauthorized to assign users to issue"
 msgstr "У вас немає прав доступу для закріплення користувачів за пропозицією"
 
-#: ckanext/issues/controller/controller.py:322
+#: ckanext/issues/controller/controller.py:323
 msgid "You must be logged in to report issues"
 msgstr "Ви повинні увійти, щоб подавати пропозиції"
 
-#: ckanext/issues/controller/controller.py:333
-#: ckanext/issues/controller/controller.py:370
+#: ckanext/issues/controller/controller.py:335
+#: ckanext/issues/controller/controller.py:381
 msgid "Report acknowledged."
 msgstr "Звіт підтверджено."
 
-#: ckanext/issues/controller/controller.py:336
-#: ckanext/issues/controller/controller.py:373
+#: ckanext/issues/controller/controller.py:338
+#: ckanext/issues/controller/controller.py:384
 msgid "Marked as abuse/spam."
 msgstr "Позначено як зловживання/спам."
 
-#: ckanext/issues/controller/controller.py:337
+#: ckanext/issues/controller/controller.py:339
 msgid "Issue is visible."
 msgstr "Пропозиція - видима."
 
-#: ckanext/issues/controller/controller.py:339
+#: ckanext/issues/controller/controller.py:341
 msgid "Issue is invisible to normal users."
 msgstr "Пропозиція - невидима для звичайних користувачів."
 
-#: ckanext/issues/controller/controller.py:342
+#: ckanext/issues/controller/controller.py:344
 msgid "Issue reported to an administrator"
 msgstr "Пропозицію надіслано адміністратору"
 
-#: ckanext/issues/controller/controller.py:358
+#: ckanext/issues/controller/controller.py:363
 msgid "You must be logged in to report comments"
 msgstr "Ви повинні зайти в систему, щоб поскаржитися на коментарі"
 
-#: ckanext/issues/controller/controller.py:374
+#: ckanext/issues/controller/controller.py:385
 msgid "Comment is visible."
 msgstr "Коментар - видимий."
 
-#: ckanext/issues/controller/controller.py:376
+#: ckanext/issues/controller/controller.py:387
 msgid "Comment is invisible to normal users."
 msgstr "Коментар - невидимий для простих користувачів."
 
-#: ckanext/issues/controller/controller.py:379
+#: ckanext/issues/controller/controller.py:390
 msgid "Comment has been reported to an administrator"
 msgstr "Коментар надіслано адміністратору"
 
-#: ckanext/issues/controller/controller.py:402
+#: ckanext/issues/controller/controller.py:416
 msgid "Issue report cleared"
 msgstr "Пропозицію розглянуто"
 
-#: ckanext/issues/controller/controller.py:407
+#: ckanext/issues/controller/controller.py:421
 msgid "You must be logged in clear abuse reports"
 msgstr "Ви повинні увійти в систему, щоб розглянути пропозицію"
 
-#: ckanext/issues/controller/controller.py:425
+#: ckanext/issues/controller/controller.py:439
 msgid "Spam/abuse report cleared"
 msgstr "Спам/пропозицію розглянуто"
 
-#: ckanext/issues/controller/controller.py:430
+#: ckanext/issues/controller/controller.py:444
 msgid "You must be logged in to clear abuse reports"
 msgstr "Ви повинні увійти в систему, щоб розглянути пропозицію"
 
-#: ckanext/issues/controller/controller.py:447
-#: ckanext/issues/controller/controller.py:487
+#: ckanext/issues/controller/controller.py:461
+#: ckanext/issues/controller/controller.py:501
 msgid "Validation error: {0}"
 msgstr "Помилка перевірки: {0}"
 
@@ -214,7 +215,11 @@ msgstr "Всі коментарі до пропозиції розглянуто
 msgid "No description provided"
 msgstr "Опису немає"
 
-#: ckanext/issues/lib/helpers.py:202
+#: ckanext/issues/lib/helpers.py:96
+msgid "Least Commented"
+msgstr "Востаннє внесеним коментарем"
+
+#: ckanext/issues/lib/helpers.py:205
 msgid "[{site_title} Issue] {dataset}"
 msgstr "[{site_title} Пропозиція] {dataset}"
 
@@ -240,6 +245,7 @@ msgid "Not found"
 msgstr "Не знайдено"
 
 #: ckanext/issues/logic/validators/validators.py:45
+#: ckanext/issues/templates/issues/email/new_comment.html:18
 msgid "Dataset"
 msgstr "Набір даних"
 
@@ -530,6 +536,48 @@ msgstr "Змінити уповноваженого"
 msgid "Assign"
 msgstr "Закріпити"
 
+#: ckanext/issues/templates/issues/email/new_comment.html:2
+msgid "A user "
+msgstr "Користувач"
+
+#: ckanext/issues/templates/issues/email/new_comment.html:2
+msgid "has added a comment to one of your issues on "
+msgstr "додав коментар до вашої пропозиції "
+
+#: ckanext/issues/templates/issues/email/new_comment.html:4
+msgid "The dataset is"
+msgstr "Набір даних: "
+
+#: ckanext/issues/templates/issues/email/new_comment.html:5
+msgid "The issue is"
+msgstr "Пропозиція: "
+
+#: ckanext/issues/templates/issues/email/new_comment.html:6
+msgid "The comment is"
+msgstr "Коментар"
+
+#: ckanext/issues/templates/issues/email/new_comment.html:9
+msgid "In order to respond to the comment, please see the issue at"
+msgstr "Для відповіді на коментар, перейдить до пропозиції"
+
+#: ckanext/issues/templates/issues/email/new_comment.html:9
+#: ckanext/issues/templates/issues/email/new_issue.html:11
+msgid "Once the issue has been resolved, click 'Close issue'."
+msgstr "Якщо пропозиція прийнята, то виберить 'Закрити'."
+
+#: ckanext/issues/templates/issues/email/new_comment.html:11
+msgid "Thank you"
+msgstr "Дякуємо,"
+
+#: ckanext/issues/templates/issues/email/new_comment.html:13
+#, python-format
+msgid "The %(site_title)s team"
+msgstr "Команда %(site_title) "
+
+#: ckanext/issues/templates/issues/email/new_comment.html:17
+msgid "Issue"
+msgstr "Пропозиція"
+
 #: ckanext/issues/templates/issues/email/new_issue.html:2
 msgid "On"
 msgstr "Увімк"
@@ -551,10 +599,6 @@ msgstr "Пропозиція: "
 #: ckanext/issues/templates/issues/email/new_issue.html:11
 msgid "Please correct the problem or add an initial comment about the issue at: "
 msgstr "Будь ласка, вирішіть проблему чи додайте перший коментар до пропозиції: "
-
-#: ckanext/issues/templates/issues/email/new_issue.html:11
-msgid "Once the issue has been resolved, click 'Close issue'."
-msgstr "Якщо пропозиція прийнята, то виберить 'Закрити'."
 
 #: ckanext/issues/templates/issues/email/new_issue.html:13
 msgid "Thank you,"
@@ -606,5 +650,21 @@ msgid "Visible"
 msgstr "Відкриті"
 
 msgid "Hidden"
-msgstr "Закриті"
+msgstr "Скриті"
+
+# Don't delete need for sorting
+msgid "Newest"
+msgstr "Датою створення (за спаданням)"
+
+msgid "Oldest"
+msgstr "Датою створення (за зростанням)"
+
+msgid "Most Commented"
+msgstr "Кількістю коментарів (за спаданням)"
+
+msgid "Most Recently Updated"
+msgstr "Кількістю оновлень (за спаданням)"
+
+msgid "Least Recently Updated"
+msgstr "Датою оновлення (за спаданням)"
 
