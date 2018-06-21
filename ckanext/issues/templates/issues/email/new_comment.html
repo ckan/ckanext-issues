@@ -1,5 +1,5 @@
 
-{% trans %}A user {% endtrans %}{{ user.fullname }} {% trans %}has added a comment to one of your issues on {% endtrans %}{{ site_title }}.
+{% trans %}A user {% endtrans %} {{ user.fullname }} {% trans %}has added a comment to one of your issues on {% endtrans %} {{ site_title }}.
 
 {% trans %}The dataset is{% endtrans %}: {{ dataset.title }}
 {% trans %}The issue is{% endtrans %}: {{ issue_subject }}
@@ -13,7 +13,4 @@
 {% trans %}The{% endtrans %} {{ site_title }} {% trans %}team{% endtrans %}
 
 --
-
-{% trans %}Issue{% endtrans %}: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}
-{% trans %}Dataset{% endtrans %}: {{ h.url_for('dataset_read', id=dataset.name, qualified=True) }}
-
+<p>{% trans %}Message sent by{% endtrans %} {{ site_title }} ({{ site_url }})</p>
