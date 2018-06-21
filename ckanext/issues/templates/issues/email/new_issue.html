@@ -1,5 +1,5 @@
 
-{% trans %}On{% endtrans %} {{ site_title }} {% trans %}a user has raised an issue with one of the datasets from organization{% endtrans %} '{{ recipient.organization_title }}', for which you are an {{ recipient.capacity }}.' for which you are an {{ capacity }}.
+{% trans %}On{% endtrans %} {{ site_title }} {% trans %} a user has raised an issue with one of the datasets from organization{% endtrans %} '{{ recipient.organization_title }}', for which you are an {{ recipient.capacity }}.' for which you are an {{ capacity }}.
 
 {% trans %}The dataset is: {% endtrans %}{{ dataset.title }}
 
@@ -16,7 +16,5 @@
 
 --
 
-{% trans %}Issue:{% endtrans %} {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}
-{% trans %}Dataset:{% endtrans %} {{ h.url_for('dataset_read', id=dataset.name, qualified=True) }}
-{% trans %}User:{% endtrans %} {{ user.fullname or user.name }}
+<p>{% trans %}Message sent by{% endtrans %} {{ site_title }} ({{ site_url }})</p>
 
