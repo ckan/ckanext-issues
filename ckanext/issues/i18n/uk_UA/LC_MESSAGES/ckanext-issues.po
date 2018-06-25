@@ -543,11 +543,11 @@ msgstr "додав коментар до вашої пропозиції "
 
 #: ckanext/issues/templates/issues/email/new_comment.html:4
 msgid "The dataset is"
-msgstr "Набір даних: "
+msgstr "Набір даних"
 
 #: ckanext/issues/templates/issues/email/new_comment.html:5
 msgid "The issue is"
-msgstr "Пропозиція: "
+msgstr "Пропозиція"
 
 #: ckanext/issues/templates/issues/email/new_comment.html:6
 msgid "The comment is"
