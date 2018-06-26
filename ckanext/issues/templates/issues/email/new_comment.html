@@ -1,16 +1,17 @@
 
-{% trans %}A user {% endtrans %} {{ user.fullname }} {% trans %}has added a comment to one of your issues on {% endtrans %} {{ site_title }}.
+{% trans %}A user {% endtrans %} {{ user.fullname or user.name }} {% trans %}has added a comment to one of your issues on {% endtrans %} {{ site_title }}.
 
 {% trans %}The dataset is{% endtrans %}: {{ dataset.title }}
 {% trans %}The issue is{% endtrans %}: {{ issue_subject }}
 {% trans %}The comment is{% endtrans %}:
 > {{ comment.comment|wordwrap(width=76)|replace('\n', '\n> '|safe) }}
 
-{% trans %}In order to respond to the comment, please see the issue at{% endtrans %}: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}. {% trans %}Once the issue has been resolved, click 'Close issue'.{% endtrans %}
+{% trans %}In order to respond to the comment, please see the issue at{% endtrans %}: {{ h.url_for('issues_show', dataset_id=dataset.name, issue_number=issue.number, qualified=True) }}.
+{% trans %}Once the issue has been resolved, click 'Close issue'.{% endtrans %}
 
 {% trans %}Thank you{% endtrans %}
 
 {% trans %}The{% endtrans %} {{ site_title }} {% trans %}team{% endtrans %}
 
 --
-<p>{% trans %}Message sent by{% endtrans %} {{ site_title }} ({{ site_url }})</p>
+{% trans %}Message sent by{% endtrans %} {{ site_title }} ({{ site_url }})
