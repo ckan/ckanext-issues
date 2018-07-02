@@ -265,7 +265,7 @@ msgstr "Збігів не знайдено"
 
 #: ckanext/issues/public/scripts/autocomplete-action-api.js:32
 msgid "Start typing…"
-msgstr "Почав писати..."
+msgstr "Почніть друкувати..."
 
 #: ckanext/issues/public/scripts/autocomplete-action-api.js:34
 msgid "Input is too short, must be at least one character"
