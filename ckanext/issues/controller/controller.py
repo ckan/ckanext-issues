@@ -128,10 +128,10 @@ class IssueController(BaseController):
                                    session=model.Session)
         except toolkit.ValidationError, e:
             p.toolkit.abort(
-                404, toolkit._(u'Issue not found: {0}'.format(e.error_summary)))
+                404, toolkit._(u'Issue not found: {0}').format(e.error_summary))
         except toolkit.ObjectNotFound, e:
             p.toolkit.abort(
-                404, toolkit._(u'Issue not found: {0}'.format(e)))
+                404, toolkit._(u'Issue not found: {0}').format(e))
         extra_vars['dataset'] = dataset
         return p.toolkit.render('issues/show.html', extra_vars=extra_vars)
 
@@ -255,12 +255,12 @@ class IssueController(BaseController):
                                'dataset_id': dataset_id}
                 )
             except toolkit.NotAuthorized:
-                msg = _(u'Unauthorized to delete issue {0}'.format(
-                    issue_number))
+                msg = _(u'Unauthorized to delete issue {0}').format(
+                    issue_number)
                 toolkit.abort(401, msg)
 
             h.flash_notice(
-                _(u'Issue {0} has been deleted.'.format(issue_number))
+                _(u'Issue {0} has been deleted.').format(issue_number)
             )
             p.toolkit.redirect_to('issues_dataset', dataset_id=dataset_id)
         else:
@@ -278,7 +278,7 @@ class IssueController(BaseController):
                 assignee = toolkit.get_action('user_show')(
                     data_dict={'id': assignee_id})
             except toolkit.ObjectNotFound:
-                h.flash_error(_(u'User {0} does not exist'.format(assignee_id)))
+                h.flash_error(_(u'User {0} does not exist').format(assignee_id))
                 return p.toolkit.redirect_to('issues_show',
                                              issue_number=issue_number,
                                              dataset_id=dataset_id)
@@ -308,8 +308,7 @@ class IssueController(BaseController):
                         log.debug(e.message)
 
             except toolkit.NotAuthorized:
-                msg = _(u'Unauthorized to assign users to issue'.format(
-                    issue_number))
+                msg = _(u'Unauthorized to assign users to issue')
                 toolkit.abort(401, msg)
             except toolkit.ValidationError, e:
                 toolkit.abort(404)
@@ -407,9 +406,7 @@ class IssueController(BaseController):
                                       dataset_id=dataset_id,
                                       issue_number=issue_number)
             except toolkit.NotAuthorized:
-                msg = _(u'You must be logged in clear abuse reports').format(
-                    issue_number
-                )
+                msg = _(u'You must be logged in clear abuse reports')
                 toolkit.abort(401, msg)
             except toolkit.ValidationError:
                 toolkit.abort(404)
@@ -430,9 +427,7 @@ class IssueController(BaseController):
                                       dataset_id=dataset_id,
                                       issue_number=issue_number)
             except toolkit.NotAuthorized:
-                msg = _(u'You must be logged in to clear abuse reports').format(
-                    issue_number
-                )
+                msg = _(u'You must be logged in to clear abuse reports')
                 toolkit.abort(401, msg)
             except toolkit.ValidationError:
                 toolkit.abort(404)
@@ -447,7 +442,7 @@ class IssueController(BaseController):
         try:
             template_params = issues_for_org(org_id, request.GET)
         except toolkit.ValidationError, e:
-            msg = toolkit._(u'Validation error: {0}'.format(e.error_summary))
+            msg = toolkit._(u'Validation error: {0}').format(e.error_summary)
             log.warning(msg + u' - Issues for org: %s', org_id)
             h.flash(msg, category='alert-error')
             return p.toolkit.redirect_to('issues_for_organization',
@@ -487,7 +482,7 @@ class IssueController(BaseController):
 
 
 def _dataset_handle_error(dataset_id, exc):
-    msg = toolkit._(u'Validation error: {0}'.format(exc.error_summary))
+    msg = toolkit._(u'Validation error: {0}').format(exc.error_summary)
     h.flash(msg, category='alert-error')
     return p.toolkit.redirect_to('issues_dataset', dataset_id=dataset_id)
 
