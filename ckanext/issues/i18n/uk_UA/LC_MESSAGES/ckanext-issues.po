@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-issues 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-06-12 16:20+0000\n"
+"POT-Creation-Date: 2018-06-20 15:25+0000\n"
 "PO-Revision-Date: 2018-03-20 22:22+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: uk_UA\n"
@@ -486,6 +486,10 @@ msgid "Are you sure you want to delete this issue?"
 msgstr "Ви впевнені, що хочете видалити цю пропозицію?"
 
 #: ckanext/issues/templates/issues/show.html:214
+msgid "Please Confirm Action"
+msgstr "Будь ласка, підтвердіть дію"
+
+#: ckanext/issues/templates/issues/show.html:214
 msgid "Delete"
 msgstr "Видалити"
 
@@ -528,6 +532,10 @@ msgstr "Нікого"
 #: ckanext/issues/templates/issues/show.html:270
 msgid "Change Assignee"
 msgstr "Змінити уповноваженого"
+
+#: ckanext/issues/templates/issues/show.html:275
+msgid "Username"
+msgstr "Ім'я користувача"
 
 #: ckanext/issues/templates/issues/show.html:280
 msgid "Assign"

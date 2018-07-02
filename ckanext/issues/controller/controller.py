@@ -210,7 +210,10 @@ class IssueController(BaseController):
                 'dataset_id': dataset['id'],
                 'status': status
                 }
-            logic.get_action('issue_update')(self.context, issue_dict)
+            try:
+                logic.get_action('issue_update')(self.context, issue_dict)
+            except p.toolkit.NotAuthorized as e:
+                p.toolkit.abort(401, e.message)
             if 'close' in request.POST:
                 h.flash_success(_("Issue closed"))
             else:
