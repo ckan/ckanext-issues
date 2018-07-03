@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-issues 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-07-03 08:33+0000\n"
+"POT-Creation-Date: 2018-07-03 18:13+0000\n"
 "PO-Revision-Date: 2018-03-20 22:22+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: uk_UA\n"
@@ -598,6 +598,10 @@ msgstr ""
 "користувач почав обговорення пропозиції з одного з наборів даних "
 "розпорядника"
 
+#: ckanext/issues/templates/issues/email/new_issue.html:2
+msgid "for which you are an"
+msgstr "де ви є "
+
 #: ckanext/issues/templates/issues/email/new_issue.html:4
 msgid "The dataset is: "
 msgstr "Набір даних: "
@@ -629,12 +633,12 @@ msgstr "Пропозиції на \"{query}\" не знайдені"
 msgid "No issues found"
 msgstr "Пропозиції не знайдені"
 
-msgid "Least Commented"
-msgstr "Востаннє внесеним коментарем"
-
 # Don't delete
 msgid "Open"
 msgstr "Відкрита"
+
+msgid "Least Commented"
+msgstr "Востаннє внесеним коментарем"
 
 msgid "Closed"
 msgstr "Закрита"

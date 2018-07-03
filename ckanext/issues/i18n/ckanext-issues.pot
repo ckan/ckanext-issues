@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-issues 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-07-03 08:33+0000\n"
+"POT-Creation-Date: 2018-07-03 18:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -588,6 +588,10 @@ msgstr ""
 
 #: ckanext/issues/templates/issues/email/new_issue.html:2
 msgid " a user has raised an issue with one of the datasets from organization"
+msgstr ""
+
+#: ckanext/issues/templates/issues/email/new_issue.html:2
+msgid "for which you are an"
 msgstr ""
 
 #: ckanext/issues/templates/issues/email/new_issue.html:4
