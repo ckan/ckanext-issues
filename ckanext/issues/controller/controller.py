@@ -259,9 +259,7 @@ class IssueController(BaseController):
                     issue_number)
                 toolkit.abort(401, msg)
 
-            h.flash_notice(
-                _(u'Issue {0} has been deleted.').format(issue_number)
-            )
+            h.flash_notice(_(u'Issue has been deleted.'))
             p.toolkit.redirect_to('issues_dataset', dataset_id=dataset_id)
         else:
             return render('issues/confirm_delete.html',
