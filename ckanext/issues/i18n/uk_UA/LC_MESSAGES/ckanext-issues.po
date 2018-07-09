@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-issues 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-07-03 18:13+0000\n"
+"POT-Creation-Date: 2018-07-09 15:10+0000\n"
 "PO-Revision-Date: 2018-03-20 22:22+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: uk_UA\n"
@@ -18,7 +18,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.5.3\n"
+"Generated-By: Babel 2.3.4\n"
 
 #: ckanext/issues/auth.py:20
 msgid "User {0} not authorized for action on issue {1}"
@@ -589,8 +589,8 @@ msgid "Message sent by"
 msgstr "Відправлено"
 
 #: ckanext/issues/templates/issues/email/new_issue.html:2
-msgid "On"
-msgstr "На"
+msgid "On open data portal"
+msgstr "На порталі відкритих даних"
 
 #: ckanext/issues/templates/issues/email/new_issue.html:2
 msgid " a user has raised an issue with one of the datasets from organization"
@@ -633,35 +633,36 @@ msgstr "Пропозиції на \"{query}\" не знайдені"
 msgid "No issues found"
 msgstr "Пропозиції не знайдені"
 
+
 # Don't delete
-msgid "Open"
-msgstr "Відкрита"
+#~ msgid "Open"
+#~ msgstr "Відкрита"
 
-msgid "Least Commented"
-msgstr "Востаннє внесеним коментарем"
+#~ msgid "Least Commented"
+#~ msgstr "Востаннє внесеним коментарем"
 
-msgid "Closed"
-msgstr "Закрита"
+#~ msgid "Closed"
+#~ msgstr "Закрита"
 
-msgid "Visible"
-msgstr "Відкриті"
+#~ msgid "Visible"
+#~ msgstr "Відкриті"
 
-msgid "Hidden"
-msgstr "Скриті"
+#~ msgid "Hidden"
+#~ msgstr "Скриті"
 
 # Don't delete need for sorting
-msgid "Newest"
-msgstr "Датою створення (за спаданням)"
+#~ msgid "Newest"
+#~ msgstr "Датою створення (за спаданням)"
 
-msgid "Oldest"
-msgstr "Датою створення (за зростанням)"
+#~ msgid "Oldest"
+#~ msgstr "Датою створення (за зростанням)"
 
-msgid "Most Commented"
-msgstr "Кількістю коментарів (за спаданням)"
+#~ msgid "Most Commented"
+#~ msgstr "Кількістю коментарів (за спаданням)"
 
-msgid "Most Recently Updated"
-msgstr "Кількістю оновлень (за спаданням)"
+#~ msgid "Most Recently Updated"
+#~ msgstr "Кількістю оновлень (за спаданням)"
 
-msgid "Least Recently Updated"
-msgstr "Датою оновлення (за спаданням)"
+#~ msgid "Least Recently Updated"
+#~ msgstr "Датою оновлення (за спаданням)"
 
