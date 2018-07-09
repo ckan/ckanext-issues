@@ -590,7 +590,7 @@ msgstr "Відправлено"
 
 #: ckanext/issues/templates/issues/email/new_issue.html:2
 msgid "On"
-msgstr "Увімк"
+msgstr "На"
 
 #: ckanext/issues/templates/issues/email/new_issue.html:2
 msgid " a user has raised an issue with one of the datasets from organization"
