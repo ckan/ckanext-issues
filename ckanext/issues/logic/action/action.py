@@ -258,7 +258,7 @@ def issue_update(context, data_dict):
 
     if status_change:
         if data_dict['status'] == issuemodel.ISSUE_STATUS.closed:
-            issue.resolved = datetime.now()
+            issue.resolved = datetime.utcnow()
             user = context['user']
             user_dict = p.toolkit.get_action('user_show')(
                 data_dict={'id': user})
