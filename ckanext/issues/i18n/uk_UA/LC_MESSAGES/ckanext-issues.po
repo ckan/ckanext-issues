@@ -633,36 +633,35 @@ msgstr "Пропозиції на \"{query}\" не знайдені"
 msgid "No issues found"
 msgstr "Пропозиції не знайдені"
 
+# Do not delete!
 
-# Don't delete
-#~ msgid "Open"
-#~ msgstr "Відкрита"
+msgid "Open"
+msgstr "Відкрита"
 
-#~ msgid "Least Commented"
-#~ msgstr "Востаннє внесеним коментарем"
+msgid "Closed"
+msgstr "Закрита"
 
-#~ msgid "Closed"
-#~ msgstr "Закрита"
+msgid "Visible"
+msgstr "Відкриті"
 
-#~ msgid "Visible"
-#~ msgstr "Відкриті"
+msgid "Hidden"
+msgstr "Скриті"
 
-#~ msgid "Hidden"
-#~ msgstr "Скриті"
+msgid "Least Commented"
+msgstr "Востаннє внесеним коментарем"
 
-# Don't delete need for sorting
-#~ msgid "Newest"
-#~ msgstr "Датою створення (за спаданням)"
+msgid "Newest"
+msgstr "Датою створення (за спаданням)"
 
-#~ msgid "Oldest"
-#~ msgstr "Датою створення (за зростанням)"
+msgid "Oldest"
+msgstr "Датою створення (за зростанням)"
 
-#~ msgid "Most Commented"
-#~ msgstr "Кількістю коментарів (за спаданням)"
+msgid "Most Commented"
+msgstr "Кількістю коментарів (за спаданням)"
 
-#~ msgid "Most Recently Updated"
-#~ msgstr "Кількістю оновлень (за спаданням)"
+msgid "Most Recently Updated"
+msgstr "Кількістю оновлень (за спаданням)"
 
-#~ msgid "Least Recently Updated"
-#~ msgstr "Датою оновлення (за спаданням)"
+msgid "Least Recently Updated"
+msgstr "Датою оновлення (за спаданням)"
 
