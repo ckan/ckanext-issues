@@ -3,6 +3,8 @@
 {% block content_primary_nav %}
   {{ super() }}
   {% if h.issues_enabled(pkg) %}
-    {{ h.build_nav_icon('issues_dataset', _('Issues'), dataset_id=pkg.name) }}
+    <li>
+      <a href="/en/dataset/0bc36b27-1c83-44db-9e49-57e497620367/issues"><i class="fa fa-warning-sign"></i> {{ _('Issues') }} <span class="badge">{{ h.issue_count(pkg) }}</span></a>
+    </li>
   {% endif %}
 {% endblock %}
