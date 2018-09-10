@@ -4,7 +4,8 @@
   {{ super() }}
   {% if h.issues_enabled(pkg) %}
     <li>
-      <a href="{{ h.url_for('issues_dataset', dataset_id=pkg.id) }}"><i class="fa fa-warning-sign"></i> {{ _('Issues') }} <span class="badge">{{ h.issue_count(pkg) }}</span></a>
+      <a href="{{ h.url_for('issues_dataset', dataset_id=pkg.id) }}"><i class="fa fa-warning-sign"></i> {{ _('Issues') }}
+        {% if h.issue_count(pkg) %} <span class="badge">{{ h.issue_count(pkg) }}</span>{% endif %}</a>
     </li>
   {% endif %}
 {% endblock %}
