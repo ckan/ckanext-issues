@@ -239,52 +239,55 @@ dataset - package object
           {% endif %}
         </div>
       </div>
+    </div>
   </section>
 {% endblock %}
 
 {% block secondary_content %}
-<div class="module module-narrow module-shallow">
-  <div class="sidebar-nav">
-    <a href="{{ h.url_for('issues_dataset', _('All issues of dataset'), dataset_id=dataset.name) }}"><i class="fa fa-arrow-left"></i> {% trans %}All issues of this dataset{% endtrans %}</a>
-  </div>
-  <div class="module context-info">
-    <div class="module-content">
-     
-      <h1 class="heading">{{ dataset.title }}</h1>
+    <div class="module module-narrow module-shallow">
+    <div class="sidebar-nav">
+        <a href="{{ h.url_for('issues_dataset', _('All issues of dataset'), dataset_id=dataset.name) }}"><i class="fa fa-arrow-left"></i> {% trans %}All issues of this dataset{% endtrans %}</a>
     </div>
-    <h2 class="module-heading">
-      {% trans %}Assignee{% endtrans %}
-    </h2>
-    <div class="module-content">
-      <div id='ckanext-issues-assignee'>
-        {% if issue.assignee %} 
-        {{ h.gravatar((issue.assignee.email_hash), size=22) }} {{ issue.assignee.name }} 
-        {% elif issue.assignee_id %} 
-        {{ _('This issue has been assigned to an administrator for the publisher') }} 
-        {% else %} 
-        {{ _('No one') }} 
-        {% endif %}
-      </div>
-    </div>
-    {% block assignee_form %} {% if is_publisher %}
-    <h2 class="module-heading">
-      {% trans %}Change Assignee{% endtrans %}
-    </h2>
-    <div class="module-content">
-      <form id='ckanext-issues-assign' class="dataset-form add-member-form" method='post' action="{{ h.url_for('issues_assign', issue_number=issue.number, dataset_id=dataset.id) }}">
-        <div class="controls">
-          <input id="assignee" type="text" name="assignee" placeholder="{% trans %}Username{% endtrans %}" value="" class="control-medium" data-module="autocomplete-action-api"
-            {% if dataset[ 'owner_org'] %} data-module-source="/api/3/action/organization_users_autocomplete?organization_id={{ dataset['owner_org']}}&q=?"> {% else %} data-module-source="/api/3/action/user_autocomplete?q=?"> {% endif %}
-        </div>
-        <div>
-          <button class="btn btn-success full-width" type="submit" name="assign">
-            {{ _('Assign') }}
-          </button>
-        </div>
-      </form>
-      {% endif %} 
-      {% endblock %}
-    </div>
-  </div>
-</div>
+
+        <div class="module context-info">
+            <div class="module-content">
+                <h1 class="heading">{{ dataset.title }}</h1>
+            </div>
+
+            <h2 class="module-heading">
+                {% trans %}Assignee{% endtrans %}
+            </h2>
+            <div class="module-content">
+                <div id='ckanext-issues-assignee'>
+                    {% if issue.assignee %}
+                        {{ h.gravatar((issue.assignee.email_hash), size=22) }} {{ issue.assignee.name }}
+                    {% elif issue.assignee_id %}
+                        {{ _('This issue has been assigned to an administrator for the publisher') }}
+                    {% else %}
+                        {{ _('No one') }}
+                    {% endif %}
+                </div>
+            </div>
+            {% block assignee_form %} {% if is_publisher %}
+                <h2 class="module-heading">
+                    {% trans %}Change Assignee{% endtrans %}
+                </h2>
+                <div class="module-content">
+                <form id='ckanext-issues-assign' class="dataset-form add-member-form" method='post' action="{{ h.url_for('issues_assign', issue_number=issue.number, dataset_id=dataset.id) }}">
+                    <div class="controls">
+                        <input id="assignee" type="text" name="assignee" placeholder="{% trans %}Username{% endtrans %}" value="" class="control-medium" data-module="autocomplete-action-api"
+                            {% if dataset[ 'owner_org'] %} data-module-source="/api/3/action/organization_users_autocomplete?organization_id={{ dataset['owner_org']}}&q=?"> {% else %} data-module-source="/api/3/action/user_autocomplete?q=?"> {% endif %}
+                    </div>
+                    <div>
+                        <button class="btn btn-success full-width" type="submit" name="assign">
+                            {{ _('Assign') }}
+                        </button>
+                    </div>
+                </form>
+            {% endif %}
+            {% endblock %}
+
+        </div><!-- content-info -->
+
+    </div><!-- module-shadow -->
 {% endblock %}
