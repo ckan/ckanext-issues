@@ -380,7 +380,7 @@ msgstr "Підтвердити видалення"
 
 #: ckanext/issues/templates/issues/confirm_delete.html:11
 msgid "Are you sure you want to delete issue - {0}?"
-msgstr "Ви впевнені, що хочете видалити пропозицію - {0}?"
+msgstr "Ви впевнені, що бажаєте видалити пропозицію - {0}?"
 
 #: ckanext/issues/templates/issues/dataset.html:14
 #: ckanext/issues/templates/issues/dataset.html:20
@@ -482,7 +482,7 @@ msgstr "Тут можете використовувати форматуван�
 
 #: ckanext/issues/templates/issues/show.html:213
 msgid "Are you sure you want to delete this issue?"
-msgstr "Ви впевнені, що хочете видалити цю пропозицію?"
+msgstr "Ви впевнені, що бажаєте видалити цю пропозицію?"
 
 #: ckanext/issues/templates/issues/show.html:214
 msgid "Please Confirm Action"
