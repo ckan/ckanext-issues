@@ -141,6 +141,7 @@ def _get_issue_vars(issue, issue_subject, user_obj, recipient):
             'dataset': model.Package.get(issue.dataset_id),
             'user': user_obj,
             'site_title': get_site_title(),
+            'site_url': config.get('ckan.site_url', ''),
             'recipient': recipient,
             'h': h}
 
@@ -467,15 +468,26 @@ def issue_comment_create(context, data_dict):
     if notifications:
         dataset = model.Package.get(data_dict['dataset_id'])
         recipients = _get_recipients(context, dataset)
-        subject = get_issue_subject(issue.as_dict())
+        # subject = get_issue_subject(issue.as_dict())
+        subject = issue.title
 
         for recipient in recipients:
             body = _get_comment_email_body(
                 issue_comment, subject, user_obj, recipient)
 
-            user_obj = model.User.get(recipient['user_id'])
+            user_recipient = model.User.get(recipient['user_id'])
             try:
-                mailer.mail_user(user_obj, subject, body)
+                mailer.mail_user(user_recipient, subject, body)
+            except (mailer.MailerException, TypeError), e:
+                # TypeError occurs when we're running command from ckanapi
+                log.debug(e.message)
+
+        # Sending email to author
+        if user_obj.id != issue.user.id:
+            body = _get_comment_email_body(
+                issue_comment, subject, user_obj, {})
+            try:
+                mailer.mail_user(issue.user, subject, body)
             except (mailer.MailerException, TypeError), e:
                 # TypeError occurs when we're running command from ckanapi
                 log.debug(e.message)
